@@ -1,0 +1,2723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA LOCAL — Auditoría & Optimización Google Maps</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.15/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.15/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0ede8;--bg2:#f7f5f1;--bg3:#e8e4de;
+  --gold:#b8913a;--gold2:rgba(184,145,58,0.13);--gold3:rgba(184,145,58,0.07);
+  --border:rgba(184,145,58,0.42);--border2:rgba(184,145,58,0.15);
+  --text:#0f0f12;--text2:#2c2c34;--text3:#60606e;
+  --card:#faf8f4;--card2:#f2efe9;
+  --pre:#1a3a5c;--pre2:rgba(26,58,92,0.08);
+  --post:#2d6a4f;--post2:rgba(45,106,79,0.08);
+  --danger:#8b3a2a;--danger2:rgba(139,58,42,0.08);
+  --warn:#7a5c0f;--warn2:rgba(122,92,15,0.12);
+  --success:#2d6a4f;
+  --claude:#5c1a1a;--gemini:#1a5276;--perplexity:#1a3a5c;--places:#2d6a4f;--serp:#4a2d7a;
+}
+[data-theme="dark"]{
+  --bg:#0e0e14;--bg2:#13131b;--bg3:#161620;
+  --gold:#d4a843;--gold2:rgba(212,168,67,0.12);--gold3:rgba(212,168,67,0.06);
+  --border:rgba(212,168,67,0.32);--border2:rgba(212,168,67,0.12);
+  --text:#f5f2ec;--text2:#d4c9b0;--text3:#8a8272;
+  --card:#1a1a24;--card2:#1e1e2a;
+  --pre2:rgba(26,58,92,0.2);--post2:rgba(45,106,79,0.2);
+  --danger2:rgba(139,58,42,0.2);--warn2:rgba(212,168,67,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',Georgia,serif}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+input[type=text],input[type=number],input[type=url],textarea,select{
+  background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-family:'Cormorant Garamond',serif;font-size:15px;padding:8px 11px;
+  border-radius:3px;outline:none;width:100%;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{resize:vertical;line-height:1.5}
+select{background:var(--card2)}
+select option{background:var(--card2);color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input[type=range]{accent-color:var(--gold);width:100%;border:none;background:transparent;padding:0}
+input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+
+.chip{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:14px;
+  border:1px solid var(--border);cursor:pointer;color:var(--text2);background:transparent;
+  letter-spacing:.04em;transition:all .18s;white-space:nowrap}
+.chip.on{background:var(--gold2);border-color:var(--gold);color:var(--gold)}
+
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+#hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.18em;color:var(--gold)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.46rem;color:var(--text3);letter-spacing:.22em;margin-left:10px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+#stBar{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.12em}
+.btn-hdr{background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:all .2s}
+.btn-hdr:hover{border-color:var(--gold);color:var(--gold)}
+
+#nav{background:var(--bg3);border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;flex-shrink:0;padding:0 12px}
+.ntab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:10px 11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  border-top:none;border-left:none;border-right:none;background:none;white-space:nowrap;transition:all .2s}
+.ntab:hover{color:var(--gold)}
+.ntab.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:500}
+.nnum{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  border-radius:50%;background:var(--gold2);border:1px solid var(--border);
+  font-size:9px;margin-right:4px;color:var(--gold)}
+.ntab.on .nnum{background:var(--gold);color:var(--bg)}
+
+#body{display:flex;flex:1;min-height:0;overflow:hidden}
+
+#sidebar{width:300px;flex-shrink:0;border-right:1px solid var(--border);
+  overflow-y:auto;padding:16px 14px 24px;display:flex;flex-direction:column;gap:16px;background:var(--bg2)}
+.slbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--gold);
+  text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid var(--border2);margin-bottom:6px;font-weight:500}
+.flbl{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:3px;font-weight:500}
+.fgrp{display:flex;flex-direction:column;gap:7px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+
+#btnGen{background:var(--gold);color:var(--bg);border:none;padding:12px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;
+  cursor:pointer;border-radius:3px;width:100%;font-weight:500;transition:opacity .2s;text-transform:uppercase}
+#btnGen:hover{opacity:.88}
+#btnGen:disabled{opacity:.35;cursor:not-allowed}
+
+#content{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:16px;background:var(--bg)}
+
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:16px;opacity:.45;padding:40px;min-height:400px}
+.welcome h2{font-size:1.7rem;font-weight:300;font-style:italic;color:var(--gold)}
+.welcome p{font-size:15px;color:var(--text2);max-width:360px;line-height:1.8}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;animation:fadeUp .3s ease}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;
+  border-bottom:1px solid var(--border2);background:var(--gold2)}
+.ct{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.cb{padding:16px 18px;line-height:1.85;font-size:15px;color:var(--text)}
+.cb p{margin-bottom:8px}
+.cb h3{color:var(--gold);margin:12px 0 4px;font-size:14px;font-weight:500;font-style:italic}
+.cb h4{color:var(--text);margin:9px 0 3px;font-size:13px;font-weight:600}
+.cb strong{color:var(--text);font-weight:600}
+.cb ul,.cb ol{padding-left:18px}
+.cb li{margin-bottom:4px}
+
+.itabs{display:flex;border-bottom:1px solid var(--border2);overflow-x:auto;background:var(--bg3)}
+.itab{font-family:'DM Mono',monospace;font-size:9px;padding:8px 12px;color:var(--text3);
+  cursor:pointer;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;
+  background:none;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;transition:all .18s}
+.itab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.ip{display:none}.ip.show{display:block}
+
+.btn-sm{background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:all .18s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{background:var(--gold);color:var(--bg);border:none;padding:8px 16px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:opacity .2s}
+.btn-gold:hover{opacity:.88}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* KPI METRICS GRID */
+.met-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px;border-bottom:1px solid var(--border2)}
+.met{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:12px;text-align:center}
+.met.danger{background:var(--danger2);border-color:rgba(139,58,42,0.3)}
+.met.warn{background:var(--warn2);border-color:rgba(122,92,15,0.3)}
+.met.ok{background:var(--post2);border-color:rgba(45,106,79,0.3)}
+.mn{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);line-height:1}
+.mn.red{color:var(--danger)}
+.mn.green{color:var(--success)}
+.ml{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.msub{font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-top:2px}
+
+/* SCORE GAUGE */
+.score-wrap{display:flex;align-items:center;gap:20px;padding:16px 18px;border-bottom:1px solid var(--border2)}
+.score-circle{width:80px;height:80px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.score-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;line-height:1}
+.score-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase}
+
+/* PROGRESS BARS */
+.pbar-wrap{padding:0 16px 12px}
+.pbar-item{margin-bottom:8px}
+.pbar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:3px}
+.pbar-label span:last-child{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold)}
+.pbar{height:5px;background:var(--border2);border-radius:3px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:3px;background:var(--gold);transition:width .6s ease}
+.pbar-fill.red{background:var(--danger)}
+.pbar-fill.green{background:var(--success)}
+
+/* COMPETITOR TABLE */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{background:var(--gold);color:var(--bg);font-family:'DM Mono',monospace;
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;text-align:left}
+.comp-table td{padding:8px 12px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:top}
+.comp-table tr:nth-child(even) td{background:var(--card2)}
+.comp-table .own-row td{background:var(--gold2);font-weight:600}
+.comp-table .own-row td:first-child{color:var(--gold);font-family:'DM Mono',monospace}
+.stars{color:#e8a000;font-size:12px}
+
+/* STATUS BADGE */
+.badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:9px;border:1px solid var(--border);color:var(--text3)}
+.badge.ok{background:var(--post2);border-color:rgba(45,106,79,0.4);color:var(--success)}
+.badge.warn{background:var(--warn2);border-color:rgba(122,92,15,0.4);color:var(--warn)}
+.badge.danger{background:var(--danger2);border-color:rgba(139,58,42,0.4);color:var(--danger)}
+
+/* PROTOCOL STEPS */
+.proto-phase{border-bottom:1px solid var(--border2)}
+.proto-head{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--gold2);cursor:pointer}
+.proto-body{padding:12px 16px;display:none}
+.proto-body.open{display:block}
+.proto-step{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border2);align-items:flex-start}
+.proto-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);min-width:28px;font-weight:500;margin-top:2px}
+.proto-text{font-size:15px;color:var(--text);flex:1;line-height:1.5}
+.proto-tag{font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);white-space:nowrap;margin-top:3px}
+.proto-check{cursor:pointer;flex-shrink:0;margin-top:2px}
+.proto-step.done .proto-text{text-decoration:line-through;opacity:.5}
+
+/* CHART CONTAINERS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 16px}
+.chart-box{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:14px}
+.chart-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.chart-box canvas{max-height:200px}
+.chart-full{padding:14px 16px}
+.chart-full canvas{max-height:220px}
+
+/* REVIEW ITEMS */
+.review-item{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;gap:10px;align-items:flex-start}
+.review-stars{font-size:11px;flex-shrink:0;margin-top:1px}
+.review-text{font-size:12px;color:var(--text);line-height:1.5;flex:1}
+.review-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-top:2px}
+.review-sentiment{font-size:9px;padding:1px 6px;border-radius:8px;font-family:'DM Mono',monospace}
+.pos{background:var(--post2);color:var(--success)}
+.neg{background:var(--danger2);color:var(--danger)}
+.neu{background:var(--border2);color:var(--text3)}
+
+/* LOADING */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px}
+.ring{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.ltxt{font-style:italic;color:var(--text3);font-size:15px}
+.ldots::after{content:'';animation:pulse 1.5s infinite}
+
+/* PHASE TAGS */
+.phase-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:10px;font-weight:500}
+.tag-diag{background:var(--pre2);color:var(--pre);border:1px solid var(--pre)}
+.tag-proto{background:var(--warn2);color:var(--warn);border:1px solid var(--warn)}
+.tag-impact{background:var(--post2);color:var(--post);border:1px solid var(--post)}
+
+/* BEFORE/AFTER */
+.ba-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border2)}
+.ba-col{padding:14px 16px}
+.ba-col:first-child{border-right:1px solid var(--border2)}
+.ba-head{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.ba-head.before{color:var(--danger)}
+.ba-head.after{color:var(--success)}
+.ba-item{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);font-size:12px}
+.ba-val{font-family:'DM Mono',monospace;font-size:11px}
+.ba-val.before{color:var(--danger)}
+.ba-val.after{color:var(--success)}
+
+/* IMPACT DELTA */
+.delta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px 16px;border-bottom:1px solid var(--border2)}
+.delta{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:12px;text-align:center}
+.delta-num{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1}
+.delta-num.up{color:var(--success)}
+.delta-num.down{color:var(--danger)}
+.delta-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+
+/* CHECKLIST PHASE */
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border2);transition:background .15s;cursor:pointer}
+.check-item:hover{background:var(--gold2)}
+.check-item.done{opacity:.55}
+.check-item.done .check-text{text-decoration:line-through;color:var(--text3)}
+.check-text{font-size:15px;color:var(--text);line-height:1.5;flex:1}
+.check-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3)}
+
+.section-divider{padding:8px 16px;background:var(--gold2);border-bottom:1px solid var(--border2);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+
+/* INSIGHT BOX */
+.insight{margin:12px 16px;padding:10px 14px;border-left:3px solid var(--gold);background:var(--gold3);border-radius:0 3px 3px 0}
+.insight-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.insight-text{font-size:12px;color:var(--text2);line-height:1.6;font-style:italic}
+
+@media(max-width:768px){
+  #sidebar{width:100%;max-height:45vh;border-right:none;border-bottom:1px solid var(--border)}
+  #body{flex-direction:column}
+  .met-grid{grid-template-columns:repeat(2,1fr)}
+  .chart-grid{grid-template-columns:1fr}
+  .ba-grid{grid-template-columns:1fr}
+  .ba-col:first-child{border-right:none;border-bottom:1px solid var(--border2)}
+  .delta-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── ENGINE BAR ─────────────────────────────────────────────── */
+body{padding-bottom:42px}
+#engine-bar{
+  position:fixed;bottom:0;left:0;right:0;height:38px;
+  background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 14px;gap:10px;z-index:1000;
+}
+.engine-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:pulse 2s infinite}
+.engine-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);white-space:nowrap}
+.engine-select{background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:2px;
+  outline:none;cursor:pointer;width:auto;letter-spacing:.04em}
+.engine-chain{display:flex;align-items:center;gap:4px;margin-left:4px}
+.engine-step{font-family:'DM Mono',monospace;font-size:8px;padding:2px 5px;border-radius:2px;
+  letter-spacing:.06em;text-transform:uppercase;opacity:.25;border:1px solid;transition:opacity .25s,font-weight .15s}
+.engine-step.active{opacity:1;font-weight:600}
+.engine-step.done{opacity:.6}
+.step-claude{color:var(--claude);border-color:var(--claude)}
+.step-gemini{color:var(--gemini);border-color:var(--gemini)}
+.step-perplexity{color:var(--perplexity);border-color:var(--perplexity)}
+.step-places{color:var(--places);border-color:var(--places)}
+.step-serp{color:var(--serp);border-color:var(--serp)}
+.engine-status{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);margin-left:auto;letter-spacing:.08em;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.engine-sep{color:var(--text3);font-size:9px;opacity:.4}
+
+/* ── CONFIG PANEL (overlay) ──────────────────────────────────── */
+#cfg-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;align-items:center;justify-content:center}
+#cfg-overlay.open{display:flex}
+#cfg-panel{background:var(--bg);border:1px solid var(--border);border-radius:5px;width:min(680px,95vw);max-height:85vh;overflow-y:auto;padding:20px;position:relative}
+.cfg-close{position:absolute;top:12px;right:14px;background:transparent;border:1px solid var(--border);color:var(--text3);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;cursor:pointer;padding:3px 9px;border-radius:2px}
+.cfg-close:hover{border-color:var(--gold);color:var(--gold)}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.cfg-section{border:1px solid var(--border2);border-radius:3px;padding:12px}
+.cfg-slbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border2);padding-bottom:5px;margin-bottom:8px;font-weight:500}
+.cfg-fgrp{display:flex;flex-direction:column;gap:6px}
+.cfg-flbl{font-size:10px;color:var(--text2);font-style:italic;margin-bottom:2px}
+.cfg-test{background:transparent;border:1px solid var(--border);color:var(--text3);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.1em;cursor:pointer;padding:3px 8px;border-radius:2px;text-transform:uppercase;margin-top:4px;transition:all .2s}
+.cfg-test:hover{border-color:var(--gold);color:var(--gold)}
+.cfg-result{font-size:10px;padding:5px 8px;border-radius:2px;margin-top:4px;display:none;font-family:'DM Mono',monospace;line-height:1.4}
+.cfg-ok{background:rgba(45,106,79,0.1);border:1px solid var(--success);color:var(--success)}
+.cfg-err{background:rgba(139,58,42,0.1);border:1px solid var(--danger);color:var(--danger)}
+.badge-provider{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:9px;
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.06em;text-transform:uppercase;border:1px solid}
+.bp-claude{color:var(--claude);border-color:var(--claude);background:rgba(92,26,26,0.08)}
+.bp-gemini{color:var(--gemini);border-color:var(--gemini);background:rgba(26,82,118,0.08)}
+.bp-perplexity{color:var(--perplexity);border-color:var(--perplexity);background:rgba(26,58,92,0.08)}
+.bp-places{color:var(--places);border-color:var(--places);background:rgba(45,106,79,0.08)}
+.bp-serp{color:var(--serp);border-color:var(--serp);background:rgba(74,45,122,0.08)}
+.bp-dot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.cfg-save-btn{background:var(--gold);color:var(--bg);border:none;padding:8px 20px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;cursor:pointer;border-radius:3px;text-transform:uppercase;width:100%;margin-top:14px;transition:opacity .2s}
+.cfg-save-btn:hover{opacity:.88}
+.cfg-toast{position:fixed;top:20px;right:20px;background:var(--gold);color:var(--bg);padding:9px 15px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;border-radius:3px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);pointer-events:none}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  var s=localStorage.getItem('aura_theme');
+  if(s) document.documentElement.setAttribute('data-theme',s);
+  else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
+    document.documentElement.setAttribute('data-theme','dark');
+})();
+</script>
+<div id="app">
+
+<div id="hdr">
+  <div class="logo">AURA <span style="color:var(--text3);font-family:'Bebas Neue',sans-serif;font-size:.9rem">LOCAL</span>
+    <span class="logo-sub">AUDITORÍA & OPTIMIZACIÓN GOOGLE MAPS · AURA CABINET</span></div>
+  <div class="hdr-right">
+    <div id="stBar">LISTO</div>
+    <button class="btn-hdr" onclick="toggleTheme()">◐ MODO OSCURO</button>
+  </div>
+</div>
+
+<div id="nav">
+  <button class="ntab on" id="ntab-brief" onclick="showTab('brief')"><span class="nnum">0</span>BRIEF</button>
+  <button class="ntab" id="ntab-diagnostico" onclick="showTab('diagnostico')"><span class="nnum">1</span>DIAGNÓSTICO</button>
+  <button class="ntab" id="ntab-reputacion" onclick="showTab('reputacion')"><span class="nnum">2</span>REPUTACIÓN</button>
+  <button class="ntab" id="ntab-competencia" onclick="showTab('competencia')"><span class="nnum">3</span>COMPETENCIA</button>
+  <button class="ntab" id="ntab-kpis" onclick="showTab('kpis')"><span class="nnum">4</span>KPIs</button>
+  <button class="ntab" id="ntab-protocolo" onclick="showTab('protocolo')"><span class="nnum">5</span>PROTOCOLO</button>
+  <button class="ntab" id="ntab-impacto" onclick="showTab('impacto')"><span class="nnum">6</span>IMPACTO</button>
+  <button class="ntab" id="ntab-pdfprevio" onclick="showTab('pdfprevio')"><span class="nnum">▼</span>PDF PREVIO</button>
+  <button class="ntab" id="ntab-pdfposterior" onclick="showTab('pdfposterior')"><span class="nnum">▼</span>PDF POSTERIOR</button>
+</div>
+
+<div id="body">
+<div id="sidebar">
+
+  <div>
+    <div class="slbl">① Datos del Negocio</div>
+    <div class="fgrp">
+      <div><div class="flbl">Nombre del establecimiento</div><input type="text" id="nombre" placeholder="Ej. Hotel Palacio del Vino"></div>
+      <div><div class="flbl">Tipo de negocio</div>
+        <select id="tipo">
+          <optgroup label="── Alojamiento">
+            <option>Hotel boutique</option>
+            <option>Hotel urbano</option>
+            <option>Hotel rural / agroturismo</option>
+            <option>Hotel de playa / resort</option>
+            <option>Hostal / Pensión</option>
+            <option>Apartamento turístico</option>
+            <option>Casa rural</option>
+            <option>Glamping / Camping</option>
+          </optgroup>
+          <optgroup label="── Restauración">
+            <option>Restaurante gastronómico</option>
+            <option>Restaurante familiar</option>
+            <option>Bar / Café / Bistró</option>
+            <option>Tapas / Pintxos</option>
+            <option>Coctelería / Rooftop bar</option>
+            <option>Pizzería / Italiana</option>
+            <option>Japonés / Sushi</option>
+            <option>Brunch / Desayunos</option>
+            <option>Fast casual</option>
+            <option>Panadería / Pastelería</option>
+          </optgroup>
+          <optgroup label="── Mixto">
+            <option>Hotel con restaurante</option>
+            <option>Hostel con bar</option>
+            <option>Complejo turístico</option>
+          </optgroup>
+        </select></div>
+      <div><div class="flbl">Dirección completa</div><input type="text" id="direccion" placeholder="Ej. Calle Mayor 12, Madrid, España"></div>
+      <div><div class="flbl">Ciudad / País</div><input type="text" id="ciudad" placeholder="Ej. Barcelona, España"></div>
+      <div><div class="flbl">Categoría / Estrellas</div>
+        <select id="categoria">
+          <option>Sin categoría</option>
+          <option>1 estrella / Básico</option>
+          <option>2 estrellas / Económico</option>
+          <option>3 estrellas / Estándar</option>
+          <option>4 estrellas / Superior</option>
+          <option>5 estrellas / Lujo</option>
+          <option>Gran Lujo / GL</option>
+        </select></div>
+      <div><div class="flbl">Web del negocio (si tiene)</div><input type="url" id="web" placeholder="https://..."></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">② Situación Actual</div>
+    <div class="fgrp">
+      <div><div class="flbl">Valoración media actual en Google</div>
+        <select id="valoracion">
+          <option value="1.0">Sin valoraciones / Muy reciente</option>
+          <option value="2.5">Entre 2.0 y 3.0 — Problemático</option>
+          <option value="3.2">Entre 3.0 y 3.5 — Por debajo de la media</option>
+          <option value="3.7">Entre 3.5 y 3.9 — En la media</option>
+          <option value="4.1">Entre 4.0 y 4.3 — Bien</option>
+          <option value="4.5">Entre 4.4 y 4.6 — Muy bien</option>
+          <option value="4.8">Entre 4.7 y 5.0 — Excelente</option>
+        </select></div>
+      <div><div class="flbl">Número aproximado de reseñas en Google</div>
+        <select id="numResenas">
+          <option value="0">Sin reseñas</option>
+          <option value="10">Menos de 20</option>
+          <option value="50">Entre 20 y 100</option>
+          <option value="200">Entre 100 y 300</option>
+          <option value="500">Entre 300 y 700</option>
+          <option value="1000">Entre 700 y 1.500</option>
+          <option value="3000">Más de 1.500</option>
+        </select></div>
+      <div><div class="flbl">Posición estimada en Maps (búsqueda principal)</div>
+        <select id="posicion">
+          <option value="1">Top 3 (Pack Local)</option>
+          <option value="4">Posición 4-7</option>
+          <option value="8">Posición 8-15</option>
+          <option value="16">Posición 16-30</option>
+          <option value="31">Fuera de las primeras 30</option>
+          <option value="0">No aparece / Sin ficha</option>
+        </select></div>
+      <div><div class="flbl">¿Tiene ficha Google Business completa?</div>
+        <select id="fichaGoogle">
+          <option>No tiene ficha o sin reclamar</option>
+          <option>Ficha básica (nombre, dirección)</option>
+          <option>Ficha parcial (algunas fotos, horarios)</option>
+          <option>Ficha completa (descripción, fotos, Q&A)</option>
+          <option>Ficha optimizada con posts y ofertas</option>
+        </select></div>
+      <div><div class="flbl">Dependencia de OTAs (Booking, Expedia...)</div>
+        <select id="otas">
+          <option>Total — más del 80% reservas por OTA</option>
+          <option>Alta — entre el 60-80% por OTA</option>
+          <option>Media — entre el 40-60% por OTA</option>
+          <option>Baja — menos del 40% por OTA</option>
+          <option>No aplica / Restaurante</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">③ Competencia</div>
+    <div class="fgrp">
+      <div><div class="flbl">Competidor principal 1</div><input type="text" id="comp1" placeholder="Nombre del competidor directo"></div>
+      <div><div class="flbl">Competidor principal 2</div><input type="text" id="comp2" placeholder="Nombre del competidor directo"></div>
+      <div><div class="flbl">Competidor principal 3</div><input type="text" id="comp3" placeholder="Nombre del competidor directo"></div>
+      <div><div class="flbl">Radio de competencia (km)</div>
+        <select id="radio">
+          <option value="0.5">500 metros</option>
+          <option value="1">1 km</option>
+          <option value="2">2 km</option>
+          <option value="5">5 km</option>
+          <option value="10">10 km (zona / municipio)</option>
+          <option value="50">Destino completo (provincia)</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">④ Objetivos & Contexto</div>
+    <div class="fgrp">
+      <div><div class="flbl">Objetivo principal</div>
+        <select id="objetivo">
+          <option>Aparecer en el Pack 3 de Google Maps</option>
+          <option>Mejorar valoración media (subir estrellas)</option>
+          <option>Aumentar número de reseñas</option>
+          <option>Reducir dependencia de Booking/Expedia</option>
+          <option>Dominar búsquedas de zona / barrio</option>
+          <option>Recuperar reputación tras crisis</option>
+          <option>Lanzamiento de nuevo establecimiento</option>
+          <option>Superar a competidor específico</option>
+        </select></div>
+      <div><div class="flbl">Información adicional / contexto</div>
+        <textarea id="contexto" placeholder="Historia del establecimiento, problemas específicos, crisis de reputación, cambio de propietario, renovación reciente…" style="min-height:55px"></textarea></div>
+      <div><div class="flbl">Modo de informe</div>
+        <select id="modo">
+          <option value="previo">Solo diagnóstico previo (antes de actuar)</option>
+          <option value="completo">Diagnóstico previo + protocolo completo</option>
+          <option value="posterior">Solo informe de impacto (ya se actuó)</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">⑤ Datos Post-Intervención</div>
+    <div id="postFields" style="display:none">
+      <div class="fgrp">
+        <div><div class="flbl">Nueva valoración tras intervención</div>
+          <select id="valoracionPost">
+            <option value="3.5">3.5 estrellas</option>
+            <option value="3.8">3.8 estrellas</option>
+            <option value="4.0">4.0 estrellas</option>
+            <option value="4.2">4.2 estrellas</option>
+            <option value="4.4">4.4 estrellas</option>
+            <option value="4.6">4.6 estrellas</option>
+            <option value="4.8">4.8 estrellas</option>
+          </select></div>
+        <div><div class="flbl">Nuevas reseñas obtenidas</div><input type="number" id="resenasPost" placeholder="Ej. 45 nuevas reseñas" min="0"></div>
+        <div><div class="flbl">Nueva posición en Maps</div>
+          <select id="posicionPost">
+            <option value="1">Top 3 (Pack Local)</option>
+            <option value="4">Posición 4-7</option>
+            <option value="8">Posición 8-15</option>
+            <option value="16">Posición 16-30</option>
+          </select></div>
+        <div><div class="flbl">Semanas de trabajo realizadas</div><input type="number" id="semanas" placeholder="Ej. 8 semanas" value="8" min="1"></div>
+        <div><div class="flbl">Observaciones post-intervención</div>
+          <textarea id="obsPost" placeholder="Resultados observados, cambios en reservas directas, feedback del cliente…" style="min-height:50px"></textarea></div>
+      </div>
+    </div>
+    <div id="postNote" style="font-size:11px;color:var(--text3);font-style:italic;padding:6px 0">Activa "completo" o "posterior" en Modo de informe para habilitar estos campos.</div>
+  </div>
+
+  <button id="btnGen" onclick="genAll()">◈ ANALIZAR & GENERAR INFORME</button>
+</div>
+
+<div id="content">
+  <div class="welcome" id="welcomeScreen">
+    <div style="font-size:3rem;opacity:.15;color:var(--gold)">◈</div>
+    <h2>AURA LOCAL</h2>
+    <p>Introduce el briefing del establecimiento y la IA investigará su posición en Google, analizará su reputación digital, identificará KPIs clave y desarrollará el protocolo completo de optimización.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px">
+      <span class="badge">Posición Maps</span>
+      <span class="badge">Reputación digital</span>
+      <span class="badge">Análisis reseñas</span>
+      <span class="badge">KPIs completos</span>
+      <span class="badge">Benchmarking</span>
+      <span class="badge">Protocolo acción</span>
+      <span class="badge">Gráficos radar</span>
+      <span class="badge">Gráficos tarta</span>
+      <span class="badge">Gráficos barras</span>
+      <span class="badge">PDF diagnóstico</span>
+      <span class="badge">PDF impacto</span>
+      <span class="badge">Sin límite geográfico</span>
+    </div>
+  </div>
+  <!-- Panels injected by JS -->
+  <div id="panel-diagnostico" style="display:none"></div>
+  <div id="panel-reputacion" style="display:none"></div>
+  <div id="panel-competencia" style="display:none"></div>
+  <div id="panel-kpis" style="display:none"></div>
+  <div id="panel-protocolo" style="display:none"></div>
+  <div id="panel-impacto" style="display:none"></div>
+</div>
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let outs = {}, curTab = 'brief', charts = {};
+let checkState = {};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+
+function renderError(panel, mod, errorMsg, retryFn) {
+  if (!panel) return;
+  panel.style.display = 'flex';
+  panel.style.flexDirection = 'column';
+  panel.style.gap = '14px';
+  panel.innerHTML = `
+    <div class="card" style="border-color:rgba(180,60,40,0.35)">
+      <div class="ch" style="background:rgba(180,60,40,0.10)">
+        <span class="ct" style="color:#c04030">◈ Error al generar</span>
+      </div>
+      <div class="cb" style="text-align:center;padding:28px 20px">
+        <p style="font-size:15px;color:var(--text2);margin-bottom:8px">${errorMsg}</p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;font-family:'DM Mono',monospace">
+          Comprueba la API Key en el ENGINE y vuelve a intentarlo.
+        </p>
+        <button class="btn-gold" onclick="(${retryFn})()" style="font-size:13px;padding:10px 24px">
+          ↺ Reintentar
+        </button>
+      </div>
+    </div>`;
+}
+
+function init(){
+  document.getElementById('modo').addEventListener('change', function(){
+    const v = this.value;
+    const pf = document.getElementById('postFields');
+    const pn = document.getElementById('postNote');
+    if(v === 'completo' || v === 'posterior'){
+      pf.style.display = 'block';
+      pn.style.display = 'none';
+    } else {
+      pf.style.display = 'none';
+      pn.style.display = 'block';
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+// THEME & NAV
+// ══════════════════════════════════════════════
+function toggleTheme(){
+  const html=document.documentElement;
+  const cur=html.getAttribute('data-theme');
+  const eff=cur||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  const next=eff==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  localStorage.setItem('aura_theme',next);
+  const btn=document.querySelector('.btn-hdr');
+  if(btn)btn.textContent=next==='dark'?'☀ MODO CLARO':'◐ MODO OSCURO';
+  // Redraw charts on theme change
+  setTimeout(()=>{ Object.values(charts).forEach(c=>{ if(c&&c.update) c.update(); }); }, 100);
+}
+
+function showTab(id){
+  curTab = id;
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('ntab-'+id)?.classList.add('on');
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+  if(id === 'brief'){
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    return;
+  }
+  if(id === 'pdfprevio'){
+    const p=document.getElementById('panel-pdfprevio');
+    if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';
+    p.innerHTML=`<div class="card"><div class="ch"><span class="ct">◈ Diagnóstico & Plan de Optimización</span></div><div class="cb" style="text-align:center;padding:30px"><p style="font-size:17px;color:var(--gold);margin-bottom:14px">Informe previo listo</p><p style="font-size:14px;color:var(--text2);margin-bottom:20px">Diagnóstico digital · Reputación · Competencia · KPIs · Protocolo · Formato A4 horizontal</p><button class="btn-gold" onclick="generatePDF('previo')" style="font-size:14px;padding:12px 28px">⬇ Descargar Informe Previo</button>
+              <button class="btn-sm" onclick="exportHTMLPrint('interno')" style="margin-left:8px;font-size:12px">◈ Descargar HTML Premium</button></div></div>`;}
+    return;
+  }
+  if(id === 'pdfposterior'){
+    const p=document.getElementById('panel-pdfposterior');
+    if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';
+    p.innerHTML=`<div class="card"><div class="ch"><span class="ct">◈ Informe de Impacto Post-Intervención</span></div><div class="cb" style="text-align:center;padding:30px"><p style="font-size:17px;color:var(--gold);margin-bottom:14px">Informe de impacto listo</p><p style="font-size:14px;color:var(--text2);margin-bottom:20px">Comparativa antes/después · Métricas de impacto · Formato A4 horizontal</p><button class="btn-gold" onclick="generatePDF('posterior')" style="font-size:14px;padding:12px 28px">⬇ Descargar Informe de Impacto</button>
+              <button class="btn-sm" onclick="exportHTMLPrint('interno')" style="margin-left:8px;font-size:12px">◈ Descargar HTML Premium</button></div></div>`;}
+    return;
+  }
+  const panel = document.getElementById('panel-'+id);
+  if(panel){
+    panel.style.display = 'flex';
+    panel.style.flexDirection = 'column';
+    panel.style.gap = '14px';
+  }
+  // Always re-render impacto to reinitialize charts after tab switch
+  if(id === 'impacto' && outs[id]) { renderModule(id, outs[id]); }
+  else if(outs[id]) renderModule(id, outs[id]);
+}
+
+function iTab(btn, pid){
+  btn.closest('.card').querySelectorAll('.itab').forEach(t=>t.classList.remove('on'));
+  btn.closest('.card').querySelectorAll('.ip').forEach(p=>p.classList.remove('show'));
+  btn.classList.add('on');
+  document.getElementById(pid)?.classList.add('show');
+  // Redraw chart if in this panel
+  setTimeout(()=>{ Object.values(charts).forEach(c=>{ if(c&&c.update) c.update(); }); }, 50);
+}
+
+function toggleProto(el){
+  const body = el.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ══════════════════════════════════════════════
+// BRIEF GETTER
+// ══════════════════════════════════════════════
+function getBrief(){
+  return {
+    nombre: document.getElementById('nombre').value.trim() || 'el establecimiento',
+    tipo: document.getElementById('tipo').value,
+    direccion: document.getElementById('direccion').value.trim() || 'sin dirección',
+    ciudad: document.getElementById('ciudad').value.trim() || 'sin ciudad',
+    categoria: document.getElementById('categoria').value,
+    web: document.getElementById('web').value.trim() || 'sin web',
+    valoracion: parseFloat(document.getElementById('valoracion').value),
+    numResenas: parseInt(document.getElementById('numResenas').value),
+    posicion: parseInt(document.getElementById('posicion').value),
+    fichaGoogle: document.getElementById('fichaGoogle').value,
+    otas: document.getElementById('otas').value,
+    comp1: document.getElementById('comp1').value.trim() || 'Competidor A',
+    comp2: document.getElementById('comp2').value.trim() || 'Competidor B',
+    comp3: document.getElementById('comp3').value.trim() || 'Competidor C',
+    radio: document.getElementById('radio').value,
+    objetivo: document.getElementById('objetivo').value,
+    contexto: document.getElementById('contexto').value.trim() || 'Sin información adicional',
+    modo: document.getElementById('modo').value,
+    // POST
+    valoracionPost: parseFloat(document.getElementById('valoracionPost')?.value || 0),
+    resenasPost: parseInt(document.getElementById('resenasPost')?.value || 0),
+    posicionPost: parseInt(document.getElementById('posicionPost')?.value || 0),
+    semanas: parseInt(document.getElementById('semanas')?.value || 8),
+    obsPost: document.getElementById('obsPost')?.value.trim() || '',
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AURA SUITE — MOTOR MULTI-API v2.0 (integrado en AURA LOCAL)
+// Flujo LOCAL: Perplexity (datos reales) → Gemini/Claude (análisis)
+// ══════════════════════════════════════════════════════════════════
+
+window.AURA_ENGINE = (function() {
+
+  let CFG = {
+    claude:     { key: '', model: 'claude-sonnet-4-6' },
+    gemini:     { key: '', model: 'gemini-2.5-flash' },
+    places:     { key: '' },
+    perplexity: { key: '', model: 'sonar' },
+    serp:       { key: '', engine: 'google', country: 'es' },
+    routes:     { local: 'auto' },
+    globalOverride: null,
+  };
+
+  let _stats = { calls: 0, phase1: 0, errors: 0 };
+
+  // ── CONFIG ────────────────────────────────────────────────────
+  function loadConfig() {
+    try {
+      const saved = localStorage.getItem('aura_engine_cfg');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // localStorage tiene prioridad absoluta sobre los defaults de CFG
+        ['claude','gemini','places','perplexity','serp'].forEach(k => {
+          if (parsed[k]) CFG[k] = Object.assign({}, CFG[k], parsed[k]);
+        });
+        if (parsed.routes) CFG.routes = Object.assign({}, CFG.routes, parsed.routes);
+        if (parsed.globalOverride !== undefined) CFG.globalOverride = parsed.globalOverride;
+      }
+    } catch(e) {}
+    _syncUI();
+    _updateEngineBar();
+  }
+
+  function saveConfig(updates) {
+    if (updates) {
+      ['claude','gemini','places','perplexity','serp'].forEach(k => {
+        if (updates[k]) CFG[k] = Object.assign({}, CFG[k], updates[k]);
+      });
+      if (updates.routes) CFG.routes = Object.assign({}, CFG.routes, updates.routes);
+      if (updates.globalOverride !== undefined) CFG.globalOverride = updates.globalOverride;
+    }
+    try { localStorage.setItem('aura_engine_cfg', JSON.stringify(CFG)); } catch(e) {}
+    _updateStatus('Configuración guardada ✓');
+    _syncUI();
+  }
+
+  function setRoute(mod, val) { CFG.routes[mod] = val; saveConfig(); }
+
+  function setGlobalOverride(val) {
+    CFG.globalOverride = val === 'auto' ? null : val;
+    saveConfig();
+    _updateStatus(`Motor global: ${CFG.globalOverride || 'AUTO'}`);
+    _updateEngineBar();
+  }
+
+  function getConfig() { return CFG; }
+
+  // ── ADAPTADOR CLAUDE (llamada directa a Anthropic) ──────────
+  async function _callClaude(prompt, system='', maxTokens=4000) {
+    _chainStep('claude','active');
+    if (!CFG.claude.key) throw new Error('API Key de Claude no configurada. Abre ⚙ ENGINE y guarda tu clave Anthropic.');
+    const body = { model: CFG.claude.model, max_tokens: maxTokens, messages:[{role:'user',content:prompt}] };
+    if (system) body.system = system;
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': CFG.claude.key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error(`Claude ${r.status}`);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || 'Claude error');
+    _chainStep('claude','done');
+    _stats.calls++;
+    return d.content?.[0]?.text || '';
+  }
+
+  // ── ADAPTADOR GEMINI (directo a Google AI Studio) ────────────
+  async function _callGemini(prompt, system='', maxTokens=8192) {
+    _chainStep('gemini','active');
+    if (!CFG.gemini.key) throw new Error('Gemini API Key no configurada.');
+    const model = CFG.gemini.model || 'gemini-2.5-flash';
+    const apiVer = model.startsWith('gemini-2.5') ? 'v1beta' : 'v1';
+    const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${CFG.gemini.key}`;
+    const contents = [];
+    if (system) {
+      contents.push({role:'user', parts:[{text:system}]});
+      contents.push({role:'model', parts:[{text:'Entendido. Procedo.'}]});
+    }
+    contents.push({role:'user', parts:[{text:prompt}]});
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents, generationConfig:{maxOutputTokens:maxTokens, temperature:0.7}})});
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(`Gemini: ${e.error?.message||r.status}`); }
+    const d = await r.json();
+    _chainStep('gemini','done');
+    _stats.calls++;
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  // ── ADAPTADOR PERPLEXITY (búsqueda en tiempo real) ────────────
+  async function _callPerplexity(query, maxTokens=2500) {
+    _chainStep('perplexity','active');
+    if (!CFG.perplexity.key) throw new Error('Perplexity API Key no configurada.');
+    const r = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${CFG.perplexity.key}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: CFG.perplexity.model || 'sonar',
+        max_tokens: maxTokens,
+        return_citations: true,
+        messages: [
+          { role:'system', content:'Eres un analista de negocios y marketing local especializado en hostelería. Proporciona datos actualizados, tendencias del sector, estadísticas de valoraciones, reputación online y posicionamiento en Google Maps. Responde en español con cifras concretas y fuentes cuando sea posible.' },
+          { role:'user', content: query }
+        ]
+      })
+    });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(`Perplexity: ${e.error?.message||r.status}`); }
+    const d = await r.json();
+    _chainStep('perplexity','done');
+    _stats.phase1++;
+    return { text: d.choices?.[0]?.message?.content||'', citations: d.citations||[] };
+  }
+
+  // ── ADAPTADOR SERPAPI (graceful — CORS no bloquea generación) ─
+  async function _callSerpAPI(query, num=8) {
+    _chainStep('serp','active');
+    if (!CFG.serp.key) { _chainStep('serp','done'); return { snippets:'', knowledge:null, raw:{} }; }
+    try {
+      const params = new URLSearchParams({
+        api_key: CFG.serp.key, q: query,
+        engine: CFG.serp.engine||'google', gl: CFG.serp.country||'es', hl:'es', num
+      });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(`https://serpapi.com/search.json?${params}`, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!r.ok) { _chainStep('serp','done'); return { snippets:'', knowledge:null, raw:{} }; }
+      const d = await r.json();
+      _chainStep('serp','done');
+      _stats.phase1++;
+      const snippets = (d.organic_results||[]).slice(0,6).map(x=>`• ${x.title}: ${x.snippet||''}`).join('\n');
+      return { snippets, knowledge: d.knowledge_graph, raw: d };
+    } catch(_) {
+      _chainStep('serp','done');
+      return { snippets:'', knowledge:null, raw:{} };
+    }
+  }
+
+  // ── ADAPTADOR GOOGLE PLACES ──────────────────────────────────
+  async function _callPlaces(businessName, location='') {
+    _chainStep('places','active');
+    if (!CFG.places.key) throw new Error('Places API Key no configurada.');
+    const q = encodeURIComponent(`${businessName} ${location}`);
+    let r;
+    try { r = await fetch(`/.netlify/functions/places?q=${q}`); if (!r.ok) throw 0; }
+    catch(_) { r = await fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=${q}&key=${CFG.places.key}&language=es`); }
+    if (!r.ok) throw new Error(`Places ${r.status}`);
+    const d = await r.json();
+    _chainStep('places','done');
+    _stats.phase1++;
+    const places = (d.results||[]).slice(0,5).map(p=>({
+      name:p.name, rating:p.rating, reviews:p.user_ratings_total,
+      address:p.formatted_address, types:p.types?.slice(0,3).join(', ')
+    }));
+    return { places, total: d.results?.length||0 };
+  }
+
+  // ── FORMATEADOR DE CONTEXTO PLACES ───────────────────────────
+  function _fmtPlaces(data, businessName) {
+    if (!data?.places?.length) return '';
+    const m = data.places[0];
+    let ctx = `\n\n## DATOS REALES — Google Places API\n`;
+    ctx += `**Negocio:** ${m.name}\n`;
+    ctx += `**Valoración:** ${m.rating||'N/D'}/5 (${m.reviews||0} reseñas)\n`;
+    ctx += `**Dirección:** ${m.address||'N/D'}\n`;
+    ctx += `**Categoría:** ${m.types||'N/D'}\n\n`;
+    if (data.places.length > 1) {
+      ctx += `**Competencia directa (datos reales):**\n`;
+      data.places.slice(1).forEach(p => {
+        ctx += `- ${p.name}: ${p.rating||'N/D'}★ (${p.reviews||0} reseñas) — ${p.address||''}\n`;
+      });
+    }
+    return ctx;
+  }
+
+  // ── FUNCIÓN PRINCIPAL callAPI (con chaining inteligente) ──────
+  /**
+   * FLUJO LOCAL:
+   *   1. Perplexity → investiga datos reales del negocio en tiempo real
+   *   2. Places API → extrae datos de Maps (rating, reseñas, competidores)
+   *   3. SerpAPI    → recoge opiniones y presencia web
+   *   4. Gemini/Claude → redacta el análisis estratégico con todo el contexto
+   */
+  async function callAPI(prompt, maxTokens=4000, options={}) {
+    const {
+      module = 'local',
+      phase1Query = null,
+      phase1Type = 'perplexity',
+      businessName = null,
+      location = '',
+      system = '',
+      forceProvider = null,
+    } = options;
+
+    _stats.calls++;
+    // Reset chain indicators
+    ['serp','perplexity','places','claude','gemini'].forEach(s=>_chainStep(s,''));
+
+    // Determinar motor final
+    const override = forceProvider || CFG.globalOverride || CFG.routes[module];
+    const mainProvider = (override && override !== 'auto') ? override : _defaultRoute();
+
+    let researchCtx = '';
+
+    // ── FASE 1: Investigación multi-fuente ────────────────────
+    if (!override || override === 'auto') {
+      // 1a. Perplexity: datos en tiempo real si hay key
+      if (phase1Query && CFG.perplexity.key) {
+        try {
+          _updateStatus(`[1/3] Perplexity investigando: ${phase1Query.slice(0,35)}…`);
+          const { text, citations } = await _callPerplexity(phase1Query);
+          researchCtx += `\n\n## INVESTIGACIÓN EN TIEMPO REAL (Perplexity Sonar)\n${text}`;
+          if (citations.length) researchCtx += `\n\nFuentes: ${citations.slice(0,3).join(', ')}`;
+        } catch(e) {
+          console.warn('AURA LOCAL — Perplexity:', e.message);
+          researchCtx += '\n\n[Perplexity no disponible — continuando con otros motores]';
+        }
+      }
+
+      // 1b. Places API: datos reales de Google Maps
+      if (businessName && CFG.places.key) {
+        try {
+          _updateStatus(`[2/3] Places API: buscando "${businessName}"…`);
+          const placesData = await _callPlaces(businessName, location);
+          researchCtx += _fmtPlaces(placesData, businessName);
+        } catch(e) {
+          console.warn('AURA LOCAL — Places:', e.message);
+        }
+      }
+
+      // 1c. SerpAPI: reseñas y presencia web
+      if (phase1Query && CFG.serp.key) {
+        try {
+          _updateStatus(`[3/3] SerpAPI: reseñas y competencia…`);
+          const { snippets, knowledge } = await _callSerpAPI(`${businessName||''} ${location} reseñas opiniones Google Maps competencia`);
+          researchCtx += `\n\n## PRESENCIA WEB Y RESEÑAS (SerpAPI — datos actuales)\n${snippets}`;
+          if (knowledge?.title) researchCtx += `\n\nFuente: ${knowledge.title} — ${knowledge.description||''}`;
+        } catch(e) {
+          console.warn('AURA LOCAL — SerpAPI:', e.message);
+        }
+      }
+    }
+
+    // Inyectar contexto de investigación al prompt
+    const fullPrompt = researchCtx ? `${prompt}\n${researchCtx}` : prompt;
+    const fullSystem = system || `Eres un consultor de marketing local y analista de hostelería de primer nivel. Tienes acceso a datos reales del negocio. Genera diagnósticos ejecutables, análisis de mercado detallados y estrategias locales concretas. Tu tono es de alta consultoría — preciso, directo y accionable. Responde en español con formato Markdown limpio (##, ###, -, **negrita**). Compatible con pdfMake.`;
+
+    // ── FASE 2: Redacción con el motor principal ──────────────
+    _updateStatus(`Generando análisis con ${mainProvider === 'gemini' ? 'Gemini 1.5 Pro' : 'Claude Sonnet 4'}…`);
+
+    let result;
+    try {
+      result = mainProvider === 'gemini'
+        ? await _callGemini(fullPrompt, fullSystem, maxTokens)
+        : await _callClaude(fullPrompt, fullSystem, maxTokens);
+    } catch(e) {
+      _stats.errors++;
+      // Fallback automático al otro proveedor
+      if (mainProvider !== 'gemini' && CFG.gemini.key) {
+        _updateStatus('Claude no disponible — Gemini como fallback…');
+        result = await _callGemini(fullPrompt, fullSystem, maxTokens);
+      } else if (mainProvider === 'gemini') {
+        _updateStatus('Gemini no disponible — Claude como fallback…');
+        result = await _callClaude(fullPrompt, fullSystem, maxTokens);
+      } else {
+        throw e;
+      }
+    }
+
+    _chainStep('pdf','active');
+    setTimeout(()=>_chainStep('pdf','done'), 600);
+    _updateStatus(`✓ Listo · ${_stats.calls} llamadas · ${Object.keys(researchCtx?{r:1}:{}).length?'datos reales':'modelo base'}`);
+    return result;
+  }
+
+  // ── FUNCIÓN ESPECIALIZADA PARA MÓDULO LOCAL ───────────────────
+  async function callAPIlocal(businessName, location, prompt, maxTokens) {
+    return callAPI(prompt, maxTokens, {
+      module: 'local',
+      phase1Query: `"${businessName}" ${location} Google Maps reseñas valoraciones posicionamiento 2025`,
+      phase1Type: 'perplexity',
+      businessName,
+      location,
+    });
+  }
+
+  // ── HELPERS ───────────────────────────────────────────────────
+  function _defaultRoute() {
+    return CFG.gemini.key ? 'gemini' : 'claude';
+  }
+
+  function _chainStep(step, state) {
+    const el = document.querySelector(`#engine-bar .step-${step}, #chain-${step}`);
+    if (!el) return;
+    el.classList.remove('active','done');
+    if (state) el.classList.add(state);
+    el.style.opacity = state==='active'?'1':state==='done'?'0.6':'0.25';
+  }
+
+  function _updateStatus(msg) {
+    // Engine bar status
+    const es = document.getElementById('engine-status');
+    if (es) es.textContent = msg;
+    // Header status bar
+    const sb = document.getElementById('stBar');
+    if (sb) sb.textContent = msg;
+  }
+
+  function _updateEngineBar() {
+    const sel = document.querySelector('#engine-bar select');
+    if (sel) sel.value = CFG.globalOverride || 'auto';
+    _updateStatus(`LISTO · ${_stats.calls} llamadas · Motor: ${CFG.globalOverride || 'AUTO'}`);
+  }
+
+  function _syncUI() {
+    const fields = {
+      'cfg-claude-key':       CFG.claude.key||'',
+      'cfg-claude-model':     CFG.claude.model,
+      'cfg-claude-endpoint':  CFG.claude.endpoint,
+      'cfg-gemini-key':       CFG.gemini.key||'',
+      'cfg-gemini-model':     CFG.gemini.model,
+      'cfg-places-key':       CFG.places.key||'',
+      'cfg-perplexity-key':   CFG.perplexity.key||'',
+      'cfg-perplexity-model': CFG.perplexity.model,
+      'cfg-serp-key':         CFG.serp.key||'',
+    };
+    Object.entries(fields).forEach(([id,val])=>{ const el=document.getElementById(id); if(el) el.value=val; });
+  }
+
+  // ── API PÚBLICA ───────────────────────────────────────────────
+  return {
+    callAPI,
+    callAPIlocal,
+    loadConfig,
+    saveConfig,
+    setRoute,
+    setGlobalOverride,
+    getConfig,
+    testClaude:     () => _callClaude('Responde solo: "Claude OK"','',20),
+    testGemini:     () => _callGemini('Responde solo: "Gemini OK"','',20),
+    testPerplexity: () => _callPerplexity('¿Cuáles son las tendencias de turismo en España en 2025?', 300),
+    testPlaces:     (n,l) => _callPlaces(n||'Hotel', l||'Madrid'),
+    testSerpAPI:    (q)   => _callSerpAPI(q||'hotel restaurante Madrid reseñas Google Maps', 5),
+    getStats:       () => ({..._stats}),
+  };
+})();
+
+// ══════════════════════════════════════════════
+// PORTABILIDAD — Export/Import entre dispositivos
+// ══════════════════════════════════════════════
+function exportConfig() {
+  try {
+    const cfg = localStorage.getItem('aura_engine_cfg');
+    if (!cfg) { alert('No hay configuración guardada para exportar.'); return; }
+    const blob = new Blob([cfg], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'aura-config.json'; a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Error al exportar: ' + e.message); }
+}
+
+// ══════════════════════════════════════════════════
+// IMPORTAR BRIEFING DE CLIENTE
+// ══════════════════════════════════════════════════
+function importBriefing(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json,application/json';
+  input.onchange=function(e){
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(!d||typeof d!=='object') throw new Error('Archivo JSON no válido');
+        // Detectar si es un briefing de cliente (tiene campo "nombre" o "_version")
+        if(!d.nombre&&!d._version&&!d.empresa) throw new Error('Este archivo no es un Briefing de cliente AURA. Usa el botón ↑ Keys para importar configuración de API.');
+  if(d['nombre']&&document.getElementById('nombre'))document.getElementById('nombre').value=d['nombre'];
+  if(d['tipoNegocio']&&document.getElementById('tipoNegocio'))document.getElementById('tipoNegocio').value=d['tipoNegocio'];
+  if(d['ciudad']&&document.getElementById('ciudad'))document.getElementById('ciudad').value=d['ciudad'];
+  if(d['valoracionGoogle']&&document.getElementById('valoracionGoogle'))document.getElementById('valoracionGoogle').value=d['valoracionGoogle'];
+  if(d['web']&&document.getElementById('web'))document.getElementById('web').value=d['web'];
+  if(d['descripcion']&&document.getElementById('descripcion'))document.getElementById('descripcion').value=d['descripcion'];
+  if(d['objetivoTexto']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivoTexto'];
+  if(d['objetivo']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivo'];
+        // Trigger input events so any listeners update
+        document.querySelectorAll('input,textarea,select').forEach(el=>el.dispatchEvent(new Event('input')));
+        const nombre=d.nombre||d.empresa||'Cliente';
+        alert('✓ Briefing de '+nombre+' importado correctamente.');
+      }catch(err){alert('Error al leer el Briefing: '+err.message);}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function importConfig() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json,application/json';
+  input.onchange = function(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (!parsed || typeof parsed !== 'object') throw new Error('JSON inválido');
+        localStorage.setItem('aura_engine_cfg', JSON.stringify(parsed));
+        alert('✓ Configuración importada. La página se recargará.');
+        location.reload();
+      } catch(err) { alert('Error al importar: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ══════════════════════════════════════════════
+// WRAPPER callAPI → AURA_ENGINE (interfaz LOCAL)
+// Perplexity investiga → Gemini/Claude redacta
+// ══════════════════════════════════════════════
+async function callAPI(prompt, maxTok=4000) {
+  const b = getBrief();
+  return AURA_ENGINE.callAPIlocal(b.nombre, b.ciudad, prompt, maxTok);
+}
+
+// ══════════════════════════════════════════════
+// PROMPTS
+// ══════════════════════════════════════════════
+function getPrompt(mod, b){
+  const ctx = `BRIEFING DEL ESTABLECIMIENTO:
+- Nombre: ${b.nombre}
+- Tipo: ${b.tipo}
+- Dirección: ${b.direccion}
+- Ciudad / País: ${b.ciudad}
+- Categoría: ${b.categoria}
+- Web: ${b.web}
+- Valoración actual Google: ${b.valoracion} estrellas
+- Número de reseñas: ${b.numResenas}
+- Posición en Maps: ${b.posicion === 0 ? 'Sin posicionamiento' : 'posición '+b.posicion}
+- Estado ficha Google Business: ${b.fichaGoogle}
+- Dependencia OTAs: ${b.otas}
+- Competidores: ${b.comp1}, ${b.comp2}, ${b.comp3}
+- Radio de competencia: ${b.radio} km
+- Objetivo principal: ${b.objetivo}
+- Contexto adicional: ${b.contexto}`;
+
+  const P = {
+    diagnostico: `Eres un experto en posicionamiento local en Google Maps para hostelería, con 15 años de experiencia. Investiga y analiza el siguiente establecimiento de hostelería para crear un diagnóstico digital completo.
+
+${ctx}
+
+Genera un diagnóstico exhaustivo en español. Estructura tu respuesta con ## para los títulos y sé muy específico, con datos estimados realistas para el tipo de negocio y ciudad indicados. Responde en secciones ##:
+
+## FICHA TÉCNICA DEL ESTABLECIMIENTO
+Resumen ejecutivo del negocio: tipo, ubicación, segmento de mercado, posicionamiento actual. Contexto del mercado local en ${b.ciudad}.
+
+## POSICIÓN ACTUAL EN GOOGLE MAPS
+Análisis detallado de su posición actual. Búsquedas principales en las que debería aparecer. Búsquedas secundarias y de cola larga. Estimación de búsquedas mensuales relacionadas con su tipo de negocio en ${b.ciudad}. Visibilidad estimada actual (porcentaje de impresiones que captura vs el total disponible).
+
+## ESTADO DE LA FICHA GOOGLE BUSINESS
+Evaluación completa del estado actual: ${b.fichaGoogle}. Elementos que faltan o están incompletos. Impacto de cada elemento en el ranking. Score de optimización estimado (sobre 100). Comparación con lo que debería tener una ficha perfecta para su categoría.
+
+## ANÁLISIS DE AUTORIDAD DIGITAL
+Antigüedad estimada de la presencia digital. Consistencia NAP (Nombre, Dirección, Teléfono) en directorios. Presencia en TripAdvisor, Booking, Yelp, redes sociales. Número de menciones web estimadas. Backlinks locales relevantes estimados.
+
+## DIAGNÓSTICO DE PALABRAS CLAVE
+Las 10 búsquedas más importantes para este establecimiento en ${b.ciudad}. Cuáles está capturando actualmente y cuáles no. Palabras clave de alta conversión que debería dominar. Keywords de intención transaccional (reserva, precio, cerca de...).
+
+## DIAGNÓSTICO DE DEPENDENCIA OTA
+Nivel actual: ${b.otas}. Coste real estimado de las comisiones anuales según el volumen de negocio típico de este tipo de establecimiento. Riesgo estratégico de la dependencia actual. Margen recuperable con reserva directa.
+
+## RESUMEN DIAGNÓSTICO — SEMÁFORO
+Estado de cada área (CRÍTICO / MEJORABLE / BIEN):
+- Posición en Maps
+- Ficha Google Business  
+- Volumen y calidad de reseñas
+- Velocidad de respuesta a reseñas
+- Dependencia OTA
+- Visibilidad orgánica
+- Consistencia NAP
+- Presencia en redes sociales`,
+
+    reputacion: `Eres un especialista en gestión de reputación digital para hostelería con dominio de análisis de sentimiento y gestión de crisis.
+
+${ctx}
+
+Genera un análisis de reputación digital completo en español. Sé específico y realista para el tipo de negocio y valoración indicados. Responde en secciones ##:
+
+## ANÁLISIS DE REPUTACIÓN GLOBAL
+Score de reputación global (sobre 100). Valoración actual: ${b.valoracion}/5 con ${b.numResenas} reseñas. Posición respecto a la media del sector en ${b.ciudad}. Tendencia (¿está mejorando o empeorando?). Velocidad de captación de reseñas (reseñas por mes estimadas).
+
+## DISTRIBUCIÓN DE VALORACIONES (ESTIMADA)
+Basándote en la valoración media de ${b.valoracion} y ${b.numResenas} reseñas, estima la distribución aproximada:
+- 5 estrellas: X% (aproximadamente Y reseñas)
+- 4 estrellas: X%
+- 3 estrellas: X%
+- 2 estrellas: X%
+- 1 estrella: X%
+
+## ANÁLISIS DE SENTIMIENTO DE RESEÑAS
+Identifica los temas más probablemente mencionados positivamente para un ${b.tipo} con esta valoración. Identifica los puntos de dolor más comunes que explican las reseñas negativas. Análisis de las palabras clave más frecuentes en reseñas similares.
+
+## EJEMPLOS DE RESEÑAS TIPO
+Genera 3 ejemplos de reseñas positivas típicas (con estrellas, texto y gestión correcta). Genera 2 ejemplos de reseñas negativas típicas (con respuesta profesional modelo de cómo AURA LOCAL respondería). Genera 1 ejemplo de reseña neutral con respuesta estratégica.
+
+## VELOCIDAD DE RESPUESTA Y PROTOCOLO ACTUAL
+Tiempo de respuesta estimado actual. Calidad de respuestas actuales. Impacto en el ranking de Maps. Comparativa con lo que exige Google para posicionar bien.
+
+## PLATAFORMAS Y CONSISTENCIA
+Estado en TripAdvisor (estimado). Estado en Booking (estimado). Estado en Instagram/Facebook. Discrepancias entre plataformas. Cuál es la plataforma más urgente a optimizar primero.
+
+## PUNTUACIÓN DE CRISIS DE REPUTACIÓN
+Nivel de riesgo actual: bajo / medio / alto / crítico. Si hay señales de crisis de reputación (valoración baja + muchas reseñas negativas recientes). Plan de respuesta inmediato si aplica.`,
+
+    competencia: `Eres un analista de mercado especializado en benchmarking competitivo en Google Maps para hostelería.
+
+${ctx}
+
+Genera un análisis competitivo exhaustivo en español. Inventa datos plausibles y realistas para los competidores en ${b.ciudad}. Responde en secciones ##:
+
+## MAPA COMPETITIVO LOCAL
+Descripción del ecosistema competitivo de ${b.tipo} en ${b.ciudad} en un radio de ${b.radio} km. Número aproximado de competidores directos. Saturación del mercado. Oportunidades de hueco competitivo.
+
+## ANÁLISIS COMPETIDOR POR COMPETIDOR
+Para cada competidor (${b.comp1}, ${b.comp2}, ${b.comp3}), estima:
+- Valoración Google (X.X/5)
+- Número de reseñas
+- Posición en Maps estimada
+- Estado de ficha Google Business
+- Principales fortalezas en su posicionamiento
+- Principales debilidades o brechas
+
+## TABLA COMPARATIVA DE POSICIONAMIENTO
+Crea una comparativa directa en todos los indicadores clave entre ${b.nombre} y sus 3 competidores.
+
+## ANÁLISIS DE BRECHA COMPETITIVA
+En qué indicadores ${b.nombre} está por debajo de la competencia. En qué indicadores tiene ventaja. Brecha de reseñas (cuántas necesita para alcanzar al líder). Brecha de valoración. Tiempo estimado para alcanzar al líder si ejecuta el protocolo.
+
+## ESTRATEGIA DIFERENCIAL
+Ángulo único de posicionamiento que ${b.nombre} puede explotar y que los competidores no tienen. Palabras clave y nichos donde puede ganar terreno rápido. Quick wins para superar a ${b.comp1} en menos de 90 días.
+
+## BENCHMARK DE SECTOR
+Valoración media del sector ${b.tipo} en mercados similares. Número de reseñas considerado "mínimo competitivo" en ${b.ciudad}. Pack 3 de Google Maps para las búsquedas clave: ¿quiénes lo ocupan y por qué?`,
+
+    kpis: `Eres un especialista en analítica digital y medición de resultados para hostelería con Google Maps.
+
+${ctx}
+
+Genera el framework completo de KPIs en español con datos concretos y realistas. Responde en secciones ##:
+
+## KPIs DE VISIBILIDAD EN GOOGLE MAPS
+Define los KPIs clave con el valor ACTUAL estimado y el TARGET a 90 días y 6 meses para ${b.nombre}:
+- Posición media en Maps (búsqueda principal)
+- Impresiones mensuales en Maps (estimado)
+- Tasa de clic desde Maps
+- Solicitudes de ruta/dirección mensuales (estimado)
+- Llamadas desde Maps mensuales (estimado)
+- Visitas web desde Google Maps (estimado)
+
+## KPIs DE REPUTACIÓN
+- Valoración media Google: ACTUAL ${b.valoracion} → TARGET
+- Número total reseñas: ACTUAL ${b.numResenas} → TARGET
+- Velocidad de nuevas reseñas: ACTUAL → TARGET
+- Tasa de respuesta a reseñas: ACTUAL → TARGET
+- Tiempo medio de respuesta: ACTUAL → TARGET
+- % Reseñas negativas respondidas: ACTUAL → TARGET
+- Score NPS estimado: ACTUAL → TARGET
+
+## KPIs DE FICHA GOOGLE BUSINESS
+- Score de optimización (sobre 100): ACTUAL → TARGET
+- Número de fotos: ACTUAL → TARGET
+- Posts publicados último mes: ACTUAL → TARGET
+- % preguntas Q&A respondidas: ACTUAL → TARGET
+- Categorías configuradas: ACTUAL → TARGET
+
+## KPIs DE NEGOCIO
+- % Reservas directas vs OTA: ACTUAL → TARGET
+- Comisión OTA mensual estimada: ACTUAL → recuperar TARGET €
+- Tráfico orgánico web desde Google Maps
+- Conversión visita Maps → reserva/contacto
+
+## CUADRO DE MANDO — DASHBOARD COMPLETO
+Define un dashboard mensual con los 12 métricas más importantes que AURA LOCAL debe monitorizar, con semáforo RAG (Rojo/Ámbar/Verde) y frecuencia de medición de cada una.
+
+## METODOLOGÍA DE MEDICIÓN
+Cómo medir cada KPI. Herramientas gratuitas y de pago. Frecuencia recomendada de reporting. Cómo crear el informe mensual para el cliente.`,
+
+    protocolo: `Eres el director de estrategia de AURA LOCAL, el servicio de optimización de Google Maps de AURA CABINET para hostelería. Tu objetivo es diseñar el protocolo de actuación completo y ejecutable.
+
+${ctx}
+
+Genera el protocolo de intervención completo en español. Sé muy específico con acciones concretas. Responde en secciones ##:
+
+## FASE 0 — SEMANA 1: AUDITORÍA Y PREPARACIÓN
+Todas las acciones de auditoría técnica antes de actuar. Configuración de herramientas de seguimiento. Establecimiento de baseline de métricas. Acceso y configuración de cuentas.
+
+## FASE 1 — SEMANAS 1-2: OPTIMIZACIÓN DE FICHA GOOGLE BUSINESS
+Acciones específicas en orden de prioridad para optimizar la ficha Google Business de ${b.nombre}. Para cada acción: qué hacer, cómo hacerlo, impacto esperado en ranking.
+Incluir: nombre, categorías, descripción, atributos, horarios, fotos, Q&A, productos/servicios.
+
+## FASE 2 — SEMANAS 2-4: ESTRATEGIA DE RESEÑAS
+Protocolo completo para aumentar reseñas de ${b.numResenas} hacia el target. Sistema de captación de reseñas en el establecimiento. Scripts exactos de solicitud (por email, WhatsApp, en persona, QR). Protocolo de respuesta a reseñas positivas (plantilla). Protocolo de respuesta a reseñas negativas (plantilla). Estrategia para gestionar reseñas falsas o malintencionadas.
+
+## FASE 3 — SEMANAS 3-6: SEÑALES LOCALES Y AUTORIDAD
+Construcción de señales locales: citas NAP, directorios. Lista de los 15 directorios más importantes para dar de alta ${b.nombre}. Estrategia de link building local. Colaboraciones con negocios locales complementarios. Gestión de otras plataformas (TripAdvisor, Yelp, etc.).
+
+## FASE 4 — SEMANAS 4-8: CONTENIDO Y PUBLICACIONES
+Calendario de posts en Google Business (12 posts mensuales tipo). Tipos de contenido que mejoran el ranking. Temporadas, eventos locales y búsquedas de oportunidad. Estrategia de fotos (cuántas, qué tipo, frecuencia de subida). Atributos y datos que pocos establecimientos configuran.
+
+## FASE 5 — SEMANAS 6-12: REDUCCIÓN DEPENDENCIA OTA
+Si aplica: estrategia para aumentar reservas directas. Acciones específicas para ${b.nombre}. Cómo usar Google Hotel Ads / Google para Restaurantes. Motor de reservas directo si no tiene. Incentivos para reserva directa.
+
+## FASE 6 — MANTENIMIENTO MENSUAL
+Rutina mensual de mantenimiento (4 horas/mes). Reporting mensual al cliente. Alertas y monitorización. Cuándo se necesita intervención urgente.
+
+## CRONOGRAMA VISUAL
+Resumen semana a semana de las primeras 12 semanas de intervención. Con hitos clave y resultados esperados en cada momento.
+
+## ACCIONES DE IMPACTO INMEDIATO (Quick Wins)
+Las 5 acciones que se pueden ejecutar HOY y que dan resultados en 7-14 días.`,
+
+    impacto: `Eres el director de reporting de AURA LOCAL. Tu función es generar el informe de impacto post-intervención comparando el antes y el después.
+
+${ctx}
+
+DATOS POST-INTERVENCIÓN:
+- Nueva valoración: ${b.valoracionPost}/5 (antes: ${b.valoracion}/5)
+- Nuevas reseñas obtenidas: +${b.resenasPost} (total aprox: ${b.numResenas + b.resenasPost})
+- Nueva posición Maps: ${b.posicionPost} (antes: ${b.posicion || 'sin posición'})
+- Semanas de trabajo: ${b.semanas}
+- Observaciones: ${b.obsPost || 'Sin observaciones adicionales'}
+
+Genera el informe de impacto completo en español. Responde en secciones ##:
+
+## RESUMEN EJECUTIVO DE IMPACTO
+Descripción de la transformación en 3-4 párrafos. Logros principales. Contexto del periodo de trabajo (${b.semanas} semanas).
+
+## COMPARATIVA ANTES / DESPUÉS
+Tabla detallada de cada métrica: valor antes, valor después, variación absoluta, variación porcentual. Incluir: valoración, reseñas, posición, estimación de impresiones, clics, llamadas, solicitudes de ruta.
+
+## ANÁLISIS DE MEJORA POR FASE
+Qué acciones del protocolo tuvieron más impacto. Qué acciones aún no han llegado a su pleno efecto. Aprendizajes del proceso.
+
+## IMPACTO ECONÓMICO ESTIMADO
+Con los datos de mejora de posición y reputación, estima el impacto económico:
+- Aumento de visibilidad estimado (más búsquedas que llegan al establecimiento)
+- Tráfico adicional estimado por mes
+- Conversiones adicionales estimadas
+- Reducción de comisiones OTA si aplica
+- ROI de la intervención de AURA LOCAL
+
+## ESTADO ACTUAL VS COMPETENCIA
+Dónde está ${b.nombre} ahora frente a ${b.comp1}, ${b.comp2}, ${b.comp3}. Posición relativa alcanzada. Próximos objetivos competitivos.
+
+## ACCIONES PENDIENTES Y PRÓXIMOS PASOS
+Lo que queda por hacer para seguir mejorando. Nuevos objetivos para los próximos 3-6 meses. Mantenimiento recomendado. Si se recomienda continuar con el servicio mensual.
+
+## VALORACIÓN DEL CLIENTE (PROYECTADA)
+Proyección de valoración y reseñas a 6 y 12 meses si se mantiene el ritmo actual. Cuándo se espera alcanzar el Pack 3 de Google si aún no se ha logrado.`
+  };
+  return P[mod] || `Analiza el establecimiento ${b.nombre} en ${b.ciudad}. Tipo: ${b.tipo}. Responde en español con análisis detallado.`;
+}
+
+// ══════════════════════════════════════════════
+// MD PARSER
+// ══════════════════════════════════════════════
+function md(t){
+  if(!t) return '';
+  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^### (.+)$/gm,'<h4 style="color:var(--gold);margin:10px 0 4px;font-size:13px;font-weight:500">$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+
+// ══════════════════════════════════════════════
+// CHART HELPERS
+// ══════════════════════════════════════════════
+function getChartColors(){
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    gold: isDark ? '#d4a843' : '#7a5c0f',
+    goldArr: isDark ? ['rgba(212,168,67,0.8)','rgba(212,168,67,0.6)','rgba(212,168,67,0.4)','rgba(212,168,67,0.3)','rgba(212,168,67,0.2)'] : ['rgba(122,92,15,0.85)','rgba(122,92,15,0.65)','rgba(122,92,15,0.45)','rgba(122,92,15,0.3)','rgba(122,92,15,0.15)'],
+    text: isDark ? '#f0ece2' : '#0d0b07',
+    text2: isDark ? '#b89860' : '#5a4828',
+    grid: isDark ? 'rgba(212,168,67,0.08)' : 'rgba(122,92,15,0.1)',
+    danger: '#8b3a2a',
+    success: '#2d6a4f',
+    palette: ['#7a5c0f','#2d6a4f','#1a3a5c','#8b3a2a','#5a4828','#3a5c7a'],
+  };
+}
+
+function destroyChart(id){
+  if(charts[id]){ charts[id].destroy(); delete charts[id]; }
+}
+
+function makeRadarChart(canvasId, labels, datasets){
+  destroyChart(canvasId);
+  const c = getChartColors();
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type: 'radar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: c.text, font: { family: 'DM Mono', size: 10 } } } },
+      scales: {
+        r: {
+          beginAtZero: true, max: 100,
+          grid: { color: c.grid },
+          ticks: { color: c.text2, font: { family: 'DM Mono', size: 8 }, backdropColor: 'transparent', stepSize: 20 },
+          pointLabels: { color: c.text, font: { family: 'DM Mono', size: 9 } }
+        }
+      }
+    }
+  });
+}
+
+function makePieChart(canvasId, labels, data, colors){
+  destroyChart(canvasId);
+  const c = getChartColors();
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors || c.palette, borderWidth: 1, borderColor: 'transparent' }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: c.text, font: { family: 'DM Mono', size: 10 } } } },
+      cutout: '55%'
+    }
+  });
+}
+
+function makeBarChart(canvasId, labels, datasets, horizontal=false){
+  destroyChart(canvasId);
+  const c = getChartColors();
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type: horizontal ? 'bar' : 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      indexAxis: horizontal ? 'y' : 'x',
+      plugins: { legend: { labels: { color: c.text, font: { family: 'DM Mono', size: 10 } } } },
+      scales: {
+        x: { grid: { color: c.grid }, ticks: { color: c.text2, font: { family: 'DM Mono', size: 9 } } },
+        y: { grid: { color: c.grid }, ticks: { color: c.text2, font: { family: 'DM Mono', size: 9 } } }
+      }
+    }
+  });
+}
+
+function makeLineChart(canvasId, labels, datasets){
+  destroyChart(canvasId);
+  const c = getChartColors();
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if(!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { labels: { color: c.text, font: { family: 'DM Mono', size: 10 } } } },
+      scales: {
+        x: { grid: { color: c.grid }, ticks: { color: c.text2, font: { family: 'DM Mono', size: 9 } } },
+        y: { grid: { color: c.grid }, ticks: { color: c.text2, font: { family: 'DM Mono', size: 9 } } }
+      },
+      elements: { line: { tension: 0.3 } }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+// RENDER MODULES
+// ══════════════════════════════════════════════
+function _cleanAIText(text){
+  // Eliminar intro conversacional de la IA antes del primer ##
+  if(!text) return '';
+  const cleaned = text.replace(/^[\s\S]*?(?=## )/,'').trim();
+
+  return cleaned || text;
+}
+
+function renderModule(mod, text){
+  const panel = document.getElementById('panel-'+mod);
+  if(!panel) return;
+
+  if(mod === 'diagnostico') renderDiagnostico(panel, text);
+  else if(mod === 'reputacion') renderReputacion(panel, text);
+  else if(mod === 'competencia') renderCompetencia(panel, text);
+  else if(mod === 'kpis') renderKpis(panel, text);
+  else if(mod === 'protocolo') renderProtocolo(panel, text);
+  else if(mod === 'impacto') renderImpacto(panel, text);
+}
+
+function renderDiagnostico(panel, text){
+  text = _cleanAIText(text);
+  const b = getBrief();
+  const c = getChartColors();
+  const scores = {
+    'Posición Maps': b.posicion === 0 ? 5 : b.posicion === 1 ? 95 : b.posicion <= 3 ? 85 : b.posicion <= 7 ? 60 : b.posicion <= 15 ? 35 : 15,
+    'Ficha Google': b.fichaGoogle.includes('optimizada') ? 95 : b.fichaGoogle.includes('completa') ? 75 : b.fichaGoogle.includes('parcial') ? 45 : b.fichaGoogle.includes('básica') ? 25 : 5,
+    'Reseñas Vol.': Math.min(95, Math.round(b.numResenas / 30 * 10)),
+    'Valoración': Math.round((b.valoracion - 1) / 4 * 100),
+    'Dep. Directa': b.otas.includes('No aplica') ? 70 : b.otas.includes('Total') ? 10 : b.otas.includes('Alta') ? 25 : b.otas.includes('Media') ? 50 : 75,
+    'Visibilidad': Math.max(10, Math.round(100 - b.posicion * 3)),
+  };
+
+  const semaphore = (val) => val >= 70 ? 'ok' : val >= 40 ? 'warn' : 'danger';
+  const semLabel = (val) => val >= 70 ? 'BIEN' : val >= 40 ? 'MEJORABLE' : 'CRÍTICO';
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Diagnóstico Digital — ${b.nombre}</span>
+      <span class="badge tag-diag">DIAGNÓSTICO PREVIO</span></div>
+    <div class="met-grid">
+      <div class="met ${semaphore(scores['Posición Maps'])}">
+        <div class="mn ${scores['Posición Maps']>=70?'green':scores['Posición Maps']>=40?'':'red'}">${b.posicion===0?'—':b.posicion===1?'#1':b.posicion<=3?'Top3':'#'+b.posicion}</div>
+        <div class="ml">Posición Maps</div>
+        <div class="msub">${semLabel(scores['Posición Maps'])}</div>
+      </div>
+      <div class="met ${semaphore(scores['Ficha Google'])}">
+        <div class="mn">${scores['Ficha Google']}</div>
+        <div class="ml">Score Ficha /100</div>
+        <div class="msub">${semLabel(scores['Ficha Google'])}</div>
+      </div>
+      <div class="met ${semaphore(scores['Valoración'])}">
+        <div class="mn">${b.valoracion}</div>
+        <div class="ml">★ Valoración</div>
+        <div class="msub">${semLabel(scores['Valoración'])}</div>
+      </div>
+      <div class="met ${semaphore(scores['Reseñas Vol.'])}">
+        <div class="mn">${b.numResenas}</div>
+        <div class="ml">Reseñas Google</div>
+        <div class="msub">${semLabel(scores['Reseñas Vol.'])}</div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="chart-title">Radar de Visibilidad Digital</div>
+        <canvas id="chartRadar"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Estado por Área — Semáforo</div>
+        <canvas id="chartSemaforo"></canvas>
+      </div>
+    </div>
+    <div class="pbar-wrap" style="margin-top:10px">
+      ${Object.entries(scores).map(([k,v])=>`
+      <div class="pbar-item">
+        <div class="pbar-label"><span>${k}</span><span>${v}/100 <span class="badge ${semaphore(v)}">${semLabel(v)}</span></span></div>
+        <div class="pbar"><div class="pbar-fill ${v>=70?'green':v<40?'red':''}" style="width:${v}%"></div></div>
+      </div>`).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Análisis Completo IA</span><button class="btn-sm" onclick="copyText('diagTxt')">COPIAR</button></div>
+    <div class="cb" id="diagTxt"><p>${md(text)}</p></div>
+  </div>`;
+
+  setTimeout(()=>{
+    makeRadarChart('chartRadar',
+      Object.keys(scores),
+      [{
+        label: b.nombre,
+        data: Object.values(scores),
+        backgroundColor: 'rgba(122,92,15,0.15)',
+        borderColor: c.gold, borderWidth: 2, pointBackgroundColor: c.gold, pointRadius: 4
+      }]
+    );
+    makeBarChart('chartSemaforo',
+      Object.keys(scores),
+      [{
+        label: 'Score actual',
+        data: Object.values(scores),
+        backgroundColor: Object.values(scores).map(v => v>=70?'rgba(45,106,79,0.7)':v>=40?'rgba(122,92,15,0.6)':'rgba(139,58,42,0.7)'),
+        borderWidth: 0
+      }]
+    );
+  }, 100);
+}
+
+function renderReputacion(panel, text){
+  text = _cleanAIText(text);
+  const b = getBrief();
+  // Estimate star distribution
+  const totalResenas = b.numResenas || 10;
+  const avg = b.valoracion;
+  let dist = [0,0,0,0,0]; // 1,2,3,4,5
+  if(avg >= 4.5){ dist=[2,3,5,20,70]; }
+  else if(avg >= 4.0){ dist=[3,5,10,32,50]; }
+  else if(avg >= 3.5){ dist=[5,8,18,37,32]; }
+  else if(avg >= 3.0){ dist=[8,12,28,30,22]; }
+  else { dist=[20,22,25,20,13]; }
+  const counts = dist.map(p=>Math.round(totalResenas*p/100));
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Análisis de Reputación — ${b.nombre}</span>
+      <span class="badge tag-diag">DIAGNÓSTICO PREVIO</span></div>
+    <div class="met-grid">
+      <div class="met">
+        <div class="mn">${b.valoracion}</div>
+        <div class="ml">⭐ Google Rating</div>
+        <div class="msub">Actual</div>
+      </div>
+      <div class="met">
+        <div class="mn">${b.numResenas}</div>
+        <div class="ml">Total Reseñas</div>
+        <div class="msub">Google Maps</div>
+      </div>
+      <div class="met ${b.valoracion>=4.3?'ok':b.valoracion>=3.7?'warn':'danger'}">
+        <div class="mn ${b.valoracion>=4.3?'green':b.valoracion<3.5?'red':''}">${b.valoracion>=4.3?'TOP':'MED'}</div>
+        <div class="ml">Posición Sector</div>
+        <div class="msub">${b.valoracion>=4.3?'Por encima media':b.valoracion>=3.7?'En la media':'Por debajo media'}</div>
+      </div>
+      <div class="met">
+        <div class="mn">${Math.round(totalResenas/(12))||'<1'}</div>
+        <div class="ml">Reseñas/mes</div>
+        <div class="msub">Ritmo estimado</div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="chart-title">Distribución de Estrellas</div>
+        <canvas id="chartEstrellas"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Volumen de Reseñas (Proyección 12 meses)</div>
+        <canvas id="chartProyeccion"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Análisis IA — Reputación y Sentimiento</span><button class="btn-sm" onclick="copyText('repTxt')">COPIAR</button></div>
+    <div class="cb" id="repTxt"><p>${md(text)}</p></div>
+  </div>`;
+
+  setTimeout(()=>{
+    const c = getChartColors();
+    makePieChart('chartEstrellas',
+      ['⭐⭐⭐⭐⭐','⭐⭐⭐⭐','⭐⭐⭐','⭐⭐','⭐'],
+      counts.slice().reverse(),
+      ['rgba(45,106,79,0.8)','rgba(122,92,15,0.7)','rgba(122,92,15,0.4)','rgba(139,58,42,0.5)','rgba(139,58,42,0.8)']
+    );
+    // Projection: current + 10 per month
+    const months = ['Hoy','1m','2m','3m','6m','12m'];
+    const baseR = b.numResenas;
+    const proj = [baseR, baseR+10, baseR+22, baseR+36, baseR+80, baseR+180];
+    makeLineChart('chartProyeccion', months, [{
+      label: 'Reseñas acumuladas',
+      data: proj, fill: true,
+      backgroundColor: 'rgba(122,92,15,0.1)',
+      borderColor: c.gold, borderWidth: 2, pointBackgroundColor: c.gold, pointRadius: 4
+    }]);
+  }, 100);
+}
+
+function renderCompetencia(panel, text){
+  text = _cleanAIText(text);
+  const b = getBrief();
+  const comps = [b.comp1, b.comp2, b.comp3];
+  const c = getChartColors();
+
+  // Estimate competitor data
+  const estVal = [4.3, 4.1, 4.6];
+  const estRes = [280, 150, 420];
+  const estPos = [2, 5, 1];
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Análisis Competitivo — Radio ${b.radio} km · ${b.ciudad}</span>
+      <span class="badge tag-diag">BENCHMARKING</span></div>
+    <div style="overflow-x:auto;padding:14px 16px">
+      <table class="comp-table">
+        <thead><tr>
+          <th>Establecimiento</th><th>Rating Google</th><th>Nº Reseñas</th><th>Posición Maps</th><th>Estado Ficha</th>
+        </tr></thead>
+        <tbody>
+          <tr class="own-row"><td>${b.nombre}</td><td>${b.valoracion} ⭐</td><td>${b.numResenas}</td><td>${b.posicion===0?'Sin pos.':b.posicion<=3?'Top 3 ✓':'#'+b.posicion}</td><td>${b.fichaGoogle.split(' ')[0]}</td></tr>
+          ${comps.map((comp,i)=>`<tr><td>${comp}</td><td>${estVal[i]} ⭐</td><td>~${estRes[i]}</td><td>${estPos[i]<=3?'Top 3':'#'+estPos[i]}</td><td>Optimizada</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="chart-title">Comparativa Rating Google</div>
+        <canvas id="chartCompRating"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Volumen de Reseñas vs Competencia</div>
+        <canvas id="chartCompResenas"></canvas>
+      </div>
+    </div>
+    <div class="chart-full">
+      <div class="chart-title">Radar Competitivo — Visibilidad Digital Global</div>
+      <canvas id="chartCompRadar"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Análisis IA — Benchmarking Detallado</span><button class="btn-sm" onclick="copyText('compTxt')">COPIAR</button></div>
+    <div class="cb" id="compTxt"><p>${md(text)}</p></div>
+  </div>`;
+
+  setTimeout(()=>{
+    const labels = [b.nombre, ...comps];
+    const ratings = [b.valoracion, ...estVal];
+    const resenas = [b.numResenas, ...estRes];
+
+    makeBarChart('chartCompRating', labels, [{
+      label: 'Rating Google',
+      data: ratings,
+      backgroundColor: [c.gold, ...Array(3).fill('rgba(122,92,15,0.35)')],
+      borderWidth: 0
+    }]);
+
+    makeBarChart('chartCompResenas', labels, [{
+      label: 'Número de reseñas',
+      data: resenas,
+      backgroundColor: [c.gold, ...Array(3).fill('rgba(122,92,15,0.35)')],
+      borderWidth: 0
+    }]);
+
+    makeRadarChart('chartCompRadar',
+      ['Rating','Reseñas','Posición Maps','Ficha GBP','Visibilidad','Respuesta'],
+      [
+        {
+          label: b.nombre,
+          data: [b.valoracion*20, Math.min(100,b.numResenas/5), 100-Math.min(95,b.posicion*6), 40, 30, 20],
+          backgroundColor:'rgba(122,92,15,0.15)', borderColor:c.gold, borderWidth:2, pointRadius:4, pointBackgroundColor:c.gold
+        },
+        {
+          label: comps[0],
+          data:[estVal[0]*20, Math.min(100,estRes[0]/5), 100-estPos[0]*6, 70, 65, 60],
+          backgroundColor:'rgba(26,58,92,0.1)', borderColor:'#1a3a5c', borderWidth:1.5, pointRadius:3, pointBackgroundColor:'#1a3a5c'
+        },
+        {
+          label: comps[2],
+          data:[estVal[2]*20, Math.min(100,estRes[2]/5), 100-estPos[2]*6, 85, 80, 75],
+          backgroundColor:'rgba(45,106,79,0.1)', borderColor:'#2d6a4f', borderWidth:1.5, pointRadius:3, pointBackgroundColor:'#2d6a4f'
+        }
+      ]
+    );
+  }, 100);
+}
+
+function renderKpis(panel, text){
+  text = _cleanAIText(text);
+  const b = getBrief();
+  const c = getChartColors();
+
+  // Current vs targets
+  const kpiData = {
+    'Rating Google': { cur: b.valoracion, tgt: Math.min(5, b.valoracion+0.5), unit:'★', max:5 },
+    'Reseñas totales': { cur: b.numResenas, tgt: b.numResenas+150, unit:'', max: b.numResenas+300 },
+    'Impresiones/mes': { cur: b.posicion===0?0:Math.round(5000/(b.posicion||10)), tgt: Math.round(5000/(Math.max(1,b.posicion-3)||3)), unit:'', max:5000 },
+    'Clics desde Maps': { cur: Math.round(b.numResenas*0.8), tgt: Math.round(b.numResenas*2.5), unit:'', max:b.numResenas*5 },
+  };
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ KPIs & Dashboard de Medición — ${b.nombre}</span>
+      <span class="badge tag-diag">MÉTRICAS</span></div>
+    <div class="met-grid">
+      <div class="met">
+        <div class="mn">${b.valoracion}</div><div class="ml">Rating Actual</div>
+        <div class="msub">Target: ${Math.min(5,b.valoracion+0.5)} ⭐</div>
+      </div>
+      <div class="met">
+        <div class="mn">${b.numResenas}</div><div class="ml">Reseñas Actuales</div>
+        <div class="msub">Target 90d: ${b.numResenas+50}</div>
+      </div>
+      <div class="met">
+        <div class="mn">${b.posicion===0?'—':b.posicion<=3?'T3':'#'+b.posicion}</div><div class="ml">Posición Maps</div>
+        <div class="msub">Target: Top 3</div>
+      </div>
+      <div class="met">
+        <div class="mn">${b.otas.includes('Total')?'80%':b.otas.includes('Alta')?'70%':b.otas.includes('Media')?'50%':'35%'}</div>
+        <div class="ml">% Via OTA</div>
+        <div class="msub">Target: reducir -20pp</div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="chart-title">Actual vs Target (90 días)</div>
+        <canvas id="chartKpiBar"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Evolución Rating Proyectada</div>
+        <canvas id="chartKpiLine"></canvas>
+      </div>
+    </div>
+    <div class="pbar-wrap" style="margin-top:12px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;padding:6px 0;border-bottom:1px solid var(--border2);margin-bottom:8px">Progreso hacia targets</div>
+      ${Object.entries(kpiData).map(([k,v])=>{
+        const pct = Math.round(Math.min(100, v.cur/v.max*100));
+        const tpct = Math.round(Math.min(100, v.tgt/v.max*100));
+        return `<div class="pbar-item">
+          <div class="pbar-label"><span>${k}</span><span>${v.cur}${v.unit} → ${v.tgt}${v.unit}</span></div>
+          <div class="pbar" style="background:var(--border2);position:relative">
+            <div class="pbar-fill" style="width:${tpct}%;background:rgba(122,92,15,0.2);position:absolute;top:0;left:0;height:100%"></div>
+            <div class="pbar-fill" style="width:${pct}%;background:var(--gold);position:relative;z-index:1"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Framework KPIs Completo IA</span><button class="btn-sm" onclick="copyText('kpiTxt')">COPIAR</button></div>
+    <div class="cb" id="kpiTxt"><p>${md(text)}</p></div>
+  </div>`;
+
+  setTimeout(()=>{
+    makeBarChart('chartKpiBar',
+      ['Rating','Reseñas/100','Score Ficha','Resp. Reseñas'],
+      [
+        { label:'Actual', data:[b.valoracion*20, Math.min(100,b.numResenas), 45, 30], backgroundColor:'rgba(122,92,15,0.5)', borderWidth:0 },
+        { label:'Target 90d', data:[Math.min(100,(b.valoracion+0.4)*20), Math.min(100,b.numResenas+50), 85, 80], backgroundColor:'rgba(122,92,15,0.2)', borderWidth:0 }
+      ]
+    );
+    const months = ['M0','M1','M2','M3','M4','M5','M6'];
+    const step = 0.08;
+    const ratingProj = months.map((_,i)=>Math.min(5, parseFloat((b.valoracion+step*i).toFixed(2))));
+    makeLineChart('chartKpiLine', months, [{
+      label:'Rating proyectado',
+      data: ratingProj,
+      fill: true,
+      backgroundColor:'rgba(122,92,15,0.08)',
+      borderColor:c.gold, borderWidth:2, pointBackgroundColor:c.gold, pointRadius:4
+    }]);
+  }, 100);
+}
+
+function renderProtocolo(panel, text){
+  text = _cleanAIText(text);
+  const b = getBrief();
+  let checkCount = {};
+
+  const phases = [
+    {key:'f0', label:'FASE 0 — Auditoría y preparación', tag:'tag-diag', weeks:'Semana 1'},
+    {key:'f1', label:'FASE 1 — Ficha Google Business', tag:'tag-proto', weeks:'Semanas 1-2'},
+    {key:'f2', label:'FASE 2 — Estrategia de reseñas', tag:'tag-proto', weeks:'Semanas 2-4'},
+    {key:'f3', label:'FASE 3 — Señales locales y autoridad', tag:'tag-proto', weeks:'Semanas 3-6'},
+    {key:'f4', label:'FASE 4 — Contenido y publicaciones', tag:'tag-proto', weeks:'Semanas 4-8'},
+    {key:'f5', label:'FASE 5 — Reducción dependencia OTA', tag:'tag-proto', weeks:'Semanas 6-12'},
+    {key:'f6', label:'FASE 6 — Mantenimiento mensual', tag:'tag-impact', weeks:'Mensual'},
+  ];
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Protocolo de Intervención — ${b.nombre}</span>
+      <span class="badge tag-proto">PLAN DE ACCIÓN</span></div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="chart-title">Distribución del Esfuerzo por Fase</div>
+        <canvas id="chartProtoEsfuerzo"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Impacto Esperado por Fase</div>
+        <canvas id="chartProtoImpacto"></canvas>
+      </div>
+    </div>
+    ${phases.map(ph=>`
+    <div class="proto-phase">
+      <div class="proto-head" onclick="toggleProto(this)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="phase-tag ${ph.tag}">${ph.weeks}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase">${ph.label}</span>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">▾</span>
+      </div>
+      <div class="proto-body" id="pb-${ph.key}">
+        <div style="font-size:12px;color:var(--text2);font-style:italic;padding:8px 0">
+          Despliega para ver las acciones específicas generadas por IA para ${b.nombre}.
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Protocolo Completo IA — Texto Íntegro</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn-sm" onclick="copyText('protoTxt')">COPIAR</button>
+      </div>
+    </div>
+    <div class="cb" id="protoTxt"><p>${md(text)}</p></div>
+  </div>`;
+
+  setTimeout(()=>{
+    const c = getChartColors();
+    makePieChart('chartProtoEsfuerzo',
+      ['Auditoría','Ficha GBP','Reseñas','Señales Loc.','Contenido','OTA / Directo','Mantenimiento'],
+      [10,20,25,15,15,10,5],
+      ['rgba(122,92,15,0.9)','rgba(122,92,15,0.75)','rgba(122,92,15,0.6)','rgba(122,92,15,0.45)','rgba(122,92,15,0.3)','rgba(26,58,92,0.6)','rgba(45,106,79,0.6)']
+    );
+    makeBarChart('chartProtoImpacto',
+      ['Ficha GBP','Reseñas','Señales','Contenido','OTA'],
+      [{
+        label:'Impacto en Ranking (estimado)',
+        data:[35,30,15,12,8],
+        backgroundColor:['rgba(122,92,15,0.85)','rgba(122,92,15,0.7)','rgba(122,92,15,0.55)','rgba(122,92,15,0.4)','rgba(26,58,92,0.5)'],
+        borderWidth:0
+      }]
+    );
+  }, 100);
+}
+
+function renderImpacto(panel, text){
+  text = _cleanAIText(text);
+  const b = getBrief();
+  const c = getChartColors();
+  const hasPost = b.valoracionPost > 0 && b.resenasPost > 0;
+
+  const valBefore = b.valoracion;
+  const valAfter = hasPost ? b.valoracionPost : Math.min(5, b.valoracion + 0.4);
+  const resBefore = b.numResenas;
+  const resAfter = hasPost ? b.numResenas + b.resenasPost : b.numResenas + 45;
+  const posBefore = b.posicion || 20;
+  const posAfter = hasPost ? b.posicionPost : Math.max(1, posBefore - 5);
+  const semanas = b.semanas || 8;
+
+  const valChange = (valAfter - valBefore).toFixed(2);
+  const resChange = resAfter - resBefore;
+  const posChange = posBefore - posAfter;
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Informe de Impacto — ${b.nombre}</span>
+      <span class="badge tag-impact">RESULTADOS POST-INTERVENCIÓN</span></div>
+    <div class="delta-grid">
+      <div class="delta">
+        <div class="delta-num up">+${valChange}</div>
+        <div class="delta-lbl">Mejora Rating ⭐</div>
+        <div class="msub">${valBefore} → ${valAfter}</div>
+      </div>
+      <div class="delta">
+        <div class="delta-num up">+${resChange}</div>
+        <div class="delta-lbl">Nuevas Reseñas</div>
+        <div class="msub">${resBefore} → ${resAfter} total</div>
+      </div>
+      <div class="delta">
+        <div class="delta-num up">${posChange>=0?'+':''}${posChange}</div>
+        <div class="delta-lbl">Posiciones Ganadas</div>
+        <div class="msub">#${posBefore} → #${posAfter}</div>
+      </div>
+    </div>
+    <div class="ba-grid">
+      <div class="ba-col">
+        <div class="ba-head before">◉ ANTES</div>
+        <div class="ba-item"><span>Rating Google</span><span class="ba-val before">${valBefore} ⭐</span></div>
+        <div class="ba-item"><span>Reseñas totales</span><span class="ba-val before">${resBefore}</span></div>
+        <div class="ba-item"><span>Posición Maps</span><span class="ba-val before">#${posBefore}</span></div>
+        <div class="ba-item"><span>Ficha GBP</span><span class="ba-val before">${b.fichaGoogle.split('(')[0].trim()}</span></div>
+        <div class="ba-item"><span>Periodo</span><span class="ba-val before">Antes de AURA LOCAL</span></div>
+      </div>
+      <div class="ba-col">
+        <div class="ba-head after">◉ DESPUÉS</div>
+        <div class="ba-item"><span>Rating Google</span><span class="ba-val after">${valAfter} ⭐</span></div>
+        <div class="ba-item"><span>Reseñas totales</span><span class="ba-val after">${resAfter}</span></div>
+        <div class="ba-item"><span>Posición Maps</span><span class="ba-val after">#${posAfter} ${posAfter<=3?'✓ Pack 3':''}</span></div>
+        <div class="ba-item"><span>Ficha GBP</span><span class="ba-val after">Optimizada ✓</span></div>
+        <div class="ba-item"><span>Periodo</span><span class="ba-val after">${semanas} semanas con AURA</span></div>
+      </div>
+    </div>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <div class="chart-title">Evolución Rating — Antes / Después</div>
+        <canvas id="chartImpRating"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Crecimiento de Reseñas</div>
+        <canvas id="chartImpResenas"></canvas>
+      </div>
+    </div>
+    <div class="chart-full">
+      <div class="chart-title">Radar de Visibilidad — Transformación Digital</div>
+      <canvas id="chartImpRadar"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ch"><span class="ct">Análisis de Impacto Completo IA</span><button class="btn-sm" onclick="copyText('impTxt')">COPIAR</button></div>
+    <div class="cb" id="impTxt"><p>${md(text)}</p></div>
+  </div>`;
+
+  setTimeout(()=>{
+    const meses = Array.from({length:semanas>4?6:4},(_,i)=>`Sem ${i+1}`);
+    const ratingEvol = meses.map((_,i)=>Math.min(valAfter, parseFloat((valBefore + (valAfter-valBefore)*(i/(meses.length-1))).toFixed(2))));
+    const resenasEvol = meses.map((_,i)=>Math.round(resBefore + resChange*(i/(meses.length-1))));
+
+    makeLineChart('chartImpRating', meses, [
+      {label:'Rating', data:ratingEvol, fill:true, backgroundColor:'rgba(45,106,79,0.1)', borderColor:'#2d6a4f', borderWidth:2, pointRadius:4, pointBackgroundColor:'#2d6a4f'}
+    ]);
+    makeBarChart('chartImpResenas', meses, [{
+      label:'Reseñas acumuladas',
+      data: resenasEvol,
+      backgroundColor:'rgba(122,92,15,0.6)',
+      borderWidth:0
+    }]);
+    makeRadarChart('chartImpRadar',
+      ['Rating','Reseñas','Posición Maps','Ficha GBP','Visibilidad','Resp. Reseñas'],
+      [
+        {
+          label:'Antes',
+          data:[valBefore*20, Math.min(100,resBefore/5), 100-Math.min(95,posBefore*5), 40, 30, 20],
+          backgroundColor:'rgba(139,58,42,0.1)', borderColor:'#8b3a2a', borderWidth:2, pointRadius:4, pointBackgroundColor:'#8b3a2a'
+        },
+        {
+          label:'Después',
+          data:[valAfter*20, Math.min(100,resAfter/5), 100-Math.min(95,posAfter*5), 90, 80, 85],
+          backgroundColor:'rgba(45,106,79,0.1)', borderColor:'#2d6a4f', borderWidth:2, pointRadius:4, pointBackgroundColor:'#2d6a4f'
+        }
+      ]
+    );
+  }, 100);
+}
+
+// ══════════════════════════════════════════════
+// COPY
+// ══════════════════════════════════════════════
+function copyText(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    const btn = el.closest?.('.card')?.querySelector('.btn-sm');
+    if(btn){ const o=btn.textContent; btn.textContent='✓'; setTimeout(()=>btn.textContent=o,2000); }
+  });
+}
+
+// ══════════════════════════════════════════════
+// PDF GENERATION
+// ══════════════════════════════════════════════
+function generatePDF(tipo){
+  const b = getBrief();
+  if(Object.keys(outs).length === 0){ alert('Genera los módulos primero.'); showTab('brief'); return; }
+
+  const GOLD='#7a5c0f', DARK='#0d0b07', GRAY='#8a7040', CREAM='#faf5e8', LIGHT='#ede6d5';
+  const GREEN='#2d6a4f', RED='#8b3a2a';
+  const isPrevio = tipo === 'previo';
+
+  function cleanText(t){ return (t||'').replace(/<[^>]+>/g,'').replace(/\*\*(.+?)\*\*/g,'$1').trim(); }
+  function textToContent(text){
+    const sections=[];
+    const clean=cleanText(text);
+    const secs=clean.split(/^## /m).filter(s=>s.trim());
+    secs.forEach(sec=>{
+      const nl=sec.indexOf('\n');
+      const title=(nl>-1?sec.slice(0,nl):sec).trim();
+      const body=(nl>-1?sec.slice(nl+1):'').trim();
+      const items=[];
+      if(title)items.push({text:title,style:'subheading',margin:[0,0,0,5]});
+      body.split('\n').forEach(line=>{
+        line=line.trim();if(!line)return;
+        if(line.startsWith('###'))items.push({text:line.replace(/^###\s*/,''),style:'subsubheading',margin:[0,5,0,2]});
+        else if(line.startsWith('-')||line.startsWith('•'))items.push({text:'• '+line.replace(/^[-•]\s*/,''),style:'bodyText',margin:[12,2,0,2]});
+        else items.push({text:line,style:'bodyText',margin:[0,2,0,2]});
+      });
+      if(items.length)sections.push({stack:items,unbreakable:true,margin:[0,0,0,12]});
+    });
+    return sections;
+  }
+
+  const content = [];
+
+  // COVER
+  const fecha = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  content.push({stack:[
+    {text:'\n\n\n\n\n\n\n\n'},
+    {text:'AURA LOCAL',style:'coverTitle'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+    {text:isPrevio?'DIAGNÓSTICO & PLAN DE OPTIMIZACIÓN':'INFORME DE IMPACTO POST-INTERVENCIÓN', style:'coverSubtitle'},
+    {text:'\n\n\n'},
+    {text:b.nombre.toUpperCase(), style:'coverCompany'},
+    {text:b.tipo+' · '+b.ciudad, style:'coverProduct'},
+    {text:'\n\n'},
+    {table:{widths:[150,580],body:[
+      [{text:'Tipo negocio',style:'tLabel'},{text:b.tipo,style:'tVal'}],
+      [{text:'Dirección',style:'tLabel'},{text:b.direccion,style:'tVal'}],
+      [{text:'Ciudad / País',style:'tLabel'},{text:b.ciudad,style:'tVal'}],
+      [{text:'Categoría',style:'tLabel'},{text:b.categoria,style:'tVal'}],
+      [{text:'Objetivo',style:'tLabel'},{text:b.objetivo,style:'tVal'}],
+      [{text:'Fecha informe',style:'tLabel'},{text:fecha,style:'tVal'}],
+    ]},layout:{fillColor:(r)=>r%2===0?CREAM:LIGHT,hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7}},
+    {text:'\n\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:'#d4c090'}]},{text:'\n'},
+    {text:'Elaborado por AURA LOCAL · AURA CABINET', style:'coverFooter'},
+    {text:'optimizacion.aura-cabinet.com · optimizacion@aura-cabinet.com', style:'coverFooter'},
+  ],pageBreak:'after'});
+
+  // ESTADO ACTUAL (previo)
+  if(isPrevio && outs.diagnostico){
+    content.push({stack:[
+      {text:'DIAGNÓSTICO DIGITAL', style:'sectionTitle'},
+      {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+      // Semáforo visual
+      {table:{widths:[280,140,160,140],dontBreakRows:true,body:[
+        [{text:'ÁREA',style:'thdr'},{text:'ESTADO',style:'thdr'},{text:'SCORE',style:'thdr'},{text:'URGENCIA',style:'thdr'}],
+        ['Posición Google Maps',{text:b.posicion<=3?'BIEN':'CRÍTICO',color:b.posicion<=3?GREEN:RED},{text:b.posicion<=3?'85/100':'15/100',style:'bodyText'},{text:b.posicion<=3?'—':'INMEDIATA',color:b.posicion<=3?GREEN:RED}],
+        ['Ficha Google Business',{text:b.fichaGoogle.includes('optimizada')?'BIEN':'MEJORABLE',color:b.fichaGoogle.includes('optimizada')?GREEN:GOLD},{text:'45/100',style:'bodyText'},{text:'ALTA',color:GOLD}],
+        ['Volumen de reseñas',{text:b.numResenas>200?'BIEN':b.numResenas>50?'MEJORABLE':'CRÍTICO',color:b.numResenas>200?GREEN:b.numResenas>50?GOLD:RED},{text:Math.min(100,Math.round(b.numResenas/3))+'/100',style:'bodyText'},{text:b.numResenas<50?'INMEDIATA':'MEDIA',color:b.numResenas<50?RED:GOLD}],
+        ['Valoración media',{text:b.valoracion>=4.3?'BIEN':b.valoracion>=3.7?'MEJORABLE':'CRÍTICO',color:b.valoracion>=4.3?GREEN:b.valoracion>=3.7?GOLD:RED},{text:Math.round(b.valoracion/5*100)+'/100',style:'bodyText'},{text:'ALTA',color:GOLD}],
+        ['Dependencia OTA',{text:b.otas.includes('Baja')||b.otas.includes('No aplica')?'BIEN':b.otas.includes('Media')?'MEJORABLE':'CRÍTICO',color:b.otas.includes('Baja')||b.otas.includes('No aplica')?GREEN:b.otas.includes('Media')?GOLD:RED},{text:b.otas.includes('Total')?'10/100':b.otas.includes('Alta')?'25/100':'60/100',style:'bodyText'},{text:b.otas.includes('Total')?'INMEDIATA':'MEDIA',color:b.otas.includes('Total')?RED:GOLD}],
+      ]},layout:{fillColor:(r)=>r===0?GOLD:r%2===0?CREAM:'white',hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7}},
+      {text:'\n'},
+      ...textToContent(outs.diagnostico),
+    ],pageBreak:'after'});
+  }
+
+  // ADD MODULES
+  const modsPrevio = ['reputacion','competencia','kpis','protocolo'];
+  const modsPost = ['impacto'];
+  const modsToAdd = isPrevio ? modsPrevio : modsPost;
+
+  const modTitles = {
+    diagnostico: 'DIAGNÓSTICO DIGITAL',
+    reputacion: 'ANÁLISIS DE REPUTACIÓN',
+    competencia: 'BENCHMARKING COMPETITIVO',
+    kpis: 'KPIs & DASHBOARD DE MEDICIÓN',
+    protocolo: 'PROTOCOLO DE INTERVENCIÓN',
+    impacto: 'INFORME DE IMPACTO POST-INTERVENCIÓN',
+  };
+
+  modsToAdd.forEach(mod=>{
+    if(!outs[mod]) return;
+    content.push({stack:[
+      {text:modTitles[mod]||mod.toUpperCase(), style:'sectionTitle'},
+      {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+      ...textToContent(outs[mod]),
+    ],pageBreak:'after'});
+  });
+
+  // IMPACTO TABLE (posterior)
+  if(!isPrevio && outs.impacto){
+    const valAfter = b.valoracionPost || Math.min(5,b.valoracion+0.4);
+    const resAfter = b.numResenas + (b.resenasPost||45);
+    content.push({stack:[
+      {text:'COMPARATIVA ANTES / DESPUÉS', style:'sectionTitle'},
+      {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+      {table:{widths:[240,140,160,162],dontBreakRows:true,body:[
+        [{text:'MÉTRICA',style:'thdr'},{text:'ANTES',style:'thdr'},{text:'DESPUÉS',style:'thdr'},{text:'VARIACIÓN',style:'thdr'}],
+        ['Rating Google',{text:b.valoracion+'⭐',style:'bodyText'},{text:valAfter+'⭐',style:'bodyText',color:GREEN},{text:'+'+((valAfter-b.valoracion).toFixed(2)),color:GREEN}],
+        ['Reseñas totales',{text:''+b.numResenas,style:'bodyText'},{text:''+resAfter,style:'bodyText',color:GREEN},{text:'+'+(resAfter-b.numResenas),color:GREEN}],
+        ['Posición Maps',{text:'#'+(b.posicion||'>30'),style:'bodyText'},{text:'#'+(b.posicionPost||Math.max(1,(b.posicion||20)-5)),style:'bodyText',color:GREEN},{text:b.posicion>0?'+'+(b.posicion-(b.posicionPost||Math.max(1,b.posicion-5)))+' pos.':'—',color:GREEN}],
+        ['Ficha GBP',{text:b.fichaGoogle.split('(')[0],style:'bodyText'},{text:'Optimizada ✓',style:'bodyText',color:GREEN},{text:'Completada',color:GREEN}],
+        ['Semanas trabajo',{text:'0',style:'bodyText'},{text:''+b.semanas,style:'bodyText'},{text:b.semanas+' semanas',style:'bodyText'}],
+      ]},layout:{fillColor:(r)=>r===0?GOLD:r%2===0?CREAM:'white',hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7}},
+    ],pageBreak:'after'});
+  }
+
+  // CLOSING
+  content.push({stack:[
+    {text:'\n\n\n\n\n\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+    {text:isPrevio?'Transformamos tu visibilidad en reservas directas.':'La visibilidad ya no es opcional — es el negocio.', style:'closingTitle'},
+    {text:'\n'},
+    {text:isPrevio?'AURA LOCAL interviene sobre los factores exactos que Google utiliza para posicionar negocios de hostelería. Sin tecnicismos. Sin promesas vacías. Solo resultados medibles.':'Gracias por confiar en AURA LOCAL. Este informe refleja el trabajo realizado y el camino recorrido. Los datos hablan.', style:'closingBody'},
+    {text:'\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:'#d4c090'}]},{text:'\n'},
+    {text:'AURA CABINET · optimizacion.aura-cabinet.com · optimizacion@aura-cabinet.com', style:'closingFooter', alignment:'center'},
+  ]});
+
+  const docDef = {
+    content,
+    styles:{
+      coverTitle:    {fontSize:42,bold:true,color:GOLD,margin:[0,0,0,8]},
+      coverSubtitle: {fontSize:10,color:GRAY,margin:[0,0,0,22]},
+      coverCompany:  {fontSize:22,bold:true,color:DARK,margin:[0,0,0,5]},
+      coverProduct:  {fontSize:13,color:GRAY,italics:true,margin:[0,0,0,18]},
+      coverFooter:   {fontSize:8,color:GRAY,italics:true,margin:[0,3,0,0]},
+      sectionTitle:  {fontSize:17,bold:true,color:GOLD,margin:[0,12,0,6]},
+      subheading:    {fontSize:13,bold:true,color:DARK,margin:[0,8,0,4]},
+      subsubheading: {fontSize:11,bold:true,color:GOLD,margin:[0,6,0,3]},
+      bodyText:      {fontSize:11,color:DARK,lineHeight:1.65,margin:[0,1,0,2]},
+      bodyItalic:    {fontSize:11,color:GRAY,italics:true,lineHeight:1.6},
+      bullet:        {fontSize:11,color:DARK,lineHeight:1.6,margin:[8,1,0,1]},
+      tLabel:        {fontSize:9,bold:true,color:GOLD},
+      tVal:          {fontSize:9,color:DARK},
+      thdr:          {fontSize:9,bold:true,color:'#ffffff'},
+      tCell:         {fontSize:9,color:DARK,lineHeight:1.4},
+      questionText:  {fontSize:10,bold:true,color:GOLD,margin:[0,5,0,1]},
+      answerText:    {fontSize:10,color:DARK,italics:true,margin:[0,0,0,6]},
+      closingTitle:  {fontSize:14,italics:true,color:DARK,alignment:'center',margin:[0,20,0,6]},
+      closingBody:   {fontSize:10,color:GRAY,alignment:'center',margin:[0,0,0,4]},
+      closingFooter: {fontSize:8,color:GRAY,alignment:'center'},
+      kpiNum:        {fontSize:26,bold:true,color:GOLD,alignment:'center'},
+      kpiLabel:      {fontSize:9,color:GRAY,alignment:'center',margin:[0,3,0,0]},
+    },
+    defaultStyle:{font:'Helvetica',fontSize:12},
+    pageSize:'A4', pageOrientation:'landscape',
+    pageMargins:[40,50,40,35],
+    footer:(page,pages)=>({
+      columns:[
+        {text:`AURA LOCAL · ${isPrevio?'Diagnóstico Previo':'Informe de Impacto'} · ${b.nombre}`,fontSize:9,color:GRAY,margin:[40,0,0,0]},
+        {text:`Pág. ${page} / ${pages}`,fontSize:9,color:GRAY,alignment:'right',margin:[0,0,40,0]}
+      ],margin:[0,4,0,0]
+    }),
+    info:{title:`AURA LOCAL — ${tipo==='previo'?'Diagnóstico':'Impacto'} — ${b.nombre}`, author:'AURA LOCAL · AURA CABINET'}
+  };
+
+  const fn = `AURA-LOCAL-${tipo.toUpperCase()}-${(b.nombre||'Negocio').replace(/\s+/g,'-')}-${new Date().toISOString().slice(0,10)}.pdf`;
+  pdfMake.fonts=Object.assign(pdfMake.fonts||{},{Helvetica:{normal:"Helvetica",bold:"Helvetica-Bold",italics:"Helvetica-Oblique",bolditalics:"Helvetica-BoldOblique"}});
+  pdfMake.createPdf(docDef).download(fn);
+}
+
+// ══════════════════════════════════════════════
+// MAIN GENERATOR
+// ══════════════════════════════════════════════
+async function genAll(){
+  const nombre = document.getElementById('nombre').value.trim();
+  if(!nombre){ alert('Añade el nombre del establecimiento.'); return; }
+
+  const b = getBrief();
+  const modo = b.modo;
+
+  let modsToGen = [];
+  if(modo === 'previo'){ modsToGen = ['diagnostico','reputacion','competencia','kpis','protocolo']; }
+  else if(modo === 'completo'){ modsToGen = ['diagnostico','reputacion','competencia','kpis','protocolo','impacto']; }
+  else if(modo === 'posterior'){ modsToGen = ['impacto']; }
+
+  document.getElementById('btnGen').disabled = true;
+  document.getElementById('welcomeScreen').style.display = 'none';
+  outs = {};
+
+  const firstTab = modsToGen[0];
+  showTab(firstTab);
+
+  const cfg = AURA_ENGINE.getConfig();
+  const hasPerplexity = !!cfg.perplexity?.key;
+  const hasPlaces = !!cfg.places?.key;
+  const hasGemini = !!cfg.gemini?.key;
+
+  for(const mod of modsToGen){
+    document.getElementById('stBar').textContent = 'ANALIZANDO ' + mod.toUpperCase() + '…';
+    const panel = document.getElementById('panel-'+mod);
+    if(panel && curTab === mod){
+      panel.innerHTML = `
+        <div class="loading">
+          <div class="ring"></div>
+          <p class="ltxt">Analizando <strong>${mod}</strong>…</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+            ${hasPerplexity ? '<span class="badge-provider bp-perplexity"><span class="bp-dot"></span>Investigando con Perplexity</span>' : ''}
+            ${hasPlaces ? '<span class="badge-provider bp-places"><span class="bp-dot"></span>Google Places</span>' : ''}
+            <span class="badge-provider ${hasGemini?'bp-gemini':'bp-claude'}"><span class="bp-dot"></span>${hasGemini?'Gemini redacta':'Claude redacta'}</span>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin-top:10px;font-style:italic">
+            ${hasPerplexity ? 'Buscando datos reales en tiempo real…' : 'Analizando con conocimiento del modelo…'}
+          </p>
+        </div>`;
+    }
+    try {
+      const tok = ['protocolo','diagnostico','reputacion','competencia'].includes(mod) ? 4500 : 4000;
+      const text = await callAPI(getPrompt(mod, b), tok);
+      outs[mod] = text;
+      renderModule(mod, text);
+    } catch(e){
+      outs[mod] = '## Error\n'+e.message;
+      if(panel){
+        panel.style.display='flex';panel.style.flexDirection='column';
+        panel.innerHTML = `<div class="card" style="border-color:rgba(180,60,40,.35)"><div class="ch" style="background:rgba(180,60,40,.10)"><span class="ct" style="color:#c04030">◈ Error en ${MTIT[mod]||mod}</span></div><div class="cb" style="text-align:center;padding:24px">
+          <code style="font-family:'DM Mono',monospace;font-size:11px;background:rgba(139,58,42,0.1);padding:6px 10px;border-radius:3px;display:block;margin-bottom:14px;word-break:break-all">${e.message}</code>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:14px">
+            Si dice <em>401</em>/<em>403</em>: API Key incorrecta · Si dice <em>529</em>: API saturada, espera 30s
+          </div>
+          <div style="display:flex;gap:8px;justify-content:center">
+            <button onclick="genAll()" style="background:var(--gold);color:#fff;border:none;padding:7px 18px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;border-radius:3px;letter-spacing:.1em">↺ REINTENTAR</button>
+            <a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:7px 14px;font-family:'DM Mono',monospace;font-size:9px;border-radius:3px;letter-spacing:.1em;text-decoration:none">⚙ ENGINE</a>
+          </div>
+        </div></div>`;
+      }
+    }
+  }
+
+  document.getElementById('btnGen').disabled = false;
+  const stats = AURA_ENGINE.getStats();
+  document.getElementById('stBar').textContent = `LISTO ✓ — ${Object.keys(outs).length} módulos · ${stats.calls} llamadas API`;
+}
+
+init();
+AURA_ENGINE.loadConfig();
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CONFIG PANEL — overlay modal
+══════════════════════════════════════════════════════════════ -->
+<div id="cfg-overlay">
+  <div id="cfg-panel">
+    <button class="cfg-close" onclick="closeCfg()">✕ CERRAR</button>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.14em;color:var(--gold);margin-bottom:4px">AURA ENGINE — CONFIGURACIÓN</div>
+    <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.14em;margin-bottom:8px">API KEYS · MODELOS · RUTAS · FLUJO LOCAL</div>
+    <div style="margin-bottom:10px">
+      <a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.1em;text-decoration:underline">⚙ Abrir Motor Multi-API Central →</a>
+    </div>
+    <div style="background:rgba(139,58,42,0.07);border:1px solid rgba(139,58,42,0.25);padding:8px 12px;border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;color:var(--danger);line-height:1.5;margin-bottom:14px">
+      ⚠ Las claves se guardan solo en localStorage de tu navegador. No se envían a ningún servidor externo.
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;color:var(--text3);text-transform:uppercase;margin-bottom:8px">
+      Flujo LOCAL: <span class="badge-provider bp-perplexity"><span class="bp-dot"></span>Perplexity</span> datos reales →
+      <span class="badge-provider bp-places"><span class="bp-dot"></span>Places</span> Maps →
+      <span class="badge-provider bp-serp"><span class="bp-dot"></span>SerpAPI</span> reseñas →
+      <span class="badge-provider bp-gemini"><span class="bp-dot"></span>Gemini</span> / <span class="badge-provider bp-claude"><span class="bp-dot"></span>Claude</span> análisis
+    </div>
+
+    <div class="cfg-grid">
+      <!-- CLAUDE -->
+      <div class="cfg-section">
+        <div class="cfg-slbl"><span class="badge-provider bp-claude"><span class="bp-dot"></span>CLAUDE — Anthropic</span></div>
+        <div class="cfg-fgrp">
+          <div><div class="cfg-flbl">API Key (directo) o dejar vacío para usar endpoint Netlify</div>
+            <input type="password" id="cfg-claude-key" placeholder="sk-ant-api03-… (opcional si usas Netlify)"></div>
+          <div><div class="cfg-flbl">Modelo</div>
+            <select id="cfg-claude-model">
+              <option value="claude-sonnet-4-20250514">claude-sonnet-4-20250514 (Recomendado)</option>
+              <option value="claude-opus-4-6">claude-opus-4-6 (Premium)</option>
+              <option value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001 (Rápido)</option>
+            </select></div>
+          <div><div class="cfg-flbl">Endpoint Netlify</div>
+            <input type="text" id="cfg-claude-endpoint" placeholder="Solo necesario con proxy Netlify" value=""></div>
+          <button class="cfg-test" onclick="testEngine('claude')">▶ Probar Claude</button>
+          <div class="cfg-result" id="cfg-result-claude"></div>
+        </div>
+      </div>
+
+      <!-- GEMINI -->
+      <div class="cfg-section">
+        <div class="cfg-slbl"><span class="badge-provider bp-gemini"><span class="bp-dot"></span>GEMINI — Google AI Studio</span></div>
+        <div class="cfg-fgrp">
+          <div><div class="cfg-flbl">API Key</div>
+            <input type="password" id="cfg-gemini-key" placeholder="AIzaSy…"></div>
+          <div><div class="cfg-flbl">Modelo</div>
+            <select id="cfg-gemini-model">
+              <option value="gemini-1.5-pro">gemini-1.5-pro (Análisis extenso)</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash (Rápido)</option>
+              <option value="gemini-2.0-flash">gemini-2.0-flash (Más reciente)</option>
+            </select></div>
+          <div><div class="cfg-flbl">Places API Key</div>
+            <input type="password" id="cfg-places-key" placeholder="AIzaSy… (puede coincidir con Gemini)"></div>
+          <button class="cfg-test" onclick="testEngine('gemini')">▶ Probar Gemini</button>
+          <div class="cfg-result" id="cfg-result-gemini"></div>
+        </div>
+      </div>
+
+      <!-- PERPLEXITY -->
+      <div class="cfg-section">
+        <div class="cfg-slbl"><span class="badge-provider bp-perplexity"><span class="bp-dot"></span>PERPLEXITY — Sonar (fase 1)</span></div>
+        <div class="cfg-fgrp">
+          <div><div class="cfg-flbl">API Key — <strong>necesaria para datos en tiempo real</strong></div>
+            <input type="password" id="cfg-perplexity-key" placeholder="pplx-…"></div>
+          <div><div class="cfg-flbl">Modelo</div>
+            <select id="cfg-perplexity-model">
+              <option value="sonar">sonar (General)</option>
+              <option value="sonar-pro">sonar-pro (Premium)</option>
+              <option value="sonar-reasoning">sonar-reasoning (Razonamiento)</option>
+            </select></div>
+          <button class="cfg-test" onclick="testEngine('perplexity')">▶ Probar Perplexity</button>
+          <div class="cfg-result" id="cfg-result-perplexity"></div>
+        </div>
+      </div>
+
+      <!-- SERPAPI -->
+      <div class="cfg-section">
+        <div class="cfg-slbl"><span class="badge-provider bp-serp"><span class="bp-dot"></span>SERPAPI — búsqueda web</span></div>
+        <div class="cfg-fgrp">
+          <div><div class="cfg-flbl">API Key</div>
+            <input type="password" id="cfg-serp-key" placeholder="30eb4f…"></div>
+          <div><div class="cfg-flbl">País por defecto</div>
+            <input type="text" id="cfg-serp-country" value="es" placeholder="es, mx, us, fr, de…"></div>
+          <div><div class="cfg-flbl">Motor de búsqueda</div>
+            <select id="cfg-serp-engine">
+              <option value="google">Google</option>
+              <option value="bing">Bing</option>
+            </select></div>
+          <button class="cfg-test" onclick="testEngine('serp')">▶ Probar SerpAPI</button>
+          <div class="cfg-result" id="cfg-result-serp"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;border:1px solid var(--border2);border-radius:3px;padding:12px">
+      <div class="cfg-slbl">Motor principal para módulo LOCAL</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text2)">Fase 2 — Redacción:</span>
+        <select id="cfg-route-local" onchange="AURA_ENGINE.setRoute('local',this.value)" style="width:auto;font-size:11px;padding:4px 8px">
+          <option value="auto">AUTO — Gemini si disponible, Claude si no</option>
+          <option value="gemini">Forzar Gemini 1.5 Pro</option>
+          <option value="claude">Forzar Claude Sonnet 4</option>
+        </select>
+      </div>
+    </div>
+
+
+    <div style="margin-top:14px;border:1px solid var(--border2);border-radius:3px;padding:12px;background:var(--card2)">
+      <div class="cfg-slbl" style="margin-bottom:8px">◈ PORTABILIDAD — Llevar configuración a otro dispositivo</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.6">
+        Exporta tus API Keys como archivo JSON. Impórtalo en cualquier dispositivo o navegador para no tener que reconfigurar.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="cfg-save-btn" onclick="exportConfig()" style="flex:1;background:transparent;border:1px solid var(--gold);color:var(--gold)">↓ Exportar configuración (.json)</button>
+        <button class="cfg-save-btn" onclick="importConfig()" style="flex:1">↑ Importar configuración (.json)</button>
+      </div>
+    </div>
+    <button class="cfg-save-btn" onclick="saveCfgPanel()">◈ GUARDAR CONFIGURACIÓN</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     ENGINE BAR — widget fijo inferior (PASO 4)
+══════════════════════════════════════════════════════════════ -->
+<div id="engine-bar">
+  <div class="engine-dot"></div>
+  <div class="engine-label">Motor:</div>
+  <select class="engine-select" onchange="AURA_ENGINE.setGlobalOverride(this.value)">
+    <option value="auto">AUTO (por módulo)</option>
+    <option value="gemini">Gemini 1.5 Pro</option>
+    <option value="claude">Claude Sonnet 4</option>
+  </select>
+  <div class="engine-chain">
+    <div class="engine-step step-perplexity" id="chain-perplexity">PPLX</div>
+    <span class="engine-sep">→</span>
+    <div class="engine-step step-places" id="chain-places">PLACES</div>
+    <span class="engine-sep">→</span>
+    <div class="engine-step step-serp" id="chain-serp">SERP</div>
+    <span class="engine-sep">→</span>
+    <div class="engine-step step-gemini" id="chain-gemini">GEMINI</div>
+    <span class="engine-sep">/</span>
+    <div class="engine-step step-claude" id="chain-claude">CLAUDE</div>
+    <span class="engine-sep">→</span>
+    <div class="engine-step step-places" id="chain-pdf" style="color:var(--success);border-color:var(--success)">PDF✓</div>
+  </div>
+  <div class="engine-status" id="engine-status">LISTO · 0 llamadas</div>
+  <button onclick="exportConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:3px 9px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.08em;flex-shrink:0" title="Exportar configuración a JSON">↓ Keys</button>
+  <button onclick="importConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:3px 9px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.08em;flex-shrink:0" title="Importar configuración desde JSON">↑ Keys</button>
+  <button onclick="openCfg()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:3px 9px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.08em;flex-shrink:0">⚙ CONFIG</button>
+</div>
+
+<script>
+// ── CONFIG PANEL FUNCTIONS ────────────────────────────────────
+function openCfg() {
+  document.getElementById('cfg-overlay').classList.add('open');
+}
+function closeCfg() {
+  document.getElementById('cfg-overlay').classList.remove('open');
+}
+document.getElementById('cfg-overlay').addEventListener('click', function(e){
+  if (e.target === this) closeCfg();
+});
+
+function saveCfgPanel() {
+  const cfg = {
+    claude: {
+      key: document.getElementById('cfg-claude-key').value,
+      model: document.getElementById('cfg-claude-model').value,
+      endpoint: document.getElementById('cfg-claude-endpoint').value,
+    },
+    gemini: {
+      key: document.getElementById('cfg-gemini-key').value,
+      model: document.getElementById('cfg-gemini-model').value,
+    },
+    places: { key: document.getElementById('cfg-places-key').value },
+    perplexity: {
+      key: document.getElementById('cfg-perplexity-key').value,
+      model: document.getElementById('cfg-perplexity-model').value,
+    },
+    serp: {
+      key: document.getElementById('cfg-serp-key').value,
+      country: document.getElementById('cfg-serp-country').value,
+      engine: document.getElementById('cfg-serp-engine').value,
+    },
+    routes: { local: document.getElementById('cfg-route-local').value },
+  };
+  AURA_ENGINE.saveConfig(cfg);
+  showCfgToast('✓ Configuración guardada');
+  setTimeout(closeCfg, 1200);
+}
+
+async function testEngine(provider) {
+  const el = document.getElementById(`cfg-result-${provider}`);
+  if (!el) return;
+  el.style.display = 'block';
+  el.className = 'cfg-result';
+  el.textContent = 'Probando…';
+  try {
+    let r;
+    if (provider === 'claude')       r = await AURA_ENGINE.testClaude();
+    else if (provider === 'gemini')  r = await AURA_ENGINE.testGemini();
+    else if (provider === 'perplexity') { const d = await AURA_ENGINE.testPerplexity(); r = d.text?.slice(0,100); }
+    else if (provider === 'serp')    { const d = await AURA_ENGINE.testSerpAPI?.('turismo España'); r = d?.snippets?.slice(0,80)||'OK'; }
+    el.className = 'cfg-result cfg-ok';
+    el.textContent = `✓ OK — ${r?.slice(0,120)||'Conexión establecida'}`;
+  } catch(e) {
+    el.className = 'cfg-result cfg-err';
+    el.textContent = `✗ ${e.message}`;
+  }
+}
+
+function showCfgToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'cfg-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ══════════════════════════════════════════════════
+// AUTO-IMPORT desde Briefing de cliente (?brief=...)
+// ══════════════════════════════════════════════════
+(function autoImportBrief() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('brief');
+    if (!encoded) return;
+    const d = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (!d || typeof d !== 'object') return;
+  if(d['nombre']&&document.getElementById('nombre'))document.getElementById('nombre').value=d['nombre'];
+  if(d['tipoNegocio']&&document.getElementById('tipoNegocio'))document.getElementById('tipoNegocio').value=d['tipoNegocio'];
+  if(d['ciudad']&&document.getElementById('ciudad'))document.getElementById('ciudad').value=d['ciudad'];
+  if(d['web']&&document.getElementById('web'))document.getElementById('web').value=d['web'];
+  if(d['descripcion']&&document.getElementById('descripcion'))document.getElementById('descripcion').value=d['descripcion'];
+  if(d['palabrasClave']&&document.getElementById('palabrasClave'))document.getElementById('palabrasClave').value=d['palabrasClave'];
+  if(d['reto']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['reto'];
+    // Trigger input events
+    document.querySelectorAll('input,textarea,select').forEach(el =>
+      el.dispatchEvent(new Event('input', {bubbles:true}))
+    );
+    // Show toast
+    const nombre = d.nombre || d.empresa || 'cliente';
+    setTimeout(() => {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--gold);color:#fff;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.14em;padding:10px 22px;border-radius:20px;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+      bar.textContent = '◈ Briefing de ' + nombre + ' cargado correctamente';
+      document.body.appendChild(bar);
+      setTimeout(() => bar.remove(), 3500);
+    }, 800);
+    // Clean URL without reloading
+    window.history.replaceState({},'',window.location.pathname);
+  } catch(e) { console.warn('Brief import:', e.message); }
+})();
+
+
+// ══════════════════════════════════════════════════
+// EXPORTAR HTML PARA IMPRESIÓN (máxima calidad PDF)
+// Abre en nueva ventana → Chrome → ⌘P → Guardar como PDF
+// ══════════════════════════════════════════════════
+function exportHTMLPrint(tipo) {
+  const isCliente = tipo === 'cliente';
+  if (!Object.keys(outs).length) { alert('Genera los módulos primero.'); return; }
+  const b = getBrief();
+  const fecha = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  const clienteNombre = b.cliente || b.empresa || b.nombre || 'Cliente';
+
+  const MTIT_LOCAL = typeof MTIT !== 'undefined' ? MTIT : {
+    diagnostico:'Diagnóstico',estrategia:'Estrategia',activacion:'Activación',
+    contenidos:'Contenidos',proveedores:'Proveedores',competencia:'Competencia',
+    propuesta:'Propuesta',kpis:'KPIs',concepto:'Concepto del Evento',
+    rider:'Rider Técnico',checklist:'Checklist',runbook:'Runbook',
+    comunicacion:'Comunicación',presupuesto:'Presupuesto',bio:'Biografía',
+    linkedin:'LinkedIn',visibilidad:'Visibilidad',identidad:'Identidad',
+    discurso:'Discurso',mensajes:'Mensajes Clave',prensa:'Nota de Prensa',
+    qya:'Q&A',plan:'Plan de Comunicación',empleados:'Comunicación Interna',
+    reputacion:'Reputación',competencia:'Competencia',protocolo:'Protocolo',
+    impacto:'Impacto',politico:'Perfil Político',radar:'Radar'
+  };
+
+  const INCLUDE = isCliente
+    ? Object.keys(outs).filter(m => !['proveedores','diagnostico'].includes(m))
+    : Object.keys(outs);
+
+  function cleanMd(t) {
+    return (t||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^#### (.+)$/gm,'<h4>$1</h4>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)\n?/g, s => '<ul>' + s + '</ul>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+  }
+
+  const tocHtml = INCLUDE.map((mod,i) =>
+    `<div class="toc-item"><span class="toc-num">${String(i+1).padStart(2,'0')}</span><span class="toc-title">${MTIT_LOCAL[mod]||mod}</span></div>`
+  ).join('');
+
+  const sectionsHtml = INCLUDE.map((mod,i) =>
+    `<section class="page-break">
+      <div class="section-header">
+        <div class="section-num">${String(i+1).padStart(2,'0')}</div>
+        <h2>${MTIT_LOCAL[mod]||mod}</h2>
+      </div>
+      <div class="section-body"><p>${cleanMd(outs[mod]||'')}</p></div>
+    </section>`
+  ).join('');
+
+  const metaRows = [
+    b.objetivo ? ['Objetivo', b.objetivo] : null,
+    b.mercado  ? ['Mercado', b.mercado]   : null,
+    b.presupuesto ? ['Presupuesto', b.presupuesto] : null,
+    b.duracion ? ['Duración', b.duracion] : null,
+    ['Fecha', fecha],
+  ].filter(Boolean);
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>${isCliente?'Propuesta':'Dossier'} · ${clienteNombre} · ${fecha}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#8b6914;--gold-lt:#c9a84c;--dark:#0d0b07;--gray:#6b6050;--cream:#faf7f2;--light:#f0ebe0;--border:#d4c090;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Cormorant Garamond",Georgia,serif;font-size:12pt;color:var(--dark);background:white;line-height:1.7;}
+/* COVER */
+.cover{width:100%;min-height:100vh;padding:56px 72px;display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;}
+.cover-bar{height:3px;background:var(--gold);margin-bottom:40px;}
+.cover-label{font-family:"DM Mono",monospace;font-size:8pt;letter-spacing:.35em;color:var(--gray);text-transform:uppercase;margin-bottom:18px;}
+.cover-title{font-family:"Cormorant Garamond",serif;font-size:54pt;font-weight:300;color:var(--gold);line-height:1;margin-bottom:4px;}
+.cover-rule{width:80px;height:2px;background:var(--gold);margin:18px 0 26px;}
+.cover-client{font-family:"Montserrat",sans-serif;font-size:15pt;font-weight:500;color:var(--dark);letter-spacing:.04em;margin-bottom:4px;}
+.cover-product{font-size:12pt;color:var(--gray);font-style:italic;margin-bottom:32px;}
+.cover-meta{border-top:1px solid var(--border);padding-top:12px;}
+.cover-meta-row{display:flex;gap:20px;padding:6px 0;border-bottom:1px solid var(--light);font-size:9pt;}
+.cover-meta-label{font-family:"DM Mono",monospace;color:var(--gold);letter-spacing:.1em;width:110px;flex-shrink:0;}
+.cover-meta-val{color:var(--dark);}
+.cover-bottom{border-top:1px solid var(--border);padding-top:14px;display:flex;justify-content:space-between;}
+.cover-footer{font-family:"DM Mono",monospace;font-size:7.5pt;color:var(--gray);letter-spacing:.08em;line-height:1.8;}
+/* TOC */
+.toc{padding:56px 72px;page-break-after:always;}
+.toc h1{font-family:"Cormorant Garamond",serif;font-size:28pt;font-weight:300;color:var(--gold);margin-bottom:6px;}
+.toc-rule{width:56px;height:1px;background:var(--gold);margin:12px 0 26px;}
+.toc-item{display:flex;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--light);gap:14px;font-size:11pt;}
+.toc-num{font-family:"DM Mono",monospace;font-size:8pt;color:var(--gold);letter-spacing:.1em;width:26px;flex-shrink:0;}
+/* SECTIONS */
+section{padding:50px 72px;}
+.page-break{page-break-before:always;}
+.section-header{display:flex;align-items:flex-start;gap:18px;margin-bottom:26px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.section-num{font-family:"DM Mono",monospace;font-size:9pt;color:var(--gold);letter-spacing:.15em;padding-top:10px;flex-shrink:0;}
+.section-header h2{font-family:"Cormorant Garamond",serif;font-size:30pt;font-weight:300;color:var(--dark);line-height:1.1;}
+.section-body h2{font-family:"Montserrat",sans-serif;font-size:10pt;font-weight:500;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin:22px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.section-body h3{font-family:"Cormorant Garamond",serif;font-size:16pt;font-weight:600;color:var(--dark);margin:16px 0 6px;}
+.section-body h4{font-family:"Montserrat",sans-serif;font-size:8.5pt;font-weight:500;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 4px;}
+.section-body p{margin-bottom:10px;font-size:11pt;line-height:1.75;}
+.section-body ul{list-style:none;margin:7px 0 11px;padding:0;}
+.section-body li{padding:3px 0 3px 18px;position:relative;font-size:11pt;line-height:1.65;}
+.section-body li::before{content:"◈";position:absolute;left:0;color:var(--gold);font-size:7pt;top:7px;}
+strong{font-weight:600;color:var(--dark);}
+em{font-style:italic;color:var(--gray);}
+/* PRINT */
+.no-print{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;gap:8px;}
+.btn-print{background:var(--gold);color:white;border:none;padding:12px 22px;font-family:"DM Mono",monospace;font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:3px;}
+.btn-close{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:12px 16px;font-family:"DM Mono",monospace;font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:3px;}
+@media print{
+  .no-print{display:none!important;}
+  @page{size:A4 landscape;margin:0;}
+  body{background:white;}
+  .page-break{page-break-before:always;}
+  .cover{height:100vh;page-break-after:always;}
+}
+</style></head><body>
+<div class="cover">
+  <div>
+    <div class="cover-bar"></div>
+    <div class="cover-label">${isCliente?'Propuesta de Campaña':'Dossier Estratégico Interno'}</div>
+    <div class="cover-title">AURA<br>CABINET</div>
+    <div class="cover-rule"></div>
+    <div class="cover-client">${clienteNombre.toUpperCase()}</div>
+    <div class="cover-product">${(b.producto||b.nombreEvento||b.cargo||b.evento||'').replace(/&/g,'&amp;')}</div>
+    <div class="cover-meta">${metaRows.map(([l,v])=>`<div class="cover-meta-row"><span class="cover-meta-label">${l}</span><span class="cover-meta-val">${(v||'').replace(/&/g,'&amp;')}</span></div>`).join('')}</div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-footer">${isCliente?'Propuesta elaborada por AURA CABINET':'Documento interno — Uso exclusivo AURA CABINET'}<br>aura-cabinet.com · private@aura-cabinet.com</div>
+    <div class="cover-footer" style="text-align:right">Confidencial<br>${isCliente?'Versión Cliente':'Versión Interna'}</div>
+  </div>
+</div>
+<div class="toc">
+  <h1>Índice</h1>
+  <div class="toc-rule"></div>
+  ${tocHtml}
+</div>
+${sectionsHtml}
+
+</body></html>`;
+
+  // Descarga como archivo HTML — ábrelo en Chrome y pulsa ⌘P para PDF de calidad
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = (isCliente ? 'Propuesta' : 'Dossier') + '-' +
+               (clienteNombre||'AURA').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'') +
+               '-' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>
