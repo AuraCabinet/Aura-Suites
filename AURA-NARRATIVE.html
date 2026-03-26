@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA NARRATIVE — Arquitectura de Marca Personal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.15/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.15/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0ede8;--bg2:#f7f5f1;--bg3:#e8e4de;
+  --gold:#b8913a;--gold2:rgba(184,145,58,0.13);
+  --border:rgba(184,145,58,0.42);--border2:rgba(184,145,58,0.15);
+  --text:#0f0f12;--text2:#2c2c34;--text3:#60606e;
+  --card:#faf8f4;--card2:#f2efe9;
+  --pol:#1a3a5c;--pol2:rgba(26,58,92,0.08);
+  --rep:#2d6a4f;--rep2:rgba(45,106,79,0.08);
+  --cri:#5c1a1a;--cri2:rgba(92,26,26,0.08);
+}
+[data-theme="dark"]{
+  --bg:#0e0e14;--bg2:#13131b;--bg3:#161620;
+  --gold:#d4a843;--gold2:rgba(212,168,67,0.12);
+  --border:rgba(212,168,67,0.32);--border2:rgba(212,168,67,0.12);
+  --text:#f5f2ec;--text2:#d4c9b0;--text3:#8a8272;
+  --card:#1a1a24;--card2:#1e1e2a;
+  --pol2:rgba(26,58,92,0.2);--rep2:rgba(45,106,79,0.2);--cri2:rgba(92,26,26,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',Georgia,serif}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+input[type=text],input[type=url],textarea,select{
+  background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-family:'Cormorant Garamond',serif;font-size:15px;padding:8px 11px;
+  border-radius:3px;outline:none;width:100%;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{resize:vertical;line-height:1.5}
+select{background:var(--card2)}
+select option{background:var(--card2);color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input[type=range]{accent-color:var(--gold);width:100%;border:none;background:transparent;padding:0}
+.chip{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:14px;
+  border:1px solid var(--border);cursor:pointer;color:var(--text2);background:transparent;
+  letter-spacing:.04em;transition:all .18s;white-space:nowrap}
+.chip.on{background:var(--gold2);border-color:var(--gold);color:var(--gold)}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.18em;color:var(--gold)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.46rem;color:var(--text3);letter-spacing:.22em;margin-left:10px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+#stBar{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.12em}
+.btn-hdr{background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:all .2s}
+.btn-hdr:hover{border-color:var(--gold);color:var(--gold)}
+#nav{background:var(--bg3);border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;flex-shrink:0;padding:0 12px}
+.ntab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:10px 11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  border-top:none;border-left:none;border-right:none;background:none;white-space:nowrap;transition:all .2s}
+.ntab:hover{color:var(--gold)}
+.ntab.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:500}
+.nnum{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  border-radius:50%;background:var(--gold2);border:1px solid var(--border);
+  font-size:9px;margin-right:4px;color:var(--gold)}
+.ntab.on .nnum{background:var(--gold);color:var(--bg)}
+#body{display:flex;flex:1;min-height:0;overflow:hidden}
+#sidebar{width:300px;flex-shrink:0;border-right:1px solid var(--border);
+  overflow-y:auto;padding:16px 14px 24px;display:flex;flex-direction:column;gap:16px;background:var(--bg2)}
+.slbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--gold);
+  text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid var(--border2);margin-bottom:6px;font-weight:500}
+.flbl{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:3px;font-weight:500}
+.fgrp{display:flex;flex-direction:column;gap:7px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+#btnGen{background:var(--gold);color:var(--bg);border:none;padding:12px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;
+  cursor:pointer;border-radius:3px;width:100%;font-weight:500;transition:opacity .2s;text-transform:uppercase}
+#btnGen:hover{opacity:.88}
+#btnGen:disabled{opacity:.35;cursor:not-allowed}
+#content{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:16px;background:var(--bg)}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:16px;opacity:.45;padding:40px;min-height:400px}
+.welcome h2{font-size:1.7rem;font-weight:300;font-style:italic;color:var(--gold)}
+.welcome p{font-size:15px;color:var(--text2);max-width:360px;line-height:1.8}
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;animation:fadeUp .3s ease}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;
+  border-bottom:1px solid var(--border2);background:var(--gold2)}
+.ct{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.cb{padding:16px 18px;line-height:1.85;font-size:15px;color:var(--text)}
+.cb p{margin-bottom:8px}
+.cb h3{color:var(--gold);margin:12px 0 4px;font-size:14px;font-weight:500;font-style:italic}
+.cb h4{color:var(--text);margin:9px 0 3px;font-size:13px;font-weight:600}
+.cb strong{color:var(--text);font-weight:600}
+.cb ul,.cb ol{padding-left:18px}
+.cb li{margin-bottom:4px}
+.itabs{display:flex;border-bottom:1px solid var(--border2);overflow-x:auto;background:var(--bg3)}
+.itab{font-family:'DM Mono',monospace;font-size:9px;padding:8px 12px;color:var(--text3);
+  cursor:pointer;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;
+  background:none;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;transition:all .18s}
+.itab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.ip{display:none}.ip.show{display:block}
+.btn-sm{background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:all .18s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{background:var(--gold);color:var(--bg);border:none;padding:8px 16px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:opacity .2s}
+.btn-gold:hover{opacity:.88}
+.met-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px;border-bottom:1px solid var(--border2)}
+.met{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:12px;text-align:center}
+.mn{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);line-height:1}
+.ml{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px}
+.ring{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.ltxt{font-style:italic;color:var(--text3);font-size:15px}
+.badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:9px;border:1px solid var(--border);color:var(--text3)}
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.panel-header{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px}
+.panel-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;padding:2px 8px;border-radius:10px}
+.tag-pol{background:var(--pol2);color:var(--pol);border:1px solid var(--pol)}
+.tag-rep{background:var(--rep2);color:var(--rep);border:1px solid var(--rep)}
+.tag-cri{background:var(--cri2);color:var(--cri);border:1px solid var(--cri)}
+.panel-body{padding:14px 16px;font-size:15px;color:var(--text);line-height:1.8}
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{background:var(--gold);color:var(--bg);font-family:'DM Mono',monospace;
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;text-align:left}
+.comp-table td{padding:8px 12px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:top}
+.comp-table tr:nth-child(even) td{background:var(--card2)}
+.comp-table .aura-row td{background:var(--gold2);font-weight:600}
+.comp-table .aura-row td:first-child{color:var(--gold);font-family:'DM Mono',monospace}
+.chart-wrap{position:relative;height:240px;padding:16px}
+@media(max-width:768px){
+  #sidebar{width:100%;max-height:45vh;border-right:none;border-bottom:1px solid var(--border)}
+  #body{flex-direction:column}
+  .met-grid{grid-template-columns:repeat(2,1fr)}
+  .dual-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  var s=localStorage.getItem('aura_theme');
+  if(s) document.documentElement.setAttribute('data-theme',s);
+  else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
+    document.documentElement.setAttribute('data-theme','dark');
+})();
+</script>
+<div id="app">
+
+<div id="hdr">
+  <div class="logo">AURA <span style="color:var(--text3);font-family:'Bebas Neue',sans-serif;font-size:.9rem">NARRATIVE</span>
+    <span class="logo-sub">ARQUITECTURA DE MARCA PERSONAL & REPUTACIÓN · AURA CABINET</span></div>
+  <div class="hdr-right">
+    <div id="stBar">LISTO</div>
+    <button class="btn-hdr" onclick="toggleTheme()">◐ MODO OSCURO</button>
+  </div>
+</div>
+
+<div id="nav"></div>
+
+<div id="body">
+<div id="sidebar">
+
+  <div>
+    <div class="slbl">① Identidad</div>
+    <div class="fgrp">
+      <div><div class="flbl">Nombre completo</div><input type="text" id="nombre" placeholder="Ej. David Cancino Quintero"></div>
+      <div><div class="flbl">Cargo / Rol actual</div><input type="text" id="cargo" placeholder="Ej. AI Software Engineer · CEO · Candidato"></div>
+      <div><div class="flbl">Sector / Industria</div><input type="text" id="sector" placeholder="Ej. Inteligencia Artificial · Política · Finanzas"></div>
+      <div><div class="flbl">País / Ciudad</div><input type="text" id="ciudad" placeholder="Ej. Madrid, España · LATAM"></div>
+      <div><div class="flbl">Perfil LinkedIn (URL)</div><input type="url" id="linkedin" placeholder="linkedin.com/in/..."></div>
+      <div><div class="flbl">Tipo de perfil</div>
+        <select id="tipoPerfil">
+          <option value="CEO">CEO / Fundador / Empresario</option>
+          <option value="directivo">Directivo / C-Suite</option>
+          <option value="politico">Candidato / Político</option>
+          <option value="experto">Experto / Thought Leader</option>
+          <option value="profesional">Profesional en transición</option>
+          <option value="creador">Creador de contenido / Influencer</option>
+          <option value="academico">Académico / Investigador</option>
+        </select></div>
+      <div id="politicoFields" style="display:none">
+        <div style="background:var(--pol2);border:1px solid var(--pol);border-radius:3px;padding:10px;margin-top:4px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--pol);text-transform:uppercase;margin-bottom:8px">Perfil Político</div>
+          <div class="fgrp">
+            <div><div class="flbl">Cargo al que aspira</div><input type="text" id="cargoAspira" placeholder="Ej. Alcalde de Santiago · Senador"></div>
+            <div><div class="flbl">Partido / Movimiento</div><input type="text" id="partido" placeholder="Ej. Partido Nuevo · Independiente"></div>
+            <div><div class="flbl">Fecha estimada de campaña</div><input type="text" id="fechaCampana" placeholder="Ej. Elecciones nov. 2027"></div>
+            <div><div class="flbl">Audiencia electoral principal</div><textarea id="audienciaElectoral" placeholder="Perfil del votante objetivo…" style="min-height:44px"></textarea></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">② Situación Actual</div>
+    <div class="fgrp">
+      <div><div class="flbl">¿Qué dicen de ti hoy?</div>
+        <textarea id="percepcionActual" placeholder="Cómo te perciben ahora mismo en tu sector, redes, medios…" style="min-height:55px"></textarea></div>
+      <div><div class="flbl">¿Qué quieres que digan de ti?</div>
+        <textarea id="percepcionDeseada" placeholder="La narrativa que quieres construir. Quién quieres ser en la mente de los demás…" style="min-height:55px"></textarea></div>
+      <div><div class="flbl">Logros y credenciales clave</div>
+        <textarea id="logros" placeholder="Proyectos, empresas, resultados, publicaciones, reconocimientos…" style="min-height:55px"></textarea></div>
+      <div><div class="flbl">Principales fortalezas</div>
+        <textarea id="fortalezas" placeholder="Lo que te diferencia genuinamente de los demás…" style="min-height:44px"></textarea></div>
+      <div><div class="flbl">Vulnerabilidades / áreas sensibles</div>
+        <textarea id="vulnerabilidades" placeholder="Lo que podría usarse en tu contra. Lo que hay que gestionar con cuidado…" style="min-height:44px"></textarea></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">③ Objetivos & Audiencias</div>
+    <div class="fgrp">
+      <div><div class="flbl">Objetivo principal en 12 meses</div>
+        <select id="objetivo">
+          <option>Posicionarme como referente en mi sector</option>
+          <option>Construir marca personal desde cero</option>
+          <option>Reposicionarme tras un cambio de rol</option>
+          <option>Preparar una campaña política</option>
+          <option>Aumentar visibilidad para atraer inversores</option>
+          <option>Generar oportunidades de negocio</option>
+          <option>Gestionar y mejorar reputación online</option>
+          <option>Escalar mi presencia en medios</option>
+          <option>Construir comunidad y audiencia propia</option>
+        </select></div>
+      <div><div class="flbl">Audiencias clave</div>
+        <div class="chips" id="audienciasChips"></div></div>
+      <div><div class="flbl">Tono de marca personal</div>
+        <select id="tono">
+          <option>Visionario e inspirador</option>
+          <option>Técnico y experto</option>
+          <option>Cercano y humano</option>
+          <option>Ejecutivo y formal</option>
+          <option>Disruptivo y provocador</option>
+          <option>Comprometido y activista</option>
+          <option>Equilibrado (autoridad + cercanía)</option>
+        </select></div>
+      <div><div class="flbl">Presencia digital actual — <span id="presenciaVal">5</span>/10</div>
+        <input type="range" id="presencia" min="1" max="10" value="5" oninput="document.getElementById('presenciaVal').textContent=this.value"></div>
+      <div><div class="flbl">Urgencia — <span id="urgenciaVal">6</span>/10</div>
+        <input type="range" id="urgencia" min="1" max="10" value="6" oninput="document.getElementById('urgenciaVal').textContent=this.value"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">④ Módulos</div>
+    <div class="chips" id="modChips" style="margin-top:4px"></div>
+  </div>
+
+  <button id="btnGen" onclick="genAll()">◈ CONSTRUIR NARRATIVA</button>
+</div>
+
+<div id="content">
+  <div class="welcome" id="welcomeScreen">
+    <div style="font-size:3rem;opacity:.15;color:var(--gold)">◈</div>
+    <h2>AURA NARRATIVE</h2>
+    <p>La narrativa que te precede antes de que abras la boca. Construye la identidad que el mundo verá — antes de que otros la construyan por ti.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px">
+      <span class="badge">Diagnóstico narrativo</span>
+      <span class="badge">Arquitectura de identidad</span>
+      <span class="badge">Bio × 3 versiones</span>
+      <span class="badge">LinkedIn optimizado</span>
+      <span class="badge">Plan de visibilidad</span>
+      <span class="badge">Estrategia de contenidos</span>
+      <span class="badge">Campaña política</span>
+      <span class="badge">Gestión reputación</span>
+      <span class="badge">KPIs de marca personal</span>
+      <span class="badge">PDF propuesta cliente</span>
+      <span class="badge">PDF dossier interno</span>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const AUDIENCIAS_OPT=['Inversores','Medios de comunicación','Clientes potenciales','Headhunters','Sector político','Comunidad profesional','Audiencia general','Empleados / equipo','Competidores','Votantes'];
+
+const MODS=[
+  {id:'diagnostico',  l:'Diagnóstico'},
+  {id:'identidad',    l:'Identidad'},
+  {id:'bio',          l:'Bio × 3'},
+  {id:'linkedin',     l:'LinkedIn'},
+  {id:'visibilidad',  l:'Visibilidad'},
+  {id:'contenidos',   l:'Contenidos'},
+  {id:'politico',     l:'Campaña Política'},
+  {id:'reputacion',   l:'Reputación'},
+  {id:'kpis',         l:'KPIs'},
+  {id:'radar',        l:'Radar Pre/Post'},
+  {id:'graficos',     l:'📊 Gráficos'},
+  {id:'pdfinterno',   l:'PDF Interno'},
+  {id:'pdfcliente',   l:'PDF Cliente'},
+];
+
+const MTIT={
+  diagnostico:'Diagnóstico de Narrativa Actual vs Deseada',
+  identidad:'Arquitectura de Identidad & Posicionamiento',
+  bio:'Bio Profesional — 3 Versiones',
+  linkedin:'LinkedIn Optimizado',
+  visibilidad:'Plan de Visibilidad en Medios',
+  contenidos:'Estrategia de Contenidos Personales',
+  politico:'Plan de Campaña Política',
+  reputacion:'Gestión de Reputación Online',
+  kpis:'KPIs de Marca Personal',
+  radar:'Radar de Impacto — Pre & Post',
+};
+
+let selAud=[],selMod=MODS.filter(m=>!['pdfinterno','pdfcliente'].includes(m.id)).map(m=>m.id);
+let outs={},curTab='brief';
+
+
+function renderError(panel, mod, errorMsg, retryFn) {
+  if (!panel) return;
+  panel.style.display = 'flex';
+  panel.style.flexDirection = 'column';
+  panel.style.gap = '14px';
+  panel.innerHTML = `
+    <div class="card" style="border-color:rgba(180,60,40,0.35)">
+      <div class="ch" style="background:rgba(180,60,40,0.10)">
+        <span class="ct" style="color:#c04030">◈ Error al generar</span>
+      </div>
+      <div class="cb" style="text-align:center;padding:28px 20px">
+        <p style="font-size:15px;color:var(--text2);margin-bottom:8px">${errorMsg}</p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;font-family:'DM Mono',monospace">
+          Comprueba la API Key en el ENGINE y vuelve a intentarlo.
+        </p>
+        <button class="btn-gold" onclick="(${retryFn})()" style="font-size:13px;padding:10px 24px">
+          ↺ Reintentar
+        </button>
+      </div>
+    </div>`;
+}
+
+function init(){
+  document.getElementById('tipoPerfil').addEventListener('change',e=>{
+    document.getElementById('politicoFields').style.display=e.target.value==='politico'?'block':'none';
+    const politicoMod=document.querySelector('[data-mod="politico"]');
+    if(politicoMod) politicoMod.style.opacity=e.target.value==='politico'?'1':'0.4';
+  });
+
+  const ac=document.getElementById('audienciasChips');
+  AUDIENCIAS_OPT.forEach(a=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=a;
+    b.onclick=()=>{const i=selAud.indexOf(a);if(i>-1){selAud.splice(i,1);b.classList.remove('on')}else{selAud.push(a);b.classList.add('on')}};
+    ac.appendChild(b);
+  });
+
+  const mc=document.getElementById('modChips');
+  MODS.forEach(m=>{
+    const b=document.createElement('button');
+    b.className='chip'+(selMod.includes(m.id)?' on':'');
+    b.dataset.mod=m.id;
+    b.textContent=m.l;
+    if(m.id==='politico') b.style.opacity='0.4';
+    b.onclick=()=>{const i=selMod.indexOf(m.id);if(i>-1){selMod.splice(i,1);b.classList.remove('on')}else{selMod.push(m.id);b.classList.add('on')}};
+    mc.appendChild(b);
+  });
+
+  const nav=document.getElementById('nav');
+  [{id:'brief',l:'BRIEF',num:0},...MODS.map((m,i)=>({id:m.id,l:m.l.toUpperCase(),num:i+1}))].forEach(t=>{
+    const b=document.createElement('button');
+    b.className='ntab'+(t.id==='brief'?' on':'');
+    b.id='ntab-'+t.id;
+    b.innerHTML=`<span class="nnum">${t.num}</span>${t.l}`;
+    b.onclick=()=>showTab(t.id);
+    nav.appendChild(b);
+    if(t.id!=='brief'){
+      const p=document.createElement('div');
+      p.id='panel-'+t.id;p.style.display='none';
+      document.getElementById('content').appendChild(p);
+    }
+  });
+}
+
+function toggleTheme(){
+  const html=document.documentElement;
+  const cur=html.getAttribute('data-theme');
+  const eff=cur||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  const next=eff==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  localStorage.setItem('aura_theme',next);
+  const btn=document.querySelector('.btn-hdr');
+  if(btn)btn.textContent=next==='dark'?'☀ MODO CLARO':'◐ MODO OSCURO';
+}
+
+function showTab(id){
+  curTab=id;
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('ntab-'+id)?.classList.add('on');
+  document.getElementById('welcomeScreen').style.display='none';
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+  if(id==='brief'){document.getElementById('welcomeScreen').style.display='flex';return;}
+  if(id==='graficos'){destroyCharts&&destroyCharts();const gp=document.getElementById('panel-graficos');if(gp){gp.style.display='flex';gp.style.flexDirection='column';gp.style.gap='14px';}renderGraficos();return;}
+  if(id==='pdfinterno'){
+    const p=document.getElementById('panel-pdfinterno');
+    if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';
+    p.innerHTML=`<div class="card"><div class="ch"><span class="ct">◈ Dossier Interno AURA NARRATIVE</span></div><div class="cb" style="text-align:center;padding:30px"><p style="font-size:17px;color:var(--gold);margin-bottom:14px">Dossier listo para descargar</p><p style="font-size:14px;color:var(--text2);margin-bottom:20px">Diagnóstico · Identidad · Bio · LinkedIn · Contenidos · Reputación · KPIs · Formato A4 horizontal</p><button class="btn-gold" onclick="generatePDF('interno')" style="font-size:14px;padding:12px 28px">⬇ Descargar Dossier Interno</button>
+              <button class="btn-sm" onclick="exportHTMLPrint('interno')" style="margin-left:8px;font-size:12px">◈ Descargar HTML Premium</button></div></div>`;}
+    return;
+  }
+  if(id==='pdfcliente'){
+    const p=document.getElementById('panel-pdfcliente');
+    if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';
+    p.innerHTML=`<div class="card"><div class="ch"><span class="ct">◈ Propuesta de Marca Personal para el Cliente</span></div><div class="cb" style="text-align:center;padding:30px"><p style="font-size:17px;color:var(--gold);margin-bottom:14px">Propuesta lista para el cliente</p><p style="font-size:14px;color:var(--text2);margin-bottom:20px">Diagnóstico · Identidad · Bio · LinkedIn · Visibilidad · KPIs · Formato A4 horizontal</p><button class="btn-gold" onclick="generatePDF('cliente')" style="font-size:14px;padding:12px 28px">⬇ Descargar Propuesta Cliente</button>
+              <button class="btn-sm" onclick="exportHTMLPrint('cliente')" style="margin-left:8px;font-size:12px">◈ Descargar HTML Premium</button></div></div>`;}
+    return;
+  }
+  if(id==='radar'){renderRadar();const p=document.getElementById('panel-radar');if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';}return;}
+  const panel=document.getElementById('panel-'+id);
+  if(panel){panel.style.display='flex';panel.style.flexDirection='column';panel.style.gap='14px';}
+  if(outs[id])renderModule(id,outs[id]);
+}
+
+function iTab(btn,pid){
+  btn.closest('.card').querySelectorAll('.itab').forEach(t=>t.classList.remove('on'));
+  btn.closest('.card').querySelectorAll('.ip').forEach(p=>p.classList.remove('show'));
+  btn.classList.add('on');document.getElementById(pid)?.classList.add('show');
+}
+
+function getBrief(){
+  return{
+    nombre:document.getElementById('nombre').value.trim()||'el cliente',
+    cargo:document.getElementById('cargo').value.trim()||'profesional',
+    sector:document.getElementById('sector').value.trim()||'su sector',
+    ciudad:document.getElementById('ciudad').value.trim()||'España',
+    linkedin:document.getElementById('linkedin').value.trim()||'',
+    tipoPerfil:document.getElementById('tipoPerfil').value,
+    cargoAspira:document.getElementById('cargoAspira')?.value||'',
+    partido:document.getElementById('partido')?.value||'',
+    fechaCampana:document.getElementById('fechaCampana')?.value||'',
+    audienciaElectoral:document.getElementById('audienciaElectoral')?.value||'',
+    percepcionActual:document.getElementById('percepcionActual').value.trim()||'no especificada',
+    percepcionDeseada:document.getElementById('percepcionDeseada').value.trim()||'no especificada',
+    logros:document.getElementById('logros').value.trim()||'no especificados',
+    fortalezas:document.getElementById('fortalezas').value.trim()||'no especificadas',
+    vulnerabilidades:document.getElementById('vulnerabilidades').value.trim()||'ninguna indicada',
+    objetivo:document.getElementById('objetivo').value,
+    audiencias:selAud.join(', ')||'audiencia profesional',
+    tono:document.getElementById('tono').value,
+    presencia:document.getElementById('presencia').value,
+    urgencia:document.getElementById('urgencia').value,
+    esPolitico:document.getElementById('tipoPerfil').value==='politico',
+  };
+}
+
+// ══════════════════════════════════════════
+// AURA ENGINE — PUENTE DE CONEXIÓN v2.0
+// Lee la configuración del Motor Central
+// (AURA-MULTIAPI-ENGINE.html) vía localStorage
+// ══════════════════════════════════════════
+const AURA_BRIDGE = (function() {
+
+  function _loadCFG() {
+    try {
+      const saved = localStorage.getItem('aura_engine_cfg');
+      return saved ? JSON.parse(saved) : null;
+    } catch(e) { return null; }
+  }
+
+  function _isEngineAvailable() {
+    const cfg = _loadCFG();
+    return !!(cfg && (cfg.claude?.key || cfg.gemini?.key || cfg.serp?.key));
+  }
+
+  function _showEngineError() {
+    const existing = document.getElementById('aura-engine-error');
+    if (existing) return;
+    const banner = document.createElement('div');
+    banner.id = 'aura-engine-error';
+    banner.style.cssText = [
+      'position:fixed','top:0','left:0','right:0','z-index:99999',
+      'background:#5c1a1a','color:#f0ece2','padding:11px 20px',
+      'font-family:DM Mono,monospace','font-size:11px','letter-spacing:.12em',
+      'display:flex','align-items:center','justify-content:space-between',
+      'border-bottom:2px solid #8b3a2a','box-shadow:0 2px 12px rgba(0,0,0,.4)'
+    ].join(';');
+    banner.innerHTML = `
+      <span>◈ ERROR: Motor AURA no detectado. Abre el panel de configuración
+        — <a href="AURA-MULTIAPI-ENGINE.html" target="_blank"
+          style="color:#c9a84c;text-decoration:underline;cursor:pointer">
+          Abrir Motor Multi-API
+        </a>
+      </span>
+      <button onclick="this.parentElement.remove()"
+        style="background:transparent;border:1px solid rgba(240,236,226,.3);
+        color:#f0ece2;padding:3px 10px;font-family:DM Mono,monospace;
+        font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:.1em">
+        ✕ CERRAR
+      </button>`;
+    document.body.prepend(banner);
+    throw new Error('◈ ERROR: Motor AURA no detectado. Abre el panel de configuración');
+  }
+
+  async function callClaude(prompt, systemPrompt='', maxTokens=3000) {
+    const cfg = _loadCFG();
+    if (!cfg) throw new Error('Motor AURA no configurado. Abre AURA-MULTIAPI-ENGINE.html y guarda tus API Keys.');
+    if (!cfg?.claude?.key) throw new Error('API Key de Claude no configurada. Abre ⚙ ENGINE e introduce tu clave Anthropic.');
+    const model = cfg.claude?.model || 'claude-sonnet-4-6';
+    const body = { model, max_tokens: maxTokens, messages: [{ role:'user', content: prompt }] };
+    if (systemPrompt) body.system = systemPrompt;
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cfg.claude.key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('Claude API error: ' + r.status);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || 'Claude error');
+    return d.content?.[0]?.text || '';
+  }
+
+  async function callGemini(prompt, systemPrompt='', maxTokens=8192) {
+    const cfg = _loadCFG();
+    if (!cfg?.gemini?.key) throw new Error('Gemini API Key no configurada en el Motor.');
+    const model = cfg.gemini?.model || 'gemini-2.5-flash';
+    const apiVer = model.startsWith('gemini-2.5') ? 'v1beta' : 'v1';
+    const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${cfg.gemini.key}`;
+    const contents = [];
+    if (systemPrompt) {
+      contents.push({ role:'user', parts:[{ text: systemPrompt }] });
+      contents.push({ role:'model', parts:[{ text: 'Entendido.' }] });
+    }
+    contents.push({ role:'user', parts:[{ text: prompt }] });
+    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents, generationConfig:{ maxOutputTokens: maxTokens, temperature: 0.7 } }) });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error('Gemini error: '+(e.error?.message||r.status)); }
+    const d = await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  async function callPerplexity(query, maxTokens=2000) {
+    const cfg = _loadCFG();
+    if (!cfg?.perplexity?.key) throw new Error('Perplexity API Key no configurada en el Motor.');
+    const r = await fetch('https://api.perplexity.ai/chat/completions', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+cfg.perplexity.key, 'Content-Type':'application/json' },
+      body: JSON.stringify({ model: cfg.perplexity.model||'sonar', messages:[
+        { role:'system', content:'Eres un analista de mercado. Proporciona datos actualizados y estadísticas. Responde en español.' },
+        { role:'user', content: query }
+      ], max_tokens: maxTokens, return_citations: true })
+    });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error('Perplexity error: '+(e.error?.message||r.status)); }
+    const d = await r.json();
+    return { text: d.choices?.[0]?.message?.content||'', citations: d.citations||[] };
+  }
+
+  async function callSerpAPI(query, numResults=8) {
+    const cfg = _loadCFG();
+    if (!cfg?.serp?.key) return null;
+    // SerpAPI tiene restricciones CORS desde navegador — se intenta y si falla se omite sin bloquear
+    try {
+      const params = new URLSearchParams({ api_key: cfg.serp.key, q: query,
+        engine: cfg.serp.engine||'google', gl: cfg.serp.country||'es', hl:'es', num: numResults });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(`https://serpapi.com/search.json?${params}`, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!r.ok) return null;
+      const d = await r.json();
+      const snippets = (d.organic_results||[]).slice(0,6).map(x=>`• ${x.title}: ${x.snippet||''}`).join('\n');
+      return { snippets, knowledge: d.knowledge_graph||null };
+    } catch(_) { return null; }
+  }
+
+  // Función principal del módulo NARRATIVE
+  async function callModuleAPI(prompt, maxTokens=3000, module='narrative') {
+    const cfg = _loadCFG();
+    if (!cfg) throw new Error('Motor AURA no configurado. Abre AURA-MULTIAPI-ENGINE.html y guarda tus API Keys.');
+    if (!cfg.claude?.key && !cfg.gemini?.key) throw new Error('No hay API Keys configuradas. Abre ⚙ ENGINE y guarda al menos una key (Claude o Gemini).');
+
+    const route = cfg.globalOverride || cfg.routes?.[module] || 'auto';
+    const sysPrompt = 'Experto en branding personal, arquitectura de identidad y posicionamiento de liderazgo. Tu escritura es elegante, sofisticada y estratégica. Responde en español con formato Markdown limpio. Compatible con pdfMake.';
+
+    // Fase 1 — Investigación de huella digital (SerpAPI, solo en modo auto)
+    let researchCtx = '';
+    if (route === 'auto' && cfg.serp?.key) {
+      try {
+        const brief_nombre = document.getElementById('nombre')?.value || '';
+        const brief_sector = document.getElementById('sector')?.value || '';
+        const searchQ = `${brief_nombre} ${brief_sector} marca personal reputación online LinkedIn`;
+        if (brief_nombre) {
+          const serpResult = await callSerpAPI(searchQ);
+          if (serpResult?.snippets) {
+            researchCtx = `\n\n## CONTEXTO DE HUELLA DIGITAL (SerpAPI)\n${serpResult.snippets}`;
+          }
+        }
+      } catch(e) { console.warn('NARRATIVE — SerpAPI fase 1:', e.message); }
+    }
+
+    const fullPrompt = researchCtx ? `${prompt}\n${researchCtx}` : prompt;
+
+    // Fase 2 — Redacción
+    if (route === 'gemini') return callGemini(fullPrompt, sysPrompt, maxTokens);
+    return callClaude(fullPrompt, sysPrompt, maxTokens);
+  }
+
+
+// ══════════════════════════════════════════════════════════════
+// PORTABILIDAD — Export/Import configuración entre dispositivos
+// ══════════════════════════════════════════════════════════════
+function exportConfig() {
+  try {
+    const cfg = localStorage.getItem('aura_engine_cfg');
+    if (!cfg) { alert('No hay configuración guardada para exportar.'); return; }
+    const blob = new Blob([cfg], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'aura-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Error al exportar: ' + e.message); }
+}
+
+
+// ══════════════════════════════════════════════════
+// IMPORTAR BRIEFING DE CLIENTE
+// ══════════════════════════════════════════════════
+function importBriefing(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json,application/json';
+  input.onchange=function(e){
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(!d||typeof d!=='object') throw new Error('Archivo JSON no válido');
+        // Detectar si es un briefing de cliente (tiene campo "nombre" o "_version")
+        if(!d.nombre&&!d._version&&!d.empresa) throw new Error('Este archivo no es un Briefing de cliente AURA. Usa el botón ↑ Keys para importar configuración de API.');
+  if(d['nombre']&&document.getElementById('nombre'))document.getElementById('nombre').value=d['nombre'];
+  if(d['sector']&&document.getElementById('sector'))document.getElementById('sector').value=d['sector'];
+  if(d['mercado']&&document.getElementById('mercado'))document.getElementById('mercado').value=d['mercado'];
+  if(d['propuesta']&&document.getElementById('propuesta'))document.getElementById('propuesta').value=d['propuesta'];
+  if(d['idea']&&document.getElementById('idea'))document.getElementById('idea').value=d['idea'];
+  if(d['objetivoTexto']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivoTexto'];
+  if(d['objetivo']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivo'];
+  if(d['descripcion']&&document.getElementById('descripcion'))document.getElementById('descripcion').value=d['descripcion'];
+  if(d['canales']&&document.getElementById('canales'))document.getElementById('canales').value=d['canales'];
+        // Trigger input events so any listeners update
+        document.querySelectorAll('input,textarea,select').forEach(el=>el.dispatchEvent(new Event('input')));
+        const nombre=d.nombre||d.empresa||'Cliente';
+        alert('✓ Briefing de '+nombre+' importado correctamente.');
+      }catch(err){alert('Error al leer el Briefing: '+err.message);}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function importConfig() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (!parsed || typeof parsed !== 'object') throw new Error('JSON inválido');
+        localStorage.setItem('aura_engine_cfg', JSON.stringify(parsed));
+        alert('✓ Configuración importada correctamente. La página se recargará.');
+        location.reload();
+      } catch(err) { alert('Error al importar: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+  return { callClaude, callGemini, callPerplexity, callModuleAPI, isEngineAvailable: _isEngineAvailable };
+})();
+
+async function callAPI(prompt,maxTok=5000){
+  return AURA_BRIDGE.callModuleAPI(prompt, maxTok, 'narrative');
+}
+
+function getPrompt(mod,b){
+  const ctx=`PERFIL:
+- Nombre: ${b.nombre}
+- Cargo actual: ${b.cargo}
+- Sector: ${b.sector}
+- Ciudad: ${b.ciudad}
+- Tipo de perfil: ${b.tipoPerfil}
+- Percepción actual: ${b.percepcionActual}
+- Percepción deseada: ${b.percepcionDeseada}
+- Logros y credenciales: ${b.logros}
+- Fortalezas: ${b.fortalezas}
+- Vulnerabilidades: ${b.vulnerabilidades}
+- Objetivo principal: ${b.objetivo}
+- Audiencias clave: ${b.audiencias}
+- Tono de marca: ${b.tono}
+- Presencia digital actual: ${b.presencia}/10
+- Urgencia: ${b.urgencia}/10
+${b.esPolitico?`- Cargo que aspira: ${b.cargoAspira}\n- Partido: ${b.partido}\n- Fecha campaña: ${b.fechaCampana}\n- Audiencia electoral: ${b.audienciaElectoral}`:''}`;
+
+  const P={
+    diagnostico:`Eres un estratega de comunicación personal y reputación con 20 años de experiencia trabajando con CEOs, políticos y líderes de opinión.\n${ctx}\n\nRealiza el diagnóstico completo de narrativa. Responde en español con secciones ##:\n## NARRATIVA ACTUAL — LO QUE EL MUNDO VE HOY\nAnálisis honesto de la percepción actual. El gap entre cómo se percibe y cómo quiere ser percibido. Lo que dicen de él/ella cuando no está en la sala.\n## ANÁLISIS DE FORTALEZAS NARRATIVAS\nQué elementos de su historia y perfil son activos de comunicación genuinos. Lo que tiene y no está usando.\n## VULNERABILIDADES Y RIESGOS REPUTACIONALES\nLo que podría usarse en su contra. Cómo gestionarlo proactivamente antes de que se convierta en crisis.\n## EL GAP DE NARRATIVA\nLa distancia entre quién es hoy en la mente de los demás y quién quiere ser. El trabajo que hay que hacer.\n## OPORTUNIDADES DE POSICIONAMIENTO\nLos 5 vectores donde puede ganar terreno en los próximos 12 meses.\n## DIAGNÓSTICO DE PRESENCIA DIGITAL\nEstado actual de su huella digital. Qué aparece cuando le buscan. Qué falta. Qué hay que trabajar.\n## MAPA DE COMPETENCIA NARRATIVA\nQuiénes ocupan el espacio donde quiere posicionarse. Cómo diferenciarse de forma genuina y sostenible.`,
+
+    identidad:`Eres el mejor arquitecto de identidad corporativa personal del mundo hispanohablante.\n${ctx}\n\nConstruye la arquitectura completa de identidad. Responde en español con secciones ##:\n## PROPÓSITO — EL POR QUÉ\nLa razón profunda por la que hace lo que hace. No lo que hace, sino por qué importa. En 2-3 frases poderosas.\n## POSICIONAMIENTO — EL LUGAR ÚNICO\nEl espacio que va a ocupar en la mente de su audiencia. Qué lo hace único. La combinación irrepetible de factores que solo él/ella tiene.\n## VALORES DE MARCA PERSONAL\nLos 5 valores que definen cómo actúa, decide y se comunica. Con su significado concreto — no palabras vacías.\n## VOZ Y TONO\nCómo habla, escribe y se expresa. Los adjetivos que lo definen. Lo que nunca diría. Ejemplos de frases que SÍ encajan con su voz y frases que NO.\n## HISTORIA FUNDACIONAL\nLa narrativa de origen que explica quién es hoy. El momento o proceso que lo convirtió en la persona que es. Auténtico, emotivo, memorable.\n## TAGLINE PERSONAL\n5 opciones de tagline personal (máx. 10 palabras cada uno). Cuál recomiendas y por qué.\n## MENSAJES CLAVE POR AUDIENCIA\nMensaje principal adaptado a cada audiencia: ${b.audiencias}. Mismo posicionamiento, lenguaje diferente.\n## TERRITORIO DE COMUNICACIÓN\nLos 3 temas sobre los que tiene autoridad genuina para hablar. Los 2 temas que debe evitar. Los temas adyacentes donde puede expandirse.`,
+
+    bio:`Eres un redactor especialista en comunicación ejecutiva y personal branding.\n${ctx}\n\nRedacta 3 versiones de bio profesional. Responde en español con secciones ##:\n## BIO LARGA (300-400 palabras)\nPara web personal, LinkedIn, dossieres de prensa. Completa, con historia, logros y visión. Tono ${b.tono}. En tercera persona.\n## BIO MEDIA (100-150 palabras)\nPara presentaciones en eventos, moderaciones, colaboraciones. Impacto en poco espacio. Tercera persona.\n## BIO CORTA (40-60 palabras)\nPara Twitter/X, perfiles secundarios, firmas de email, tarjetas de visita digitales. Lo esencial.\n## ELEVATOR PITCH (spoken — 45 segundos)\nLo que dice cuando le preguntan "¿a qué te dedicas?" en un evento. Primera persona. Natural, no recitado. Con gancho al inicio y llamada a la acción implícita al final.\n## HEADLINE DE LINKEDIN\n7 opciones de headline para LinkedIn (máx. 220 caracteres cada uno). El que genera clics, el que posiciona en búsquedas y el equilibrado. Con recomendación final.\n## FIRMA DE EMAIL PROFESIONAL\nTexto de firma de email que refuerza el posicionamiento. Con qué incluir y qué evitar.`,
+
+    linkedin:`Eres un experto en LinkedIn con especialización en personal branding para ejecutivos y líderes.\n${ctx}\n\nOptimiza la presencia en LinkedIn al máximo nivel. Responde en español con secciones ##:\n## ESTRATEGIA GENERAL DE LINKEDIN\nCómo usar LinkedIn como herramienta de posicionamiento, no solo de presencia. Qué hace la mayoría mal y qué debe hacer diferente.\n## SECCIÓN ABOUT (extracto)\nTexto completo del About/Resumen de LinkedIn (máx. 2.600 caracteres). Primera persona. Con gancho en las primeras líneas (lo único visible sin hacer clic). Incluye palabras clave de búsqueda de forma natural.\n## SECCIÓN EXPERIENCIA\nCómo redactar cada posición para que cuente una historia de progresión y logros. Estructura y ejemplos para las 3 posiciones más relevantes.\n## ESTRATEGIA DE CONEXIONES\nA quién conectar, cómo hacerlo sin parecer oportunista, cómo gestionar los mensajes de conexión. Mensaje de conexión tipo.\n## ESTRATEGIA DE PUBLICACIONES\nQué publicar, con qué frecuencia, en qué formato. Los 5 tipos de contenido que mejor funcionan para su perfil. Cuándo publicar.\n## INTERACCIÓN Y VISIBILIDAD\nCómo ganar visibilidad comentando estratégicamente. A quién seguir. Cómo usar los artículos de LinkedIn.\n## OPTIMIZACIÓN SEO DE PERFIL\nPalabras clave que debe incluir en su perfil para aparecer en búsquedas de su sector. Dónde colocarlas.\n## 3 PRIMEROS POSTS\nRedacta los 3 primeros posts que debería publicar al activar esta estrategia. Cada uno con un objetivo diferente: presentación, autoridad y humanidad.`,
+
+    visibilidad:`Eres un director de comunicación especializado en estrategia de medios y visibilidad de líderes.\n${ctx}\n\nCrea el plan de visibilidad completo. Responde en español con secciones ##:\n## DIAGNÓSTICO DE VISIBILIDAD ACTUAL\nDónde aparece hoy. Dónde debería aparecer. El gap que hay que cerrar.\n## MAPA DE MEDIOS Y PLATAFORMAS\nDónde debe estar presente según su perfil y audiencias: medios tradicionales, digitales, podcasts, newsletters, plataformas sociales. Para cada uno: por qué, cómo entrar, qué ofrecer.\n## ESTRATEGIA DE THOUGHT LEADERSHIP\nCómo convertirse en referente. Publicaciones propias (artículos, columnas, libro). Participación en eventos como ponente. Premios y reconocimientos del sector. Timeline.\n## RELACIONES CON MEDIOS\nCómo construir relaciones con periodistas y editores. El ángulo de historia que hace noticiable su perfil. Cómo aparecer en medios sin pagar por ello.\n## PLAN DE APARICIONES PÚBLICAS\nEventos donde debe aparecer. Conferencias donde debe hablar. Cómo conseguir las primeras invitaciones. Cómo escalar.\n## ESTRATEGIA DE PODCASTS\nListado de podcasts relevantes en su sector donde debería aparecer como invitado. Cómo preparar el pitch. De qué hablar.\n## CALENDARIO DE VISIBILIDAD\nCalendario mensual para los primeros 6 meses: qué hacer cada mes para aumentar la visibilidad de forma consistente.\n## MEDICIÓN DE VISIBILIDAD\nCómo medir el crecimiento de visibilidad. Qué herramientas usar. Qué KPIs seguir.`,
+
+    contenidos:`Eres un estratega de contenidos especializado en marca personal de líderes y ejecutivos.\n${ctx}\n\nCrea la estrategia de contenidos completa. Responde en español con secciones ##:\n## PILARES DE CONTENIDO\nLos 4-5 temas sobre los que va a hablar siempre. Por qué esos temas. Cómo conectan con su posicionamiento.\n## FORMATOS Y CANALES\nQué formato usar en cada plataforma. Dónde concentrar la energía según su perfil y tiempo disponible.\n## CALENDARIO EDITORIAL MENSUAL\nEstructura del mes: cuánto publicar, cuándo, sobre qué. Distribución por pilar de contenido.\n## 10 IDEAS DE CONTENIDO CONCRETAS\n10 piezas de contenido listas para desarrollar: título, formato, plataforma, objetivo y por qué funcionaría para su perfil.\n## VOZ EDITORIAL\nCómo escribir de forma que suene a él/ella y no a IA. Las frases tipo que usa. Los temas que evita. El nivel de vulnerabilidad apropiado.\n## ESTRATEGIA DE REUTILIZACIÓN\nCómo convertir un contenido en múltiples formatos. El método de producción eficiente para alguien con poco tiempo.\n## GESTIÓN DE LA COMUNIDAD\nCómo responder comentarios. Cómo gestionar críticas públicas. Cómo construir una comunidad real alrededor de su contenido.`,
+
+    politico:`Eres un consultor de comunicación política con experiencia en campañas electorales en América Latina y España.\n${ctx}\n${b.esPolitico?`Cargo aspirado: ${b.cargoAspira} | Partido: ${b.partido} | Campaña: ${b.fechaCampana} | Electorado: ${b.audienciaElectoral}`:'Este módulo aplica si el perfil tiene ambiciones políticas o necesita comunicar en entornos públicos.'}\n\nCrea el plan de comunicación política completo. Responde en español con secciones ##:\n## DIAGNÓSTICO POLÍTICO\nAnálisis del escenario político. Dónde está el espacio para su candidatura. Qué necesita el electorado que él/ella puede ofrecer.\n## POSICIONAMIENTO ELECTORAL\nLa propuesta de valor política. El mensaje central de campaña (máx. 10 palabras). Los 3 pilares temáticos de su campaña.\n## MENSAJES POR SEGMENTO ELECTORAL\nMensaje adaptado para cada segmento del electorado objetivo. Mismo candidato, idioma diferente.\n## NARRATIVA PERSONAL DE CAMPAÑA\nLa historia que conecta su vida personal con su propuesta política. Por qué él/ella y no otro. El momento que lo decidió.\n## ESTRATEGIA DIGITAL DE CAMPAÑA\nRedes sociales, publicidad digital, WhatsApp, comunidades online. Cómo ganar terreno digital con presupuesto limitado.\n## GESTIÓN DE DEBATES Y APARICIONES\nCómo preparar un debate. Las 5 preguntas más difíciles y cómo responderlas. El lenguaje corporal. El manejo del tiempo.\n## GESTIÓN DE CONTROVERSIAS\nCómo responder a ataques. Cuándo responder y cuándo no. El protocolo de crisis electoral.\n## PLAN DE CAMPAÑA SEMANA A SEMANA\nCalendario de los últimos 3 meses antes de la elección. Qué hacer cada semana.\n## COALICIONES Y ALIANZAS\nCon quién aliarse para ampliar la base electoral. Cómo construir esas alianzas.`,
+
+    reputacion:`Eres un experto en gestión de reputación online y crisis de comunicación para personas públicas.\n${ctx}\n\nCrea el plan completo de gestión de reputación. Responde en español con secciones ##:\n## AUDITORÍA DE REPUTACIÓN DIGITAL\nQué aparece en Google cuando buscan su nombre. Cómo está su huella digital. Qué hay que reforzar, qué hay que gestionar, qué hay que hacer desaparecer.\n## ESTRATEGIA DE REPUTACIÓN PROACTIVA\nCómo construir una reputación sólida antes de que llegue una crisis. Los activos de reputación que debe crear.\n## GESTIÓN DE CONTENIDO NEGATIVO\nQué hacer si hay contenido negativo en Google. Estrategias de SEO reputacional. Cuándo y cómo responder a críticas públicas.\n## PROTOCOLO DE CRISIS REPUTACIONAL\nLos 5 tipos de crisis reputacional más habituales para su perfil. Protocolo de respuesta para cada una. Las primeras 24 horas.\n## GESTIÓN DE REDES SOCIALES EN CRISIS\nCómo gestionar una crisis en redes. Qué decir, cuándo decirlo, qué nunca decir. El equipo mínimo necesario.\n## BLINDAJE REPUTACIONAL\nLas acciones preventivas que reducen el riesgo de crisis. Lo que debe hacer hoy para estar protegido mañana.\n## RECUPERACIÓN POST-CRISIS\nCómo reconstruir la reputación después de una crisis. El timeline realista. Los indicadores de recuperación.`,
+
+    kpis:`Eres un especialista en medición de marca personal y reputación digital.\n${ctx}\n\nCrea el framework completo de KPIs. Responde en español con secciones ##:\n## KPIs DE PRESENCIA DIGITAL\nSe\nguimiento de: posicionamiento en Google, tráfico web personal, menciones en medios. Herramientas gratuitas para medirlo.\n## KPIs DE REDES SOCIALES\nPor plataforma: seguidores, crecimiento mensual, engagement rate, alcance, contenido más compartido. Benchmarks del sector para su perfil.\n## KPIs DE INFLUENCIA Y AUTORIDAD\nCitas en medios, invitaciones a hablar, solicitudes de entrevistas, menciones de referentes. Cómo rastrearlos.\n## KPIs DE NEGOCIO GENERADO\nOportunidades de negocio atribuibles a la marca personal. Leads generados. Acuerdos donde la marca personal fue decisiva.\n## KPIs POLÍTICOS (si aplica)\nIntención de voto, notoriedad espontánea vs sugerida, favorabilidad, seguimiento de campaña. Encuestas y sondeos.\n## DASHBOARD MENSUAL\nPlantilla del informe mensual de evolución de marca personal. Qué datos incluir, en qué formato, cómo presentarlo al cliente.\n## OBJETIVOS A 3, 6 Y 12 MESES\nMilestones concretos y medibles para cada período. Qué debe haber conseguido en cada etapa para confirmar que la estrategia funciona.`
+  };
+  const _p=P[mod]||`Estrategia de marca personal para ${b.nombre}. Objetivo: ${b.objetivo}. Responde en español con secciones ##.`; return _p+'\n\nIMPORTANTE: Desarrolla CADA sección completamente sin truncar. El documento debe ser accionable y completo para el cliente.';
+}
+
+function md(t){
+  if(!t)return'';
+  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^### (.+)$/gm,'<h4 style="color:var(--gold);margin:10px 0 4px;font-size:13px;font-weight:500">$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3 style="color:var(--gold);margin:14px 0 5px;font-size:14px;font-weight:500;font-style:italic">$1</h3>')
+    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+
+function renderModule(mod,text){
+  const panel=document.getElementById('panel-'+mod);
+  if(!panel)return;
+  renderGeneric(panel,mod,text);
+}
+
+function renderGeneric(panel,mod,text){
+  const cleanedText = text.replace(/^[^#\n]*?\n(?=##\s)/s,'').trim()||text;
+  const secs=cleanedText.split(/^## /m).filter(s=>s.trim()).map(s=>{
+    const nl=s.indexOf('\n');
+    if(nl===-1)return{title:s.trim(),body:''};
+    return{title:s.slice(0,nl).trim(),body:s.slice(nl+1).trim()};
+  });
+  let inner;
+  if(secs.length>1){
+    const tabs=secs.map((s,i)=>`<button class="itab ${i===0?'on':''}" onclick="iTab(this,'gp-${mod}-${i}')">${s.title.slice(0,28)}</button>`).join('');
+    const panels=secs.map((s,i)=>`<div id="gp-${mod}-${i}" class="ip ${i===0?'show':''} cb"><p>${md(s.body)}</p></div>`).join('');
+    inner=`<div class="itabs" style="overflow-x:auto">${tabs}</div>${panels}`;
+  } else if(secs.length===1){
+    inner=`<div class="cb"><p>${md(secs[0].body||cleanedText)}</p></div>`;
+  } else {
+    inner=`<div class="cb"><p>${md(cleanedText)}</p></div>`;
+  }
+  panel.innerHTML=`<div class="card" id="gc-${mod}"><div class="ch"><span class="ct">${MTIT[mod]||mod}</span><button class="btn-sm" onclick="copyText('gc-${mod}')">COPIAR</button></div>${inner}</div>`;
+}
+
+function copyText(id){
+  const el=document.getElementById(id);if(!el)return;
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    const btn=el.closest?.('.card')?.querySelector('.btn-sm');
+    if(btn){const o=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=o,2000);}
+  });
+}
+
+// ══════════════════════════════════
+// RADAR PRE/POST
+// ══════════════════════════════════
+let radarChart=null;
+const RADAR_DIMS=[
+  {label:'Notoriedad en sector',pre:20,post:60},
+  {label:'Presencia digital',pre:30,post:70},
+  {label:'Percepción de autoridad',pre:25,post:65},
+  {label:'Engagement comunidad',pre:15,post:55},
+  {label:'Cobertura en medios',pre:10,post:50},
+  {label:'Claridad de mensaje',pre:35,post:80},
+  {label:'Reputación online',pre:40,post:75},
+  {label:'Oportunidades generadas',pre:20,post:65},
+];
+
+function renderRadar(){
+  const panel=document.getElementById('panel-radar');
+  if(!panel)return;
+  panel.innerHTML=`
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Radar de Impacto de Marca Personal — Antes vs Después</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;align-items:start">
+      <div>
+        <canvas id="radarCanvas" height="300"></canvas>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;color:var(--gold);text-transform:uppercase;margin-bottom:4px">Introduce los datos reales del cliente</div>
+        ${RADAR_DIMS.map((d,i)=>`
+          <div style="display:grid;grid-template-columns:1fr 52px 52px;gap:6px;align-items:center">
+            <div style="font-size:11px;color:var(--text2)">${d.label}</div>
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-bottom:2px">ANTES</div>
+              <input type="number" id="rpre${i}" value="${d.pre}" min="0" max="100" style="padding:4px 6px;font-size:12px;text-align:center">
+            </div>
+            <div>
+              <div style="font-family:'DM Mono',monospace;font-size:8px;color:#2d6a4f;margin-bottom:2px">DESPUÉS</div>
+              <input type="number" id="rpost${i}" value="${d.post}" min="0" max="100" style="padding:4px 6px;font-size:12px;text-align:center;border-color:#2d6a4f">
+            </div>
+          </div>`).join('')}
+        <button class="btn-gold" onclick="updateRadar()" style="margin-top:8px">ACTUALIZAR GRÁFICO</button>
+        <div id="radarResult"></div>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(buildRadar,100);
+}
+
+function buildRadar(){
+  const ctx=document.getElementById('radarCanvas')?.getContext('2d');
+  if(!ctx)return;
+  if(radarChart){radarChart.destroy();radarChart=null;}
+  const pre=RADAR_DIMS.map((_,i)=>parseFloat(document.getElementById('rpre'+i)?.value||0));
+  const post=RADAR_DIMS.map((_,i)=>parseFloat(document.getElementById('rpost'+i)?.value||0));
+  radarChart=new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:RADAR_DIMS.map(d=>d.label),
+      datasets:[
+        {label:'ANTES',data:pre,borderColor:'rgba(138,112,64,0.7)',backgroundColor:'rgba(138,112,64,0.1)',pointBackgroundColor:'rgba(138,112,64,0.7)',borderWidth:2,borderDash:[5,3]},
+        {label:'DESPUÉS',data:post,borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,0.15)',pointBackgroundColor:'#2d6a4f',borderWidth:2.5},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}},
+      scales:{r:{min:0,max:100,ticks:{stepSize:20,font:{size:8}},grid:{color:'rgba(122,92,15,0.12)'},pointLabels:{font:{size:9}}}}}
+  });
+}
+
+function updateRadar(){
+  buildRadar();
+  const pre=RADAR_DIMS.map((_,i)=>parseFloat(document.getElementById('rpre'+i)?.value||0));
+  const post=RADAR_DIMS.map((_,i)=>parseFloat(document.getElementById('rpost'+i)?.value||0));
+  const avgPre=pre.reduce((a,b)=>a+b,0)/pre.length;
+  const avgPost=post.reduce((a,b)=>a+b,0)/post.length;
+  const impact=Math.round(((avgPost-avgPre)/avgPre)*100);
+  const res=document.getElementById('radarResult');
+  if(res) res.innerHTML=`<div style="margin-top:10px;padding:12px;background:rgba(45,106,79,0.1);border:1px solid #2d6a4f;border-radius:3px;text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#2d6a4f">+${impact}%</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase">Mejora media de marca personal</div></div>`;
+}
+
+// ══════════════════════════════════
+// PDF
+// ══════════════════════════════════
+function generatePDF(tipo){
+  const b=getBrief();
+  if(Object.keys(outs).length===0){alert('Genera los módulos primero.');showTab('brief');return;}
+  const GOLD='#7a5c0f',DARK='#0d0b07',GRAY='#8a7040',CREAM='#faf5e8',LIGHT='#ede6d5';
+  const isCliente=tipo==='cliente';
+
+  function cleanText(t){return(t||'').replace(/<[^>]+>/g,'').replace(/\*\*(.+?)\*\*/g,'$1').trim();}
+  function textToContent(text){
+    const sections=[];
+    const clean=cleanText(text);
+    const secs=clean.split(/^## /m).filter(s=>s.trim());
+    secs.forEach(sec=>{
+      const nl=sec.indexOf('\n');
+      const title=(nl>-1?sec.slice(0,nl):sec).trim();
+      const body=(nl>-1?sec.slice(nl+1):'').trim();
+      const items=[];
+      if(title)items.push({text:title,style:'subheading',margin:[0,0,0,5]});
+      body.split('\n').forEach(line=>{
+        line=line.trim();if(!line)return;
+        if(line.startsWith('###'))items.push({text:line.replace(/^###\s*/,''),style:'subsubheading',margin:[0,5,0,2]});
+        else if(line.startsWith('-')||line.startsWith('•'))items.push({text:'• '+line.replace(/^[-•]\s*/,''),style:'bodyText',margin:[12,2,0,2]});
+        else items.push({text:line,style:'bodyText',margin:[0,2,0,2]});
+      });
+      if(items.length)sections.push({stack:items,unbreakable:true,margin:[0,0,0,12]});
+    });
+    return sections;
+  }
+
+  const content=[];
+
+  // COVER
+  content.push({stack:[
+    {text:'\n\n\n\n\n\n\n\n'},
+    {text:'AURA NARRATIVE',style:'coverTitle'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+    {text:isCliente?'PROPUESTA DE MARCA PERSONAL':'DOSSIER ESTRATÉGICO INTERNO',style:'coverSubtitle'},
+    {text:'\n\n\n'},
+    {text:b.nombre.toUpperCase(),style:'coverCompany'},
+    {text:b.cargo+' · '+b.sector,style:'coverProduct'},
+    {text:'\n\n'},
+    {table:{widths:[140,590],body:[
+      [{text:'Perfil',style:'tLabel'},{text:b.tipoPerfil,style:'tVal'}],
+      [{text:'Ciudad',style:'tLabel'},{text:b.ciudad,style:'tVal'}],
+      [{text:'Objetivo',style:'tLabel'},{text:b.objetivo,style:'tVal'}],
+      [{text:'Audiencias',style:'tLabel'},{text:b.audiencias,style:'tVal'}],
+      [{text:'Urgencia',style:'tLabel'},{text:b.urgencia+'/10',style:'tVal'}],
+    ]},layout:{fillColor:(r)=>r%2===0?CREAM:LIGHT,hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7}},
+    {text:'\n\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:'#d4c090'}]},{text:'\n'},
+    {text:isCliente?'Propuesta elaborada por AURA CABINET':'Documento interno confidencial — AURA CABINET',style:'coverFooter'},
+    {text:'aura-cabinet.com · private@aura-cabinet.com',style:'coverFooter'},
+  ],pageBreak:'after'});
+
+  // COMPARISON TABLE (solo cliente)
+  if(isCliente){
+    content.push({stack:[
+      {text:'POR QUÉ AURA CABINET',style:'sectionTitle'},
+      {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:GOLD}]},{text:'\n'},
+      {table:{
+        widths:[185,130,130,150,110],headerRows:1,dontBreakRows:true,
+        body:[
+          [{text:'',style:'thdr'},{text:'GRAN AGENCIA',style:'thdr'},{text:'CONSULTOR',style:'thdr'},{text:'AURA CABINET',style:'thdr'},{text:'HAZLO TÚ MISMO',style:'thdr'}],
+          ['Estrategia narrativa completa',{text:'✓',color:'#2d6a4f'},{text:'Parcial',color:GRAY},{text:'✓ Completa',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'}],
+          ['Arquitectura de identidad',{text:'Estándar',color:GRAY},{text:'Variable',color:GRAY},{text:'✓ A medida',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'}],
+          ['Gestión de reputación online',{text:'✓',color:'#2d6a4f'},{text:'✗',color:'#8b3a2a'},{text:'✓',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'}],
+          ['Plan político (si aplica)',{text:'Agencia específica',color:GRAY},{text:'✗',color:'#8b3a2a'},{text:'✓ Integrado',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'}],
+          ['KPIs y medición de impacto',{text:'Básico',color:GRAY},{text:'✗',color:'#8b3a2a'},{text:'✓ Completo',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'}],
+          ['Máx. 3 clientes simultáneos',{text:'✗',color:'#8b3a2a'},{text:'Variable',color:GRAY},{text:'✓ Exclusividad',bold:true,color:GOLD},{text:'—',color:GRAY}],
+          ['Precio orientativo',{text:'€€€€',color:'#1a3a5c'},{text:'€€€',color:'#1a3a5c'},{text:'€€€',bold:true,color:GOLD},{text:'Tu tiempo',color:GRAY}],
+        ]
+      },layout:{hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7,fillColor:(r)=>r===0?GOLD:r%2===0?CREAM:'white'}},
+      {text:'\n'},
+      {text:'La narrativa que te precede antes de que abras la boca. AURA CABINET construye la identidad que el mundo verá — antes de que otros la construyan por ti.',style:'bodyText',italics:true,margin:[0,8,0,0]},
+    ],pageBreak:'after'});
+  }
+
+  // MODULES
+  const modsCliente=['diagnostico','identidad','bio','linkedin','visibilidad','kpis'];
+  const modsInterno=['diagnostico','identidad','bio','linkedin','visibilidad','contenidos','reputacion','kpis'];
+  const modsForPDF=isCliente?modsCliente:modsInterno;
+  if(b.esPolitico) modsForPDF.push('politico');
+
+  modsForPDF.forEach(mod=>{
+    if(!outs[mod])return;
+    content.push({
+      stack:[
+        {text:(MTIT[mod]||mod).toUpperCase(),style:'sectionTitle'},
+        {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+        ...textToContent(outs[mod]),
+      ],pageBreak:'after'
+    });
+  });
+
+  // CLOSING
+  content.push({stack:[
+    {text:'\n\n\n\n\n\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+    {text:'La Arquitectura de lo Imperceptible.',style:'closingTitle'},
+    {text:'\n'},
+    {text:isCliente?'Tu narrativa ya existe. La pregunta es quién la está construyendo.':'Documento confidencial — AURA CABINET.',style:'closingBody'},
+    {text:'\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:'#d4c090'}]},{text:'\n'},
+    {text:'AURA CABINET · private@aura-cabinet.com · aura-cabinet.com',style:'closingFooter',alignment:'center'},
+  ]});
+
+  const docDef={
+    content,
+    styles:{
+      coverTitle:    {fontSize:42,bold:true,color:GOLD,margin:[0,0,0,8]},
+      coverSubtitle: {fontSize:10,color:GRAY,margin:[0,0,0,22]},
+      coverCompany:  {fontSize:22,bold:true,color:DARK,margin:[0,0,0,5]},
+      coverProduct:  {fontSize:13,color:GRAY,italics:true,margin:[0,0,0,18]},
+      coverFooter:   {fontSize:8,color:GRAY,italics:true,margin:[0,3,0,0]},
+      sectionTitle:  {fontSize:17,bold:true,color:GOLD,margin:[0,12,0,6]},
+      subheading:    {fontSize:13,bold:true,color:DARK,margin:[0,8,0,4]},
+      subsubheading: {fontSize:11,bold:true,color:GOLD,margin:[0,6,0,3]},
+      bodyText:      {fontSize:11,color:DARK,lineHeight:1.65,margin:[0,1,0,2]},
+      bodyItalic:    {fontSize:11,color:GRAY,italics:true,lineHeight:1.6},
+      bullet:        {fontSize:11,color:DARK,lineHeight:1.6,margin:[8,1,0,1]},
+      tLabel:        {fontSize:9,bold:true,color:GOLD},
+      tVal:          {fontSize:9,color:DARK},
+      thdr:          {fontSize:9,bold:true,color:'#ffffff'},
+      tCell:         {fontSize:9,color:DARK,lineHeight:1.4},
+      questionText:  {fontSize:10,bold:true,color:GOLD,margin:[0,5,0,1]},
+      answerText:    {fontSize:10,color:DARK,italics:true,margin:[0,0,0,6]},
+      closingTitle:  {fontSize:14,italics:true,color:DARK,alignment:'center',margin:[0,20,0,6]},
+      closingBody:   {fontSize:10,color:GRAY,alignment:'center',margin:[0,0,0,4]},
+      closingFooter: {fontSize:8,color:GRAY,alignment:'center'},
+      kpiNum:        {fontSize:26,bold:true,color:GOLD,alignment:'center'},
+      kpiLabel:      {fontSize:9,color:GRAY,alignment:'center',margin:[0,3,0,0]},
+    },
+    defaultStyle:{font:'Helvetica',fontSize:12},
+    pageSize:'A4', pageOrientation:'landscape',
+    pageMargins:[40,50,40,35],
+    footer:(page,pages)=>({
+      columns:[
+        {text:`AURA NARRATIVE · ${isCliente?'Propuesta Cliente':'Dossier Interno'}`,fontSize:9,color:GRAY,margin:[40,0,0,0]},
+        {text:`Pág. ${page} / ${pages}`,fontSize:9,color:GRAY,alignment:'right',margin:[0,0,40,0]}
+      ],margin:[0,4,0,0]
+    }),
+    info:{title:`AURA NARRATIVE — ${b.nombre}`,author:'AURA CABINET'}
+  };
+
+  const filename=`AURA-NARRATIVE-${tipo.toUpperCase()}-${(b.nombre||'Cliente').replace(/\s+/g,'-')}-${new Date().toISOString().slice(0,10)}.pdf`;
+  pdfMake.fonts=Object.assign(pdfMake.fonts||{},{Helvetica:{normal:"Helvetica",bold:"Helvetica-Bold",italics:"Helvetica-Oblique",bolditalics:"Helvetica-BoldOblique"}});
+  pdfMake.createPdf(docDef).download(filename);
+}
+
+// ══════════════════════════════════
+// GENERATE
+// ══════════════════════════════════
+
+// ══════════════════════════════════════
+// GRÁFICOS NARRATIVE — pre/post actividad
+// ══════════════════════════════════════
+let chartInstances={};
+function destroyCharts(){Object.values(chartInstances).forEach(c=>{try{c.destroy()}catch(e){}});chartInstances={};}
+
+function renderGraficos(){
+  const panel=document.getElementById('panel-graficos');
+  if(!panel)return;
+  destroyCharts();
+  const b=getBrief();
+  panel.innerHTML=`
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Dashboard de Marca Personal — Evolución de Indicadores</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px">
+
+      <div style="background:var(--card2);border:1px solid var(--border2);border-radius:4px;padding:16px;grid-column:span 2">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px">Radar de Impacto de Marca Personal — Antes vs Después de la intervención</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+          <div style="height:280px;position:relative"><canvas id="na-radar"></canvas></div>
+          <div id="na-rf" style="display:flex;flex-direction:column;gap:8px;padding-top:8px"></div>
+        </div>
+        <button onclick="updateNaRadar()" style="margin-top:12px;background:var(--gold);color:white;border:none;padding:8px 18px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;border-radius:3px">ACTUALIZAR</button>
+      </div>
+
+      <div style="background:var(--card2);border:1px solid var(--border2);border-radius:4px;padding:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px">Visibilidad Digital — Evolución Proyectada</div>
+        <div style="height:200px;position:relative"><canvas id="na-line"></canvas></div>
+      </div>
+
+      <div style="background:var(--card2);border:1px solid var(--border2);border-radius:4px;padding:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px">Mix de Canales — Peso Estratégico</div>
+        <div style="height:200px;position:relative"><canvas id="na-donut"></canvas></div>
+      </div>
+
+    </div>
+  </div>`;
+
+  const dims=[
+    {l:'Presencia LinkedIn',pre:0,post:0},{l:'Autoridad de nicho',pre:0,post:0},
+    {l:'Reputación online',pre:0,post:0},{l:'Consistencia narrativa',pre:0,post:0},
+    {l:'Visibilidad en medios',pre:0,post:0},{l:'Network estratégico',pre:0,post:0},
+  ];
+  const rf=document.getElementById('na-rf');
+  if(rf) rf.innerHTML=dims.map((d,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 56px 56px;gap:5px;align-items:center;margin-bottom:4px">
+      <div style="font-size:11px;color:var(--text2)">${d.l}</div>
+      <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-bottom:2px">ANTES</div>
+        <input type="number" id="napre${i}" value="0" min="0" max="100" style="padding:4px;font-size:11px;text-align:center"></div>
+      <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:#2d6a4f;margin-bottom:2px">DESPUÉS</div>
+        <input type="number" id="napost${i}" value="0" min="0" max="100" style="padding:4px;font-size:11px;text-align:center;border-color:#2d6a4f"></div>
+    </div>`).join('');
+
+  setTimeout(()=>{
+    const rc=document.getElementById('na-radar')?.getContext('2d');
+    if(rc) chartInstances.radar=new Chart(rc,{type:'radar',data:{labels:dims.map(d=>d.l),datasets:[
+      {label:'Antes',data:dims.map(d=>d.pre),borderColor:'rgba(184,145,58,0.6)',backgroundColor:'rgba(184,145,58,0.12)',borderWidth:2,pointRadius:3},
+      {label:'Después',data:dims.map(d=>d.post),borderColor:'rgba(45,106,79,0.8)',backgroundColor:'rgba(45,106,79,0.15)',borderWidth:2,pointRadius:3},
+    ]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,ticks:{stepSize:25,font:{size:9}},grid:{color:'rgba(184,145,58,0.12)'},pointLabels:{font:{size:10}}}},plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}});
+
+    const lc=document.getElementById('na-line')?.getContext('2d');
+    if(lc) chartInstances.line=new Chart(lc,{type:'line',data:{labels:['Mes 1','Mes 2','Mes 3','Mes 4','Mes 5','Mes 6'],datasets:[
+      {label:'LinkedIn alcance',data:[100,130,170,210,260,320],borderColor:'#b8913a',backgroundColor:'rgba(184,145,58,0.1)',borderWidth:2,fill:true,tension:0.4},
+      {label:'Menciones en medios',data:[0,2,5,8,12,18],borderColor:'#2d6a4f',backgroundColor:'rgba(45,106,79,0.1)',borderWidth:2,fill:true,tension:0.4},
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}});
+
+    const dc=document.getElementById('na-donut')?.getContext('2d');
+    if(dc) chartInstances.donut=new Chart(dc,{type:'doughnut',data:{labels:['LinkedIn','Conferencias','Medios','Newsletter','X/Twitter','Podcast'],datasets:[{data:[35,20,20,10,10,5],backgroundColor:['#b8913a','#1a3a5c','#2d6a4f','#5c1a1a','#4a2d7a','#8b6914'],borderWidth:2}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}}}});
+  },100);
+}
+
+function updateNaRadar(){
+  const pre=Array.from({length:6},(_,i)=>parseFloat(document.getElementById('napre'+i)?.value||0));
+  const post=Array.from({length:6},(_,i)=>parseFloat(document.getElementById('napost'+i)?.value||0));
+  if(chartInstances.radar){chartInstances.radar.data.datasets[0].data=pre;chartInstances.radar.data.datasets[1].data=post;chartInstances.radar.update();}
+}
+
+async function genAll(){
+  const nombre=document.getElementById('nombre').value.trim();
+  if(!nombre){alert('Añade el nombre del cliente.');return;}
+  const toGen=selMod.filter(m=>Object.keys(MTIT).includes(m));
+  if(!toGen.length){alert('Selecciona al menos un módulo.');return;}
+
+  // ── Verificar Motor Central ──
+  if (!AURA_BRIDGE.isEngineAvailable()) {
+    const existing = document.getElementById('aura-engine-error');
+    if (!existing) {
+      const b = document.createElement('div');
+      b.id = 'aura-engine-error';
+      b.style.cssText = ['position:fixed','top:0','left:0','right:0','z-index:99999','background:#5c1a1a','color:#f0ece2','padding:11px 20px','font-family:DM Mono,monospace','font-size:11px','letter-spacing:.12em','display:flex','align-items:center','justify-content:space-between','border-bottom:2px solid #8b3a2a','box-shadow:0 2px 12px rgba(0,0,0,.4)'].join(';');
+      b.innerHTML = `<span>◈ ERROR: Motor AURA no detectado. Abre el panel de configuración — <a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="color:#c9a84c;text-decoration:underline">Abrir Motor Multi-API</a></span><button onclick="this.parentElement.remove()" style="background:transparent;border:1px solid rgba(240,236,226,.3);color:#f0ece2;padding:3px 10px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;border-radius:2px">✕ CERRAR</button>`;
+      document.body.prepend(b);
+    }
+    return;
+  }
+
+  const b=getBrief();
+  document.getElementById('btnGen').disabled=true;
+  document.getElementById('welcomeScreen').style.display='none';
+  outs={};
+  showTab(toGen[0]);
+  for(const mod of toGen){
+    document.getElementById('stBar').textContent='GENERANDO '+mod.toUpperCase()+'…';
+    const panel=document.getElementById('panel-'+mod);
+    if(panel) panel.innerHTML=`<div class="loading"><div class="ring"></div><p class="ltxt">Construyendo ${MTIT[mod]||mod}…</p></div>`;
+    try{
+      const tok=mod==='politico'||mod==='reputacion'?5000:mod==='linkedin'||mod==='visibilidad'||mod==='contenidos'||mod==='kpis'?4500:3500;
+      const text=await callAPI(getPrompt(mod,b),tok);
+      outs[mod]=text;
+      renderModule(mod,text);
+    }catch(e){
+      outs[mod]='## Error\nNo se pudo generar: '+e.message;
+      if(panel) panel.innerHTML=`<div class="card"><div class="cb" style="color:#8a4030">
+        <strong style="font-size:14px">Error en ${MTIT[mod]||mod}:</strong><br><br>
+        <code style="font-family:'DM Mono',monospace;font-size:11px;background:rgba(139,58,42,0.1);padding:6px 10px;border-radius:3px;display:block;word-break:break-all">${e.message}</code>
+        <div style="margin-top:10px;font-size:12px;color:var(--text2)">
+          Si dice <em>401</em> o <em>403</em>: API Key incorrecta o expirada — abre ENGINE y verifica.<br>
+          Si dice <em>529</em> o <em>overloaded</em>: API saturada, espera 30s y reintenta.<br>
+          Si dice <em>no detectado</em>: guarda las keys en ENGINE primero.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button onclick="genAll()" style="background:var(--gold);color:white;border:none;padding:6px 16px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;border-radius:3px;letter-spacing:.1em">↺ REINTENTAR</button>
+          <a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:6px 14px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;border-radius:3px;letter-spacing:.1em;text-decoration:none">⚙ ABRIR ENGINE</a>
+        </div>
+      </div></div>`;
+    }
+  }
+  document.getElementById('btnGen').disabled=false;
+  document.getElementById('stBar').textContent='LISTO ✓ — '+Object.keys(outs).length+' módulos';
+}
+
+// ══════════════════════════════════
+// ENGINE STATUS BAR
+// ══════════════════════════════════
+(function injectEngineBar() {
+  const bar = document.createElement('div');
+  bar.id = 'aura-engine-bar';
+  bar.style.cssText = ['position:fixed','bottom:0','left:0','right:0','z-index:1000','background:var(--bg2)','border-top:1px solid var(--border)','display:flex','align-items:center','padding:5px 16px','gap:10px','height:34px'].join(';');
+  const cfg = (()=>{ try{ const s=localStorage.getItem('aura_engine_cfg'); return s?JSON.parse(s):null; }catch(e){return null;} })();
+  const hasEngine = cfg && (cfg.claude?.key || cfg.gemini?.key || cfg.serp?.key);
+  const dotColor  = hasEngine ? 'var(--gold)' : '#8b3a2a';
+  const statusTxt = hasEngine
+    ? `Motor: ${cfg.globalOverride||'AUTO'} · Claude:${cfg.claude?.key?'✓':'✗'} · Gemini:${cfg.gemini?.key?'✓':'✗'} · SerpAPI:${cfg.serp?.key?'✓':'✗'}`
+    : '◈ Motor no configurado — Abre AURA-MULTIAPI-ENGINE.html';
+  bar.innerHTML = `<div style="width:7px;height:7px;border-radius:50%;background:${dotColor};flex-shrink:0;${hasEngine?'animation:pulse 2s infinite':''}"></div><span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)">AURA ENGINE</span><span id="suite-status-bar" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;flex:1">${statusTxt}</span><button onclick="exportConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;text-transform:uppercase" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" title="Exportar configuración a JSON">↓ Keys</button><button onclick="importConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;text-transform:uppercase" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" title="Importar configuración desde JSON">↑ Keys</button><a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;text-decoration:none;text-transform:uppercase" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">⚙ CONFIG</a>`;
+  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(bar));
+})();
+
+init();
+// ══════════════════════════════════════════════════
+// AUTO-IMPORT desde Briefing de cliente (?brief=...)
+// ══════════════════════════════════════════════════
+
+(function autoImportBrief() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+
+    let d = null;
+
+    // New method: key in localStorage (avoids URI Too Long)
+    const briefKey = params.get('briefkey');
+    if (briefKey) {
+      const stored = localStorage.getItem(briefKey);
+      if (stored) {
+        d = JSON.parse(stored);
+        localStorage.removeItem(briefKey); // clean up after reading
+      }
+    }
+
+    // Legacy method: data encoded in URL
+    if (!d) {
+      const encoded = params.get('brief');
+      if (encoded) {
+        d = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+      }
+    }
+
+    if (!d || typeof d !== 'object') return;
+
+    if(d['nombre']!==undefined&&document.getElementById('nombre'))document.getElementById('nombre').value=d['nombre'];
+    if(d['cargo']!==undefined&&document.getElementById('cargo'))document.getElementById('cargo').value=d['cargo'];
+    if(d['empresa']!==undefined&&document.getElementById('empresa'))document.getElementById('empresa').value=d['empresa'];
+    if(d['sector']!==undefined&&document.getElementById('sector'))document.getElementById('sector').value=d['sector'];
+    if(d['mercado']!==undefined&&document.getElementById('mercado'))document.getElementById('mercado').value=d['mercado'];
+    if(d['descripcion']!==undefined&&document.getElementById('bio'))document.getElementById('bio').value=d['descripcion'];
+    if(d['propuesta']!==undefined&&document.getElementById('propuesta'))document.getElementById('propuesta').value=d['propuesta'];
+    if(d['objetivo']!==undefined&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivo'];
+    if(d['canales']!==undefined&&document.getElementById('canales'))document.getElementById('canales').value=d['canales'];
+    if(d['idea']!==undefined&&document.getElementById('idea'))document.getElementById('idea').value=d['idea'];
+
+    // Trigger input events so any listeners fire
+    document.querySelectorAll('input,textarea,select').forEach(el =>
+      el.dispatchEvent(new Event('input', {bubbles:true}))
+    );
+
+    // Show banner
+    const nombre = d.nombre || d.cliente || d.empresa || 'cliente';
+    setTimeout(() => {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--gold,#b8913a);color:#fff;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.14em;padding:10px 22px;border-radius:20px;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+      bar.textContent = '◈ Briefing de ' + nombre + ' cargado correctamente';
+      document.body.appendChild(bar);
+      setTimeout(() => bar.remove(), 3500);
+    }, 800);
+
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+  } catch(e) { console.warn('Brief import:', e.message); }
+})();
+
+
+// ══════════════════════════════════════════════════
+// EXPORTAR HTML PARA IMPRESIÓN (máxima calidad PDF)
+// Abre en nueva ventana → Chrome → ⌘P → Guardar como PDF
+// ══════════════════════════════════════════════════
+function exportHTMLPrint(tipo) {
+  const isCliente = tipo === 'cliente';
+  if (!Object.keys(outs).length) { alert('Genera los módulos primero.'); return; }
+  const b = getBrief();
+  const fecha = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  const clienteNombre = b.cliente || b.empresa || b.nombre || 'Cliente';
+
+  const MTIT_LOCAL = typeof MTIT !== 'undefined' ? MTIT : {
+    diagnostico:'Diagnóstico',estrategia:'Estrategia',activacion:'Activación',
+    contenidos:'Contenidos',proveedores:'Proveedores',competencia:'Competencia',
+    propuesta:'Propuesta',kpis:'KPIs',concepto:'Concepto del Evento',
+    rider:'Rider Técnico',checklist:'Checklist',runbook:'Runbook',
+    comunicacion:'Comunicación',presupuesto:'Presupuesto',bio:'Biografía',
+    linkedin:'LinkedIn',visibilidad:'Visibilidad',identidad:'Identidad',
+    discurso:'Discurso',mensajes:'Mensajes Clave',prensa:'Nota de Prensa',
+    qya:'Q&A',plan:'Plan de Comunicación',empleados:'Comunicación Interna',
+    reputacion:'Reputación',competencia:'Competencia',protocolo:'Protocolo',
+    impacto:'Impacto',politico:'Perfil Político',radar:'Radar'
+  };
+
+  const INCLUDE = isCliente
+    ? Object.keys(outs).filter(m => !['proveedores','diagnostico'].includes(m))
+    : Object.keys(outs);
+
+  function cleanMd(t) {
+    return (t||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^#### (.+)$/gm,'<h4>$1</h4>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)\n?/g, s => '<ul>' + s + '</ul>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+  }
+
+  const tocHtml = INCLUDE.map((mod,i) =>
+    `<div class="toc-item"><span class="toc-num">${String(i+1).padStart(2,'0')}</span><span class="toc-title">${MTIT_LOCAL[mod]||mod}</span></div>`
+  ).join('');
+
+  const sectionsHtml = INCLUDE.map((mod,i) =>
+    `<section class="page-break">
+      <div class="section-header">
+        <div class="section-num">${String(i+1).padStart(2,'0')}</div>
+        <h2>${MTIT_LOCAL[mod]||mod}</h2>
+      </div>
+      <div class="section-body"><p>${cleanMd(outs[mod]||'')}</p></div>
+    </section>`
+  ).join('');
+
+  const metaRows = [
+    b.objetivo ? ['Objetivo', b.objetivo] : null,
+    b.mercado  ? ['Mercado', b.mercado]   : null,
+    b.presupuesto ? ['Presupuesto', b.presupuesto] : null,
+    b.duracion ? ['Duración', b.duracion] : null,
+    ['Fecha', fecha],
+  ].filter(Boolean);
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>${isCliente?'Propuesta':'Dossier'} · ${clienteNombre} · ${fecha}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#8b6914;--gold-lt:#c9a84c;--dark:#0d0b07;--gray:#6b6050;--cream:#faf7f2;--light:#f0ebe0;--border:#d4c090;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Cormorant Garamond",Georgia,serif;font-size:12pt;color:var(--dark);background:white;line-height:1.7;}
+/* COVER */
+.cover{width:100%;min-height:100vh;padding:56px 72px;display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;}
+.cover-bar{height:3px;background:var(--gold);margin-bottom:40px;}
+.cover-label{font-family:"DM Mono",monospace;font-size:8pt;letter-spacing:.35em;color:var(--gray);text-transform:uppercase;margin-bottom:18px;}
+.cover-title{font-family:"Cormorant Garamond",serif;font-size:54pt;font-weight:300;color:var(--gold);line-height:1;margin-bottom:4px;}
+.cover-rule{width:80px;height:2px;background:var(--gold);margin:18px 0 26px;}
+.cover-client{font-family:"Montserrat",sans-serif;font-size:15pt;font-weight:500;color:var(--dark);letter-spacing:.04em;margin-bottom:4px;}
+.cover-product{font-size:12pt;color:var(--gray);font-style:italic;margin-bottom:32px;}
+.cover-meta{border-top:1px solid var(--border);padding-top:12px;}
+.cover-meta-row{display:flex;gap:20px;padding:6px 0;border-bottom:1px solid var(--light);font-size:9pt;}
+.cover-meta-label{font-family:"DM Mono",monospace;color:var(--gold);letter-spacing:.1em;width:110px;flex-shrink:0;}
+.cover-meta-val{color:var(--dark);}
+.cover-bottom{border-top:1px solid var(--border);padding-top:14px;display:flex;justify-content:space-between;}
+.cover-footer{font-family:"DM Mono",monospace;font-size:7.5pt;color:var(--gray);letter-spacing:.08em;line-height:1.8;}
+/* TOC */
+.toc{padding:56px 72px;page-break-after:always;}
+.toc h1{font-family:"Cormorant Garamond",serif;font-size:28pt;font-weight:300;color:var(--gold);margin-bottom:6px;}
+.toc-rule{width:56px;height:1px;background:var(--gold);margin:12px 0 26px;}
+.toc-item{display:flex;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--light);gap:14px;font-size:11pt;}
+.toc-num{font-family:"DM Mono",monospace;font-size:8pt;color:var(--gold);letter-spacing:.1em;width:26px;flex-shrink:0;}
+/* SECTIONS */
+section{padding:50px 72px;}
+.page-break{page-break-before:always;}
+.section-header{display:flex;align-items:flex-start;gap:18px;margin-bottom:26px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.section-num{font-family:"DM Mono",monospace;font-size:9pt;color:var(--gold);letter-spacing:.15em;padding-top:10px;flex-shrink:0;}
+.section-header h2{font-family:"Cormorant Garamond",serif;font-size:30pt;font-weight:300;color:var(--dark);line-height:1.1;}
+.section-body h2{font-family:"Montserrat",sans-serif;font-size:10pt;font-weight:500;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin:22px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.section-body h3{font-family:"Cormorant Garamond",serif;font-size:16pt;font-weight:600;color:var(--dark);margin:16px 0 6px;}
+.section-body h4{font-family:"Montserrat",sans-serif;font-size:8.5pt;font-weight:500;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 4px;}
+.section-body p{margin-bottom:10px;font-size:11pt;line-height:1.75;}
+.section-body ul{list-style:none;margin:7px 0 11px;padding:0;}
+.section-body li{padding:3px 0 3px 18px;position:relative;font-size:11pt;line-height:1.65;}
+.section-body li::before{content:"◈";position:absolute;left:0;color:var(--gold);font-size:7pt;top:7px;}
+strong{font-weight:600;color:var(--dark);}
+em{font-style:italic;color:var(--gray);}
+/* PRINT */
+.no-print{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;gap:8px;}
+.btn-print{background:var(--gold);color:white;border:none;padding:12px 22px;font-family:"DM Mono",monospace;font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:3px;}
+.btn-close{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:12px 16px;font-family:"DM Mono",monospace;font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:3px;}
+@media print{
+  .no-print{display:none!important;}
+  @page{size:A4 landscape;margin:0;}
+  body{background:white;}
+  .page-break{page-break-before:always;}
+  .cover{height:100vh;page-break-after:always;}
+}
+</style></head><body>
+<div class="cover">
+  <div>
+    <div class="cover-bar"></div>
+    <div class="cover-label">${isCliente?'Propuesta de Campaña':'Dossier Estratégico Interno'}</div>
+    <div class="cover-title">AURA<br>CABINET</div>
+    <div class="cover-rule"></div>
+    <div class="cover-client">${clienteNombre.toUpperCase()}</div>
+    <div class="cover-product">${(b.producto||b.nombreEvento||b.cargo||b.evento||'').replace(/&/g,'&amp;')}</div>
+    <div class="cover-meta">${metaRows.map(([l,v])=>`<div class="cover-meta-row"><span class="cover-meta-label">${l}</span><span class="cover-meta-val">${(v||'').replace(/&/g,'&amp;')}</span></div>`).join('')}</div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-footer">${isCliente?'Propuesta elaborada por AURA CABINET':'Documento interno — Uso exclusivo AURA CABINET'}<br>aura-cabinet.com · private@aura-cabinet.com</div>
+    <div class="cover-footer" style="text-align:right">Confidencial<br>${isCliente?'Versión Cliente':'Versión Interna'}</div>
+  </div>
+</div>
+<div class="toc">
+  <h1>Índice</h1>
+  <div class="toc-rule"></div>
+  ${tocHtml}
+</div>
+${sectionsHtml}
+
+</body></html>`;
+
+  // Descarga como archivo HTML — ábrelo en Chrome y pulsa ⌘P para PDF de calidad
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = (isCliente ? 'Propuesta' : 'Dossier') + '-' +
+               (clienteNombre||'AURA').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'') +
+               '-' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>
