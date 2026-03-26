@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA EVENTS — Gestión Integral de Eventos</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.15/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.15/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f0ede8;--bg2:#f7f5f1;--bg3:#e8e4de;
+  --gold:#b8913a;--gold2:rgba(184,145,58,0.13);
+  --border:rgba(184,145,58,0.42);--border2:rgba(184,145,58,0.15);
+  --text:#0f0f12;--text2:#2c2c34;--text3:#60606e;
+  --card:#faf8f4;--card2:#f2efe9;
+  --pre:#1a3a5c;--pre2:rgba(26,58,92,0.08);
+  --prod:#2d6a4f;--prod2:rgba(45,106,79,0.08);
+  --post:#5c1a1a;--post2:rgba(92,26,26,0.08);
+  --success:#2d6a4f;--danger:#8b3a2a;
+}
+[data-theme="dark"]{
+  --bg:#0e0e14;--bg2:#13131b;--bg3:#161620;
+  --gold:#d4a843;--gold2:rgba(212,168,67,0.12);
+  --border:rgba(212,168,67,0.32);--border2:rgba(212,168,67,0.12);
+  --text:#f5f2ec;--text2:#d4c9b0;--text3:#8a8272;
+  --card:#1a1a24;--card2:#1e1e2a;
+  --pre2:rgba(26,58,92,0.2);--prod2:rgba(45,106,79,0.2);--post2:rgba(92,26,26,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cormorant Garamond',Georgia,serif}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+input[type=text],input[type=number],input[type=date],input[type=time],textarea,select{
+  background:var(--card);border:1px solid var(--border);color:var(--text);
+  font-family:'Cormorant Garamond',serif;font-size:15px;padding:8px 11px;
+  border-radius:3px;outline:none;width:100%;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{resize:vertical;line-height:1.5}
+select{background:var(--card2)}
+select option{background:var(--card2);color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input[type=range]{accent-color:var(--gold);width:100%;border:none;background:transparent;padding:0}
+input[type=checkbox]{accent-color:var(--gold);width:16px;height:16px;cursor:pointer;flex-shrink:0}
+
+.chip{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:14px;
+  border:1px solid var(--border);cursor:pointer;color:var(--text2);background:transparent;
+  letter-spacing:.04em;transition:all .18s;white-space:nowrap}
+.chip.on{background:var(--gold2);border-color:var(--gold);color:var(--gold)}
+
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+#hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.18em;color:var(--gold)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:.46rem;color:var(--text3);letter-spacing:.22em;margin-left:10px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+#stBar{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:.12em}
+.btn-hdr{background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:all .2s}
+.btn-hdr:hover{border-color:var(--gold);color:var(--gold)}
+
+#nav{background:var(--bg3);border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;flex-shrink:0;padding:0 12px}
+.ntab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:10px 11px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;
+  border-top:none;border-left:none;border-right:none;background:none;white-space:nowrap;transition:all .2s}
+.ntab:hover{color:var(--gold)}
+.ntab.on{color:var(--gold);border-bottom-color:var(--gold);font-weight:500}
+.nnum{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;
+  border-radius:50%;background:var(--gold2);border:1px solid var(--border);
+  font-size:9px;margin-right:4px;color:var(--gold)}
+.ntab.on .nnum{background:var(--gold);color:var(--bg)}
+
+#body{display:flex;flex:1;min-height:0;overflow:hidden}
+
+#sidebar{width:300px;flex-shrink:0;border-right:1px solid var(--border);
+  overflow-y:auto;padding:16px 14px 24px;display:flex;flex-direction:column;gap:16px;background:var(--bg2)}
+.slbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--gold);
+  text-transform:uppercase;padding-bottom:5px;border-bottom:1px solid var(--border2);margin-bottom:6px;font-weight:500}
+.flbl{font-size:13px;color:var(--text2);font-style:italic;margin-bottom:3px;font-weight:500}
+.fgrp{display:flex;flex-direction:column;gap:7px}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+
+#btnGen{background:var(--gold);color:var(--bg);border:none;padding:12px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;
+  cursor:pointer;border-radius:3px;width:100%;font-weight:500;transition:opacity .2s;text-transform:uppercase}
+#btnGen:hover{opacity:.88}
+#btnGen:disabled{opacity:.35;cursor:not-allowed}
+
+#content{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:16px;background:var(--bg)}
+
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:16px;opacity:.45;padding:40px;min-height:400px}
+.welcome h2{font-size:1.7rem;font-weight:300;font-style:italic;color:var(--gold)}
+.welcome p{font-size:15px;color:var(--text2);max-width:360px;line-height:1.8}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;animation:fadeUp .3s ease}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;
+  border-bottom:1px solid var(--border2);background:var(--gold2)}
+.ct{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.cb{padding:16px 18px;line-height:1.85;font-size:15px;color:var(--text)}
+.cb p{margin-bottom:8px}
+.cb h3{color:var(--gold);margin:12px 0 4px;font-size:14px;font-weight:500;font-style:italic}
+.cb h4{color:var(--text);margin:9px 0 3px;font-size:13px;font-weight:600}
+.cb strong{color:var(--text);font-weight:600}
+.cb ul,.cb ol{padding-left:18px}
+.cb li{margin-bottom:4px}
+
+.itabs{display:flex;border-bottom:1px solid var(--border2);overflow-x:auto;background:var(--bg3)}
+.itab{font-family:'DM Mono',monospace;font-size:9px;padding:8px 12px;color:var(--text3);
+  cursor:pointer;border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;
+  background:none;white-space:nowrap;letter-spacing:.08em;text-transform:uppercase;transition:all .18s}
+.itab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.ip{display:none}.ip.show{display:block}
+
+.btn-sm{background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:all .18s;white-space:nowrap}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold)}
+.btn-gold{background:var(--gold);color:var(--bg);border:none;padding:8px 16px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
+  cursor:pointer;border-radius:3px;text-transform:uppercase;transition:opacity .2s}
+.btn-gold:hover{opacity:.88}
+
+/* CHECKLIST */
+.phase-header{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border2)}
+.phase-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  padding:3px 10px;border-radius:10px;font-weight:500}
+.tag-pre{background:var(--pre2);color:var(--pre);border:1px solid var(--pre)}
+.tag-prod{background:var(--prod2);color:var(--prod);border:1px solid var(--prod)}
+.tag-post{background:var(--post2);color:var(--post);border:1px solid var(--post)}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:9px 16px;
+  border-bottom:1px solid var(--border2);transition:background .15s;cursor:pointer}
+.check-item:hover{background:var(--gold2)}
+.check-item.done{opacity:.55}
+.check-item.done .check-text{text-decoration:line-through;color:var(--text3)}
+.check-text{font-size:15px;color:var(--text);line-height:1.5;flex:1}
+.check-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);white-space:nowrap;margin-top:2px}
+.progress-bar{height:5px;background:var(--border2);border-radius:3px;overflow:hidden;margin:8px 16px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.progress-pre{background:var(--pre)}
+.progress-prod{background:var(--prod)}
+.progress-post{background:var(--post)}
+
+/* RIDER */
+.rider-section{border-bottom:1px solid var(--border2)}
+.rider-head{padding:10px 16px;background:var(--gold2);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.rider-body{padding:12px 16px;display:none}
+.rider-body.open{display:block}
+.rider-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border2);font-size:13px}
+.rider-qty{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);min-width:40px;font-weight:500}
+.rider-required{color:var(--danger);font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em}
+.rider-optional{color:var(--text3);font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.06em}
+
+/* RUNBOOK */
+.runbook-item{display:flex;gap:12px;padding:8px 16px;border-bottom:1px solid var(--border2);align-items:flex-start}
+.run-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);min-width:52px;font-weight:500;margin-top:2px}
+.run-action{font-size:15px;color:var(--text);flex:1;line-height:1.4}
+.run-who{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);white-space:nowrap;margin-top:2px}
+
+/* METRICS */
+.met-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 16px;border-bottom:1px solid var(--border2)}
+.met{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:12px;text-align:center}
+.mn{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold);line-height:1}
+.ml{font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+
+/* COMP TABLE */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{background:var(--gold);color:var(--bg);font-family:'DM Mono',monospace;
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;text-align:left}
+.comp-table td{padding:8px 12px;border-bottom:1px solid var(--border2);color:var(--text);vertical-align:top}
+.comp-table tr:nth-child(even) td{background:var(--card2)}
+.comp-table .aura-row td{background:var(--gold2);font-weight:600}
+.comp-table .aura-row td:first-child{color:var(--gold);font-family:'DM Mono',monospace}
+.check{color:var(--success);font-weight:700}
+.cross{color:var(--danger)}
+.badge{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:9px;border:1px solid var(--border);color:var(--text3)}
+
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px}
+.ring{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.ltxt{font-style:italic;color:var(--text3);font-size:15px}
+
+@media(max-width:768px){
+  #sidebar{width:100%;max-height:45vh;border-right:none;border-bottom:1px solid var(--border)}
+  #body{flex-direction:column}
+  .met-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<script>
+(function(){
+  var s=localStorage.getItem('aura_theme');
+  if(s) document.documentElement.setAttribute('data-theme',s);
+  else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)
+    document.documentElement.setAttribute('data-theme','dark');
+})();
+</script>
+<div id="app">
+
+<div id="hdr">
+  <div class="logo">AURA <span style="color:var(--text3);font-family:'Bebas Neue',sans-serif;font-size:.9rem">EVENTS</span>
+    <span class="logo-sub">GESTIÓN INTEGRAL DE EVENTOS · AURA GROWTH</span></div>
+  <div class="hdr-right">
+    <div id="stBar">LISTO</div>
+    <button class="btn-hdr" onclick="toggleTheme()">◐ MODO OSCURO</button>
+  </div>
+</div>
+
+<div id="nav"></div>
+
+<div id="body">
+<div id="sidebar">
+
+  <div>
+    <div class="slbl">① Datos del Evento</div>
+    <div class="fgrp">
+      <div><div class="flbl">Nombre del cliente</div><input type="text" id="cliente" placeholder="Ej. Del Frutal / Grupo Meridian"></div>
+      <div><div class="flbl">Nombre del evento</div><input type="text" id="nombreEvento" placeholder="Ej. Gala Anual de Liderazgo 2026"></div>
+      <div><div class="flbl">Tipo de evento</div>
+        <select id="tipoEvento">
+          <optgroup label="── Presencial">
+            <option>Convención corporativa</option>
+            <option>Lanzamiento de producto</option>
+            <option>Gala / Cena de gala</option>
+            <option>Congreso / Conferencia</option>
+            <option>Activación de marca en punto de venta</option>
+            <option>Team building</option>
+            <option>Networking estratégico</option>
+            <option>Rueda de prensa</option>
+            <option>Evento de patrocinio</option>
+            <option>Pop-up / Experiencia de marca</option>
+            <option>Feria / Exposición</option>
+            <option>Evento benéfico / RSC</option>
+          </optgroup>
+          <optgroup label="── Digital / A distancia">
+            <option>Webinar / Masterclass</option>
+            <option>Conferencia virtual</option>
+            <option>Lanzamiento digital</option>
+            <option>Formación corporativa online</option>
+            <option>Streaming en directo</option>
+            <option>Evento de comunidad online</option>
+          </optgroup>
+          <optgroup label="── Híbrido">
+            <option>Evento híbrido (presencial + streaming)</option>
+            <option>Convención híbrida multi-sede</option>
+          </optgroup>
+        </select></div>
+      <div><div class="flbl">Formato</div>
+        <select id="formato">
+          <option>Presencial</option>
+          <option>Digital / Online</option>
+          <option>Híbrido</option>
+        </select></div>
+      <div><div class="flbl">Escenario de gestión</div>
+        <select id="escenario" onchange="updateEscenario()">
+          <option value="propio">Presencial cercano — yo lo dirijo en persona</option>
+          <option value="remoto">Presencial remoto — coordino equipo en destino</option>
+          <option value="formacion">Charla / Formación / Keynote / Webinar</option>
+        </select></div>
+      <div id="escenarioInfo" style="padding:8px 10px;border-radius:3px;background:var(--gold2);border:1px solid var(--border);font-size:11px;color:var(--text2);font-style:italic;line-height:1.5"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">② Fecha, Lugar & Asistentes</div>
+    <div class="fgrp">
+      <div><div class="flbl">Fecha del evento</div><input type="date" id="fechaEvento"></div>
+      <div><div class="flbl">Horario (inicio — fin)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <input type="time" id="horaInicio" value="09:00">
+          <input type="time" id="horaFin" value="18:00">
+        </div></div>
+      <div><div class="flbl">Lugar / Sede</div><input type="text" id="lugar" placeholder="Ej. Hotel Ritz Madrid / Zoom / Híbrido"></div>
+      <div><div class="flbl">Ciudad / País</div><input type="text" id="ciudad" placeholder="Ej. Madrid, España"></div>
+      <div id="remotoFields" style="display:none">
+        <div style="background:var(--pre2);border:1px solid var(--pre);border-radius:3px;padding:10px;margin-top:4px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--pre);text-transform:uppercase;margin-bottom:8px;font-weight:500">Gestión Remota</div>
+          <div class="fgrp">
+            <div><div class="flbl">Diferencia horaria (horas)</div><input type="number" id="difHoraria" placeholder="Ej. -5 para LATAM" value="0"></div>
+            <div><div class="flbl">Coordinador local en destino</div><input type="text" id="coordLocal" placeholder="Nombre y contacto del coordinador local"></div>
+            <div><div class="flbl">Proveedores locales confirmados</div><textarea id="provLocal" placeholder="Lista de proveedores ya identificados en destino…" style="min-height:44px"></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div id="formacionFields" style="display:none">
+        <div style="background:var(--prod2);border:1px solid var(--prod);border-radius:3px;padding:10px;margin-top:4px">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--prod);text-transform:uppercase;margin-bottom:8px;font-weight:500">Datos de la Charla / Formación</div>
+          <div class="fgrp">
+            <div><div class="flbl">Ponente / Speaker</div><input type="text" id="ponente" placeholder="Nombre y perfil del ponente"></div>
+            <div><div class="flbl">Tema y duración</div><input type="text" id="temaDuracion" placeholder="Ej. Liderazgo en seguridad · 2 horas"></div>
+            <div><div class="flbl">Plataforma (si online)</div><select id="plataforma"><option>Presencial</option><option>Zoom</option><option>Teams</option><option>Google Meet</option><option>StreamYard</option><option>Hopin</option><option>Otra</option></select></div>
+          </div>
+        </div>
+      </div>
+      <div><div class="flbl">Número de asistentes</div>
+        <select id="asistentes">
+          <option value="10">Hasta 10 (reunión privada)</option>
+          <option value="30">10–30 (pequeño)</option>
+          <option value="75">30–75 (mediano)</option>
+          <option value="150">75–150 (grande)</option>
+          <option value="300">150–300 (corporativo)</option>
+          <option value="500">300–500 (masivo)</option>
+          <option value="1000">500–1.000 (multitudinario)</option>
+          <option value="5000">1.000+ (gran evento)</option>
+        </select></div>
+      <div><div class="flbl">Perfil de asistentes</div>
+        <textarea id="perfilAsistentes" placeholder="Ej. Directivos C-suite, inversores, medios especializados…" style="min-height:45px"></textarea></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">③ Objetivo & Concepto</div>
+    <div class="fgrp">
+      <div><div class="flbl">Objetivo principal del evento</div>
+        <select id="objetivo">
+          <option>Lanzamiento de producto / servicio</option>
+          <option>Fortalecimiento de cultura interna</option>
+          <option>Generación de networking estratégico</option>
+          <option>Posicionamiento de marca / CEO</option>
+          <option>Cierre de acuerdos comerciales</option>
+          <option>Celebración / reconocimiento</option>
+          <option>Formación / capacitación</option>
+          <option>Captación de clientes / leads</option>
+          <option>Comunicación de cambio organizacional</option>
+          <option>RSC / causa social</option>
+          <option>Generación de contenido y PR</option>
+        </select></div>
+      <div><div class="flbl">Mensaje clave del evento</div>
+        <textarea id="mensajeClave" placeholder="Qué debe llevarse cada asistente al salir…" style="min-height:50px"></textarea></div>
+      <div><div class="flbl">Tono / Ambiente</div>
+        <select id="tono">
+          <option>Formal y protocolario</option>
+          <option>Profesional y dinámico</option>
+          <option>Inspirador y motivacional</option>
+          <option>Íntimo y exclusivo</option>
+          <option>Creativo y disruptivo</option>
+          <option>Celebrativo y festivo</option>
+          <option>Educativo y participativo</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">④ Presupuesto & Honorarios</div>
+    <div class="fgrp">
+      <div><div class="flbl">Presupuesto total del evento (€)</div><input type="number" id="presupuesto" placeholder="Ej. 25000"></div>
+      <div><div class="flbl">Fee AURA EVENTS (€)</div><input type="number" id="feeAura" placeholder="Ej. 6500"></div>
+      <div><div class="flbl">Margen sobre proveedores (%)</div><input type="number" id="margen" value="15" placeholder="15"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">⑤ Módulos a Generar</div>
+    <div class="chips" id="modChips" style="margin-top:4px"></div>
+  </div>
+
+  <button id="btnGen" onclick="genAll()">◈ GENERAR EVENTO COMPLETO</button>
+</div>
+
+<div id="content">
+  <div class="welcome" id="welcomeScreen">
+    <div style="font-size:3rem;opacity:.15;color:var(--gold)">◈</div>
+    <h2>AURA EVENTS</h2>
+    <p>De un briefing a un evento completamente planificado. Rider técnico, checklist por fases, runbook minuto a minuto, métricas de impacto y propuesta al cliente.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px">
+      <span class="badge">Concepto creativo</span>
+      <span class="badge">Rider técnico</span>
+      <span class="badge">Checklist pre-prod</span>
+      <span class="badge">Checklist producción</span>
+      <span class="badge">Checklist post</span>
+      <span class="badge">Runbook día D</span>
+      <span class="badge">Plan de comunicación</span>
+      <span class="badge">Gestión proveedores</span>
+      <span class="badge">Presupuesto detallado</span>
+      <span class="badge">KPIs & métricas</span>
+      <span class="badge">PDF interno</span>
+      <span class="badge">PDF cliente</span>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// DATA
+// ══════════════════════════════════
+const MODS = [
+  {id:"concepto",   l:"Concepto"},
+  {id:"rider",      l:"Rider Técnico"},
+  {id:"checklist",  l:"Checklist"},
+  {id:"runbook",    l:"Runbook Día D"},
+  {id:"comunicacion",l:"Com. Evento"},
+  {id:"proveedores",l:"Proveedores"},
+  {id:"presupuesto",l:"Presupuesto"},
+  {id:"kpis",       l:"KPIs"},
+  {id:"pdfinterno", l:"PDF Interno"},
+  {id:"pdfcliente", l:"PDF Cliente"},
+];
+
+const MTIT = {
+  concepto:"Concepto Creativo & Estrategia del Evento",
+  rider:"Rider Técnico & Logístico",
+  checklist:"Checklist Operativo por Fases",
+  runbook:"Runbook — Guion del Día D",
+  comunicacion:"Plan de Comunicación del Evento",
+  proveedores:"Gestión de Proveedores & Subcontratas",
+  presupuesto:"Presupuesto Detallado",
+  kpis:"KPIs & Medición de Impacto",
+};
+
+let selMod = MODS.filter(m=>!['pdfinterno','pdfcliente'].includes(m.id)).map(m=>m.id);
+let outs = {}, curTab = "brief";
+let checkState = {};
+
+// ══════════════════════════════════
+// INIT
+// ══════════════════════════════════
+
+function renderError(panel, mod, errorMsg, retryFn) {
+  if (!panel) return;
+  panel.style.display = 'flex';
+  panel.style.flexDirection = 'column';
+  panel.style.gap = '14px';
+  panel.innerHTML = `
+    <div class="card" style="border-color:rgba(180,60,40,0.35)">
+      <div class="ch" style="background:rgba(180,60,40,0.10)">
+        <span class="ct" style="color:#c04030">◈ Error al generar</span>
+      </div>
+      <div class="cb" style="text-align:center;padding:28px 20px">
+        <p style="font-size:15px;color:var(--text2);margin-bottom:8px">${errorMsg}</p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;font-family:'DM Mono',monospace">
+          Comprueba la API Key en el ENGINE y vuelve a intentarlo.
+        </p>
+        <button class="btn-gold" onclick="(${retryFn})()" style="font-size:13px;padding:10px 24px">
+          ↺ Reintentar
+        </button>
+      </div>
+    </div>`;
+}
+
+function updateEscenario(){
+  const val = document.getElementById('escenario').value;
+  const info = document.getElementById('escenarioInfo');
+  const remoto = document.getElementById('remotoFields');
+  const formacion = document.getElementById('formacionFields');
+  
+  remoto.style.display = 'none';
+  formacion.style.display = 'none';
+  
+  const msgs = {
+    propio: '◈ Tú diriges y produces el evento en primera persona. Rider completo, checklist detallado y runbook minuto a minuto.',
+    remoto: '◈ Tú diseñas la estrategia y coordinas un equipo local en destino. Se genera briefing para coordinador local, protocolo de gestión remota y contingencias de distancia.',
+    formacion: '◈ Charla, keynote, masterclass o formación. Rider simplificado, guion del ponente, gestión de Q&A y métricas de impacto formativo.'
+  };
+  info.textContent = msgs[val] || '';
+  
+  if(val === 'remoto') remoto.style.display = 'block';
+  if(val === 'formacion') formacion.style.display = 'block';
+}
+
+function init(){
+  const mc = document.getElementById('modChips');
+  MODS.forEach(m=>{
+    const b=document.createElement('button');
+    b.className='chip'+(selMod.includes(m.id)?' on':'');
+    b.textContent=m.l;
+    b.onclick=()=>{const i=selMod.indexOf(m.id);if(i>-1){selMod.splice(i,1);b.classList.remove('on')}else{selMod.push(m.id);b.classList.add('on')}};
+    mc.appendChild(b);
+  });
+
+  const nav=document.getElementById('nav');
+  [{id:"brief",l:"BRIEF",num:0},...MODS.map((m,i)=>({id:m.id,l:m.l.toUpperCase(),num:i+1}))].forEach(t=>{
+    const b=document.createElement('button');
+    b.className='ntab'+(t.id==='brief'?' on':'');
+    b.id='ntab-'+t.id;
+    b.innerHTML=`<span class="nnum">${t.num}</span>${t.l}`;
+    b.onclick=()=>showTab(t.id);
+    nav.appendChild(b);
+    if(t.id!=='brief'){
+      const p=document.createElement('div');
+      p.id='panel-'+t.id;p.style.display='none';
+      document.getElementById('content').appendChild(p);
+    }
+  });
+
+  // Set today's date
+  document.getElementById('fechaEvento').value=new Date().toISOString().slice(0,10);
+  updateEscenario();
+}
+
+// ══════════════════════════════════
+// THEME & NAV
+// ══════════════════════════════════
+function toggleTheme(){
+  const html=document.documentElement;
+  const cur=html.getAttribute('data-theme');
+  const eff=cur||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  const next=eff==='dark'?'light':'dark';
+  html.setAttribute('data-theme',next);
+  localStorage.setItem('aura_theme',next);
+  const btn=document.querySelector('.btn-hdr');
+  if(btn)btn.textContent=next==='dark'?'☀ MODO CLARO':'◐ MODO OSCURO';
+}
+
+function showTab(id){
+  curTab=id;
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('ntab-'+id)?.classList.add('on');
+  document.getElementById('welcomeScreen').style.display='none';
+  document.querySelectorAll('[id^="panel-"]').forEach(p=>p.style.display='none');
+  if(id==='brief'){document.getElementById('welcomeScreen').style.display='flex';return;}
+  if(id==='graficos'){
+    const gp=document.getElementById('panel-graficos');
+    if(gp){gp.style.display='flex';gp.style.flexDirection='column';gp.style.gap='14px';}
+    renderGraficos();return;
+  }
+  if(id==='pdfinterno'){
+    const p=document.getElementById('panel-pdfinterno');
+    if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';
+    p.innerHTML=`<div class="card"><div class="ch"><span class="ct">◈ Dossier Interno de Producción</span></div><div class="cb" style="text-align:center;padding:30px"><p style="font-size:17px;color:var(--gold);margin-bottom:14px">Dossier listo para descargar</p><p style="font-size:14px;color:var(--text2);margin-bottom:20px">Rider técnico · Checklist · Presupuesto · KPIs · Formato A4 horizontal</p><button class="btn-gold" onclick="generatePDF('interno')" style="font-size:14px;padding:12px 28px">⬇ Descargar PDF Interno</button>
+              <button class="btn-sm" onclick="exportHTMLPrint('interno')" style="margin-left:8px;font-size:12px">◈ Descargar HTML Premium</button></div></div>`;}
+    return;
+  }
+  if(id==='pdfcliente'){
+    const p=document.getElementById('panel-pdfcliente');
+    if(p){p.style.display='flex';p.style.flexDirection='column';p.style.gap='14px';
+    p.innerHTML=`<div class="card"><div class="ch"><span class="ct">◈ Propuesta de Evento para el Cliente</span></div><div class="cb" style="text-align:center;padding:30px"><p style="font-size:17px;color:var(--gold);margin-bottom:14px">Propuesta lista para el cliente</p><p style="font-size:14px;color:var(--text2);margin-bottom:20px">Concepto · Comunicación · Presupuesto · KPIs · Formato A4 horizontal</p><button class="btn-gold" onclick="generatePDF('cliente')" style="font-size:14px;padding:12px 28px">⬇ Descargar Propuesta Cliente</button>
+              <button class="btn-sm" onclick="exportHTMLPrint('cliente')" style="margin-left:8px;font-size:12px">◈ Descargar HTML Premium</button></div></div>`;}
+    return;
+  }
+  const panel=document.getElementById('panel-'+id);
+  if(panel){panel.style.display='flex';panel.style.flexDirection='column';panel.style.gap='14px';}
+  if(outs[id]) renderModule(id,outs[id]);
+}
+
+function iTab(btn,pid){
+  btn.closest('.card').querySelectorAll('.itab').forEach(t=>t.classList.remove('on'));
+  btn.closest('.card').querySelectorAll('.ip').forEach(p=>p.classList.remove('show'));
+  btn.classList.add('on');document.getElementById(pid)?.classList.add('show');
+}
+
+// ══════════════════════════════════
+// BRIEF
+// ══════════════════════════════════
+function getBrief(){
+  return{
+    cliente:document.getElementById('cliente').value.trim()||'el cliente',
+    nombreEvento:document.getElementById('nombreEvento').value.trim()||'el evento',
+    tipoEvento:document.getElementById('tipoEvento').value,
+    formato:document.getElementById('formato').value,
+    fechaEvento:document.getElementById('fechaEvento').value,
+    horaInicio:document.getElementById('horaInicio').value,
+    horaFin:document.getElementById('horaFin').value,
+    lugar:document.getElementById('lugar').value.trim()||'por confirmar',
+    ciudad:document.getElementById('ciudad').value.trim()||'por confirmar',
+    asistentes:document.getElementById('asistentes').value,
+    perfilAsistentes:document.getElementById('perfilAsistentes').value.trim()||'profesionales del sector',
+    objetivo:document.getElementById('objetivo').value,
+    mensajeClave:document.getElementById('mensajeClave').value.trim()||'no especificado',
+    tono:document.getElementById('tono').value,
+    presupuesto:document.getElementById('presupuesto').value||'0',
+    feeAura:document.getElementById('feeAura').value||'0',
+    margen:document.getElementById('margen').value||'15',
+    esPresencial:document.getElementById('formato').value==='Presencial'||document.getElementById('formato').value==='Híbrido',
+    esDigital:document.getElementById('formato').value==='Digital / Online'||document.getElementById('formato').value==='Híbrido',
+    escenario:document.getElementById('escenario').value,
+    difHoraria:document.getElementById('difHoraria')?.value||'0',
+    coordLocal:document.getElementById('coordLocal')?.value||'',
+    provLocal:document.getElementById('provLocal')?.value||'',
+    ponente:document.getElementById('ponente')?.value||'',
+    temaDuracion:document.getElementById('temaDuracion')?.value||'',
+    plataforma:document.getElementById('plataforma')?.value||'Presencial',
+  };
+}
+
+// ══════════════════════════════════════════
+// AURA ENGINE — PUENTE DE CONEXIÓN v2.0
+// Lee la configuración del Motor Central
+// (AURA-MULTIAPI-ENGINE.html) vía localStorage
+// ══════════════════════════════════════════
+const AURA_BRIDGE = (function() {
+
+  function _loadCFG() {
+    try {
+      const saved = localStorage.getItem('aura_engine_cfg');
+      return saved ? JSON.parse(saved) : null;
+    } catch(e) { return null; }
+  }
+
+  function _isEngineAvailable() {
+    const cfg = _loadCFG();
+    return !!(cfg && (cfg.claude?.key || cfg.gemini?.key || cfg.serp?.key));
+  }
+
+  function _showEngineError() {
+    const existing = document.getElementById('aura-engine-error');
+    if (existing) return;
+    const banner = document.createElement('div');
+    banner.id = 'aura-engine-error';
+    banner.style.cssText = [
+      'position:fixed','top:0','left:0','right:0','z-index:99999',
+      'background:#5c1a1a','color:#f0ece2','padding:11px 20px',
+      'font-family:DM Mono,monospace','font-size:11px','letter-spacing:.12em',
+      'display:flex','align-items:center','justify-content:space-between',
+      'border-bottom:2px solid #8b3a2a','box-shadow:0 2px 12px rgba(0,0,0,.4)'
+    ].join(';');
+    banner.innerHTML = `
+      <span>◈ ERROR: Motor AURA no detectado. Abre el panel de configuración
+        — <a href="AURA-MULTIAPI-ENGINE.html" target="_blank"
+          style="color:#c9a84c;text-decoration:underline;cursor:pointer">
+          Abrir Motor Multi-API
+        </a>
+      </span>
+      <button onclick="this.parentElement.remove()"
+        style="background:transparent;border:1px solid rgba(240,236,226,.3);
+        color:#f0ece2;padding:3px 10px;font-family:DM Mono,monospace;
+        font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:.1em">
+        ✕ CERRAR
+      </button>`;
+    document.body.prepend(banner);
+    throw new Error('◈ ERROR: Motor AURA no detectado. Abre el panel de configuración');
+  }
+
+  async function callClaude(prompt, systemPrompt='', maxTokens=3000) {
+    const cfg = _loadCFG();
+    if (!cfg) throw new Error('Motor no configurado. Abre AURA-MULTIAPI-ENGINE.html.');
+    if (!cfg?.claude?.key) throw new Error('API Key de Claude no configurada. Abre ⚙ ENGINE y guarda tu clave Anthropic.');
+    const model = cfg.claude?.model || 'claude-sonnet-4-6';
+    const body = { model, max_tokens: maxTokens, messages: [{ role:'user', content: prompt }] };
+    if (systemPrompt) body.system = systemPrompt;
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': cfg.claude.key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('Claude API error: ' + r.status);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error.message || 'Claude error');
+    return d.content?.[0]?.text || '';
+  }
+
+  async function callGemini(prompt, systemPrompt='', maxTokens=8192) {
+    const cfg = _loadCFG();
+    if (!cfg?.gemini?.key) throw new Error('Gemini API Key no configurada en el Motor.');
+    const model = cfg.gemini?.model || 'gemini-2.5-flash';
+    const apiVer = model.startsWith('gemini-2.5') ? 'v1beta' : 'v1';
+    const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${cfg.gemini.key}`;
+    const contents = [];
+    if (systemPrompt) {
+      contents.push({ role:'user', parts:[{ text: systemPrompt }] });
+      contents.push({ role:'model', parts:[{ text: 'Entendido.' }] });
+    }
+    contents.push({ role:'user', parts:[{ text: prompt }] });
+    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contents, generationConfig:{ maxOutputTokens: maxTokens, temperature: 0.7 } }) });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error('Gemini error: '+(e.error?.message||r.status)); }
+    const d = await r.json();
+    return d.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  async function callPerplexity(query, maxTokens=2000) {
+    const cfg = _loadCFG();
+    if (!cfg?.perplexity?.key) throw new Error('Perplexity API Key no configurada en el Motor.');
+    const r = await fetch('https://api.perplexity.ai/chat/completions', {
+      method:'POST',
+      headers:{ 'Authorization':'Bearer '+cfg.perplexity.key, 'Content-Type':'application/json' },
+      body: JSON.stringify({ model: cfg.perplexity.model||'sonar', messages:[
+        { role:'system', content:'Eres un analista de mercado. Proporciona datos actualizados y estadísticas. Responde en español.' },
+        { role:'user', content: query }
+      ], max_tokens: maxTokens, return_citations: true })
+    });
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error('Perplexity error: '+(e.error?.message||r.status)); }
+    const d = await r.json();
+    return { text: d.choices?.[0]?.message?.content||'', citations: d.citations||[] };
+  }
+
+  async function callSerpAPI(query, numResults=8) {
+    const cfg = _loadCFG();
+    if (!cfg?.serp?.key) return null;
+    // SerpAPI tiene restricciones CORS desde navegador — se intenta y si falla se omite sin bloquear
+    try {
+      const params = new URLSearchParams({ api_key: cfg.serp.key, q: query,
+        engine: cfg.serp.engine||'google', gl: cfg.serp.country||'es', hl:'es', num: numResults });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      const r = await fetch(`https://serpapi.com/search.json?${params}`, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!r.ok) return null;
+      const d = await r.json();
+      const snippets = (d.organic_results||[]).slice(0,6).map(x=>`• ${x.title}: ${x.snippet||''}`).join('\n');
+      return { snippets, knowledge: d.knowledge_graph||null };
+    } catch(_) { return null; }
+  }
+
+  // Función principal del módulo EVENTS
+  async function callModuleAPI(prompt, maxTokens=3000, module='events') {
+    const cfg = _loadCFG();
+    if (!cfg) _showEngineError();
+
+    const route = cfg.globalOverride || cfg.routes?.[module] || 'auto';
+    const sysPrompt = 'Experto en producción de eventos corporativos, gestión logística y dirección creativa. Genera documentos operativos completos: riders, checklists, runbooks. Responde en español con formato Markdown limpio. Compatible con pdfMake.';
+
+    // Fase 1 — Investigación contextual (SerpAPI, solo en modo auto)
+    let researchCtx = '';
+    if (route === 'auto' && cfg.serp?.key) {
+      try {
+        const brief_tipo = document.getElementById('tipoEvento')?.value || 'evento corporativo';
+        const brief_ciudad = document.getElementById('ciudad')?.value || '';
+        const searchQ = `${brief_tipo} ${brief_ciudad} proveedores técnicos venues España`;
+        const serpResult = await callSerpAPI(searchQ);
+        if (serpResult?.snippets) {
+          researchCtx = `\n\n## CONTEXTO DE INVESTIGACIÓN (SerpAPI)\n${serpResult.snippets}`;
+        }
+      } catch(e) { console.warn('EVENTS — SerpAPI fase 1:', e.message); }
+    }
+
+    const fullPrompt = researchCtx ? `${prompt}\n${researchCtx}` : prompt;
+
+    // Fase 2 — Redacción
+    if (route === 'gemini') return callGemini(fullPrompt, sysPrompt, maxTokens);
+    return callClaude(fullPrompt, sysPrompt, maxTokens);
+  }
+
+
+// ══════════════════════════════════════════════════════════════
+// PORTABILIDAD — Export/Import configuración entre dispositivos
+// ══════════════════════════════════════════════════════════════
+function exportConfig() {
+  try {
+    const cfg = localStorage.getItem('aura_engine_cfg');
+    if (!cfg) { alert('No hay configuración guardada para exportar.'); return; }
+    const blob = new Blob([cfg], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'aura-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Error al exportar: ' + e.message); }
+}
+
+
+// ══════════════════════════════════════════════════
+// IMPORTAR BRIEFING DE CLIENTE
+// ══════════════════════════════════════════════════
+function importBriefing(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json,application/json';
+  input.onchange=function(e){
+    const file=e.target.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(!d||typeof d!=='object') throw new Error('Archivo JSON no válido');
+        // Detectar si es un briefing de cliente (tiene campo "nombre" o "_version")
+        if(!d.nombre&&!d._version&&!d.empresa) throw new Error('Este archivo no es un Briefing de cliente AURA. Usa el botón ↑ Keys para importar configuración de API.');
+  if(d['nombre']&&document.getElementById('cliente'))document.getElementById('cliente').value=d['nombre'];
+  if(d['nombreEvento']&&document.getElementById('nombreEvento'))document.getElementById('nombreEvento').value=d['nombreEvento'];
+  if(d['asistentes']&&document.getElementById('asistentes'))document.getElementById('asistentes').value=d['asistentes'];
+  if(d['fechaEvento']&&document.getElementById('fechaEvento'))document.getElementById('fechaEvento').value=d['fechaEvento'];
+  if(d['lugar']&&document.getElementById('lugar'))document.getElementById('lugar').value=d['lugar'];
+  if(d['ciudad']&&document.getElementById('ciudad'))document.getElementById('ciudad').value=d['ciudad'];
+  if(d['objetivoTexto']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivoTexto'];
+  if(d['objetivo']&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivo'];
+  if(d['presupuesto']&&document.getElementById('presupuesto'))document.getElementById('presupuesto').value=d['presupuesto'];
+  if(d['producto']&&document.getElementById('nombreEvento'))document.getElementById('nombreEvento').value=d['producto'];
+  if(d['descripcion']&&document.getElementById('descripcion'))document.getElementById('descripcion').value=d['descripcion'];
+        // Trigger input events so any listeners update
+        document.querySelectorAll('input,textarea,select').forEach(el=>el.dispatchEvent(new Event('input')));
+        const nombre=d.nombre||d.empresa||'Cliente';
+        alert('✓ Briefing de '+nombre+' importado correctamente.');
+      }catch(err){alert('Error al leer el Briefing: '+err.message);}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function importConfig() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (!parsed || typeof parsed !== 'object') throw new Error('JSON inválido');
+        localStorage.setItem('aura_engine_cfg', JSON.stringify(parsed));
+        alert('✓ Configuración importada correctamente. La página se recargará.');
+        location.reload();
+      } catch(err) { alert('Error al importar: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+  return { callClaude, callGemini, callPerplexity, callModuleAPI, isEngineAvailable: _isEngineAvailable };
+})();
+
+// ══════════════════════════════════
+// API — Delegada al Motor Central
+// ══════════════════════════════════
+async function callAPI(prompt,maxTok=3000){
+  return AURA_BRIDGE.callModuleAPI(prompt, maxTok, 'events');
+}
+
+// ══════════════════════════════════
+// PROMPTS
+// ══════════════════════════════════
+function getPrompt(mod,b){
+  const ctx=`BRIEF DEL EVENTO:
+- Cliente: ${b.cliente}
+- Evento: ${b.nombreEvento}
+- Tipo: ${b.tipoEvento} (${b.formato})
+- Fecha: ${b.fechaEvento} · Horario: ${b.horaInicio}–${b.horaFin}
+- Lugar: ${b.lugar} · ${b.ciudad}
+- Asistentes: ${b.asistentes} personas — Perfil: ${b.perfilAsistentes}
+- Objetivo: ${b.objetivo}
+- Mensaje clave: ${b.mensajeClave}
+- Tono: ${b.tono}
+- Presupuesto total: €${b.presupuesto}`;
+
+  const P={
+    concepto:`Eres un director creativo especializado en eventos corporativos de alto nivel.\n${ctx}\n\nCrea el concepto creativo completo del evento. Responde en español con secciones ##:\n## NOMBRE CREATIVO DEL EVENTO\nNombre memorable, con su subtítulo y tagline. Justificación de la elección.\n## CONCEPTO CENTRAL\nLa idea que vertebra todo el evento. El "por qué" emocional que hace que los asistentes quieran estar ahí.\n## EXPERIENCIA DEL ASISTENTE\nDescribe minuciosamente cómo se siente el asistente desde que recibe la invitación hasta que se va. El journey completo.\n## ELEMENTOS DIFERENCIADORES\n5 elementos que harán que este evento sea recordado y comentado.\n## IDENTIDAD VISUAL Y AMBIENTAL\nPaleta de colores, materiales, música, iluminación, aromas, mobiliario. Todo al servicio del concepto.\n## MOMENTOS CLAVE DEL EVENTO\nLos 3-5 momentos diseñados para generar impacto máximo, emoción y contenido compartible.\n## ESTRATEGIA DE CONTENIDO GENERADO\nCómo el evento genera contenido orgánico y cobertura mediática de forma natural.`,
+
+    rider:`Eres un director técnico de producción de eventos con 20 años de experiencia.\n${ctx}\nEscenario: ${b.escenario==='remoto'?'GESTIÓN REMOTA — coordinar equipo en destino, diferencia horaria '+b.difHoraria+'h, coordinador local: '+b.coordLocal:b.escenario==='formacion'?'CHARLA/FORMACIÓN — ponente: '+b.ponente+', tema: '+b.temaDuracion+', plataforma: '+b.plataforma:'GESTIÓN EN PRIMERA PERSONA — director presente'}\n\nGenera el rider técnico y logístico completo adaptado a ${b.asistentes} asistentes en formato ${b.formato}. Responde en español con secciones ##:\n\n## RIDER TÉCNICO — SONIDO\nEspecificaciones completas: sistema de PA, micrófonos (tipos y cantidad), mesa de mezclas, monitores, fold back. Cantidades exactas según ${b.asistentes} asistentes. Indica OBLIGATORIO u OPCIONAL para cada elemento.\n\n## RIDER TÉCNICO — ILUMINACIÓN\nSistema de iluminación general, iluminación de escenario, efectos especiales, controladora. Adaptar a ${b.tipoEvento}.\n\n## RIDER TÉCNICO — AUDIOVISUAL\nPantallas (tamaños y cantidad), proyectores o LED walls, reproducción de vídeo, streaming ${b.esDigital?'(plataforma, ancho de banda, cámaras)':'(si aplica)'}. Ordenadores de producción, cables y conectores.\n\n## RIDER DE ESCENARIO Y PRODUCCIÓN\nDimensiones mínimas de escenario según ${b.asistentes} asistentes, tarima, podio, sillas de panel, branding en escena, photocall si aplica.\n\n## RIDER DE CATERING\nCálculo por asistente: ${b.asistentes} personas. Coffee break, catering, bebidas, menú si aplica. Personal de servicio necesario (ratio 1 por cada X asistentes). Equipamiento: mesas, sillas, mantelería, vajilla.\n\n## RIDER DE LOGÍSTICA Y ACCESO\nControl de acceso (personal, acreditaciones, app), señalización, parking (cálculo plazas), guardarropa, registro de asistentes.\n\n## RIDER DE SEGURIDAD Y EMERGENCIAS\nPersonal de seguridad (ratio según asistentes y normativa), plan de evacuación, primeros auxilios, seguro de responsabilidad civil. Contactos de emergencia.\n\n## RIDER DIGITAL ${b.esDigital?'(OBLIGATORIO)':'(si aplica streaming)'}\nPlataforma recomendada, ancho de banda mínimo, equipo técnico remoto, sala virtual de espera, gestión de Q&A online, grabación y posterior distribución.\n\n## RESUMEN DE PERSONAL TÉCNICO NECESARIO\nLista completa: técnico de sonido, técnico de luz, realizador vídeo, técnico streaming, asistentes de producción. Cuántos de cada uno.\n\n## CHECKLIST DE MONTAJE Y DESMONTAJE\nTiming de montaje (horas necesarias antes del evento), proceso de desmontaje.`,
+
+    checklist:`Eres un director de producción de eventos especializado en gestión operativa.\n${ctx}\nEscenario: ${b.escenario==='remoto'?'REMOTO — añade tareas específicas de coordinación a distancia: briefing coordinador local, confirmaciones por videollamada, logística internacional, gestión de diferencia horaria de '+b.difHoraria+'h':b.escenario==='formacion'?'CHARLA/FORMACIÓN — adapta el checklist a evento de formación/keynote con ponente '+b.ponente:' PRESENCIAL CERCANO — gestión directa en primera persona'}\n\nCrea el checklist operativo completo por fases. Para cada tarea indica: descripción, responsable, plazo/timing y si es crítica. Responde en español con secciones ##:\n\n## FASE PRE-PRODUCCIÓN — 8 SEMANAS ANTES\nTodas las tareas de planificación inicial: confirmación de sede, contratos, briefing creativo, identidad del evento, invitaciones.\n\n## FASE PRE-PRODUCCIÓN — 4 SEMANAS ANTES\nContratación de proveedores, confirmación de speakers/ponentes, producción de materiales, envío de invitaciones, gestión de inscripciones.\n\n## FASE PRE-PRODUCCIÓN — 1 SEMANA ANTES\nConfirmación final de asistentes, ensayo técnico, briefing de equipo, preparación de acreditaciones, revisión de runbook, kit de emergencias.\n\n## FASE PRE-PRODUCCIÓN — 24-48 HORAS ANTES\nMontaje de espacio, prueba de sonido y luces, test de streaming, carga de materiales AV, briefing final con todo el equipo, confirmación de catering.\n\n## FASE PRODUCCIÓN — DÍA DEL EVENTO\nApertura de puertas, recepción de asistentes, gestión de incidencias, coordinación de speakers, control de tiempos, catering, contenido en directo.\n\n## FASE POST-PRODUCCIÓN — 24-48 HORAS DESPUÉS\nDesmontaje, recogida de materiales, envío de agradecimientos, publicación de contenidos, gestión de grabaciones.\n\n## FASE POST-PRODUCCIÓN — 1 SEMANA DESPUÉS\nInforme de resultados, encuesta de satisfacción, clipping de prensa, liquidación de proveedores, informe final al cliente.\n\n## CHECKLIST DE EMERGENCIAS Y CONTINGENCIAS\nPlan B para los 5 escenarios de riesgo más habituales: fallo técnico, speaker que no aparece, problema de aforo, mal tiempo (si exterior), fallo de streaming.`,
+
+    runbook:`Eres un director de eventos experto en producción ejecutiva y gestión de tiempos.\n${ctx}\nEscenario: ${b.escenario==='formacion'?'CHARLA/FORMACIÓN — incluye guion del ponente '+b.ponente+', gestión de Q&A, recursos audiovisuales de la presentación, métricas de participación':b.escenario==='remoto'?'REMOTO — incluye protocolo de comunicación con equipo local, canales de coordinación en tiempo real, plan de contingencia para gestión a distancia':'PRESENCIAL — director en primera persona'}\n\nCrea el runbook completo del día del evento. Guion minuto a minuto desde la llegada del equipo hasta el cierre. Responde en español con secciones ##:\n\n## CRONOGRAMA PRE-EVENTO (llegada del equipo hasta apertura de puertas)\nDesde ${b.horaInicio} hacia atrás. Cada acción con hora exacta, responsable y duración.\n\n## CRONOGRAMA DEL EVENTO (apertura hasta cierre)\nDesde apertura de puertas hasta ${b.horaFin}. Cada momento con: hora exacta, acción, responsable, pie de micrófono/guion si aplica, señal técnica necesaria.\n\n## GUIONES DE PRESENTACIÓN\nTexto exacto de bienvenida del presentador/MC. Transiciones entre bloques. Cierre oficial. Adaptado al tono ${b.tono}.\n\n## SEÑALES TÉCNICAS Y CUES\nLista de cues de sonido, vídeo e iluminación con su timing exacto. Para coordinar con el equipo técnico.\n\n## PROTOCOLO DE GESTIÓN DE IMPREVISTOS\nQué hacer si: speaker se retrasa / fallo técnico / asistente con incidencia / pregunta comprometida en Q&A / problema de tiempo.\n\n## CONTACTOS DEL DÍA\nLista de todos los contactos clave el día del evento: cliente, speakers, técnicos, catering, seguridad, venue. Con nombre y teléfono directo.`,
+
+    comunicacion:`Eres un director de comunicación especializado en eventos y PR corporativo.\n${ctx}\n\nCrea el plan de comunicación completo del evento. Responde en español con secciones ##:\n\n## ESTRATEGIA DE COMUNICACIÓN\nObjetivos de comunicación del evento, públicos objetivo, mensajes clave por audiencia.\n\n## COMUNICACIÓN PRE-EVENTO\nInvitaciones (texto y formato), save the date, recordatorios, comunicación a medios (nota de prensa de convocatoria), contenido de redes previo al evento (teaser, cuenta atrás, behind the scenes).\n\n## COMUNICACIÓN DURANTE EL EVENTO\nCobertura en redes en tiempo real: qué publicar, cuándo, en qué formato. Hashtag oficial. Gestión de prensa acreditada. Contenido para stories/reels en directo.\n\n## COMUNICACIÓN POST-EVENTO\nNota de prensa de resultados, agradecimiento a asistentes, publicación de highlights, distribución de grabaciones, gestión de cobertura mediática conseguida.\n\n## KIT DE PRENSA\nContenido del dossier de prensa: nota de convocatoria, nota de resultados, fotografías oficiales, vídeo resumen, datos clave del evento.\n\n## PLANTILLAS DE COMUNICACIÓN\nTexto de invitación formal. Texto de recordatorio. Post de redes pre-evento. Post de redes post-evento. Email de agradecimiento a asistentes.`,
+
+    proveedores:`Eres un director de producción de eventos experto en gestión de proveedores y subcontratas.\n${ctx}\n${b.escenario==='remoto'?'EVENTO REMOTO en '+b.ciudad+': incluye sección específica de PROVEEDORES LOCALES EN DESTINO, cómo identificarlos, validarlos a distancia, briefing internacional y gestión de pagos en moneda local. Coordinador local: '+b.coordLocal+'. Proveedores ya identificados: '+b.provLocal:''}\n\nCrea la guía completa de proveedores. Responde en español con secciones ##:\n\n## MAPA DE PROVEEDORES NECESARIOS\nLista completa de todos los proveedores necesarios para este evento: categoría, descripción del servicio, si es crítico u opcional, plazo de contratación recomendado.\n\n## CRITERIOS DE SELECCIÓN Y EVALUACIÓN\nCómo evaluar y comparar proveedores para cada categoría. Preguntas clave, garantías exigibles, cláusulas de contrato imprescindibles.\n\n## BRIEFING TIPO PARA PROVEEDORES\nPlantilla completa de briefing que AURA EVENTS entrega a cada proveedor: información del evento, requerimientos técnicos, condiciones, entregables esperados, timing.\n\n## RIDER DE SPEAKERS Y PONENTES\nQué necesita cada ponente: equipo técnico, transporte, alojamiento, honorarios, derechos de imagen, presentaciones. Checklist de gestión de speakers.\n\n## GESTIÓN DE EMBAJADORES DE MARCA\nPerfil ideal del embajador para este tipo de evento, briefing de embajadores, protocolo de actuación, gestión en redes durante el evento.\n\n## PROTOCOLO DE SUBCONTRATAS\nCómo coordinar múltiples proveedores el día del evento. Reunión de coordinación previa. Canal de comunicación. Responsable de cada área.`,
+
+    presupuesto:`Eres un director de producción especializado en presupuestos de eventos corporativos.\n${ctx}\n- Fee AURA EVENTS: €${b.feeAura}\n- Margen sobre proveedores: ${b.margen}%\n\nCrea el presupuesto completo y detallado. Responde en español con secciones ##:\n\n## RESUMEN EJECUTIVO DE PRESUPUESTO\nTotal del evento, desglose por grandes categorías, fee AURA EVENTS, margen sobre proveedores, total facturado al cliente.\n\n## DESGLOSE POR CATEGORÍAS\nPara cada categoría, indicar coste estimado, si está incluido en el fee o se factura aparte, y notas:\n- Venue / Espacio\n- Producción técnica (sonido, luz, AV)\n- Catering y bebidas\n- Decoración y ambientación\n- Personal de producción y azafatas\n- Comunicación y diseño\n- Fotografía y vídeo\n- Seguridad\n- Transporte y logística\n- Imprevistos (reserva del 10%)\n\n## HONORARIOS AURA EVENTS\nDesglose del fee: estrategia y concepto, producción ejecutiva, dirección del evento, gestión de proveedores, comunicación, informe de resultados.\n\n## TRES OPCIONES DE PRESUPUESTO\nOpción Esencial / Opción Completa / Opción Premium. Con diferencias claras en cada una.\n\n## CONDICIONES ECONÓMICAS\nForma de pago, anticipos, política de cancelación, gastos adicionales, IVA.`,
+
+    kpis:`Eres un especialista en medición de impacto de eventos y ROI del marketing experiencial.\n${ctx}\n\nCrea el framework completo de KPIs. Responde en español con secciones ##:\n\n## KPIs DE ASISTENCIA Y ALCANCE\nTasa de confirmación vs invitados, tasa de asistencia vs confirmados, puntualidad, perfil real vs esperado. Cómo medirlo.\n\n## KPIs DE EXPERIENCIA Y SATISFACCIÓN\nEncuesta de satisfacción (modelo incluido con las 8 preguntas clave), NPS del evento, valoración por elementos (contenido, venue, networking, organización). Cuándo y cómo pasarla.\n\n## KPIs DE COMUNICACIÓN E IMPACTO MEDIÁTICO\nAlcance en redes (impresiones, engagement, shares), menciones del evento, cobertura en medios (AVE), tráfico web generado, nuevos seguidores.\n\n## KPIs DE NEGOCIO Y ROI\nLeads generados, reuniones de negocio activadas, acuerdos en pipeline, valor estimado del negocio generado, ROI del evento.\n\n## KPIs DIGITALES (si aplica streaming)\nVisualizaciones en directo, pico de audiencia, tiempo medio de visionado, tasa de retención, reproducciones post-evento.\n\n## DASHBOARD DE MEDICIÓN\nPlantilla del informe de resultados que AURA entrega al cliente: estructura, datos, visualización.\n\n## ENCUESTA POST-EVENTO\nModelo completo de las 8 preguntas de satisfacción, listo para enviar por email a asistentes.`
+  };
+  return P[mod]||`Genera contenido para evento corporativo de ${b.cliente}. Tipo: ${b.tipoEvento}. Responde en español.`;
+}
+
+// ══════════════════════════════════
+// RENDER
+// ══════════════════════════════════
+function md(t){
+  if(!t)return'';
+  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^### (.+)$/gm,'<h4 style="color:var(--gold);margin:10px 0 4px;font-size:13px;font-weight:500">$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm,'<li>$2</li>')
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+}
+
+function renderModule(mod,text){
+  const panel=document.getElementById('panel-'+mod);
+  if(!panel)return;
+  if(mod==='checklist') renderChecklist(panel,text);
+  else if(mod==='rider') renderRider(panel,text);
+  else if(mod==='runbook') renderRunbook(panel,text);
+  else renderGeneric(panel,mod,text);
+}
+
+function renderChecklist(panel, text){
+  const phases=[
+    {key:'pre8',  label:'Pre-producción — 8 semanas antes', keywords:['8 semana','8 sem','ocho sem'],  tag:'tag-pre',  prog:'progress-pre'},
+    {key:'pre4',  label:'Pre-producción — 4 semanas antes', keywords:['4 semana','4 sem','cuatro sem'],tag:'tag-pre',  prog:'progress-pre'},
+    {key:'pre1',  label:'Pre-producción — 1 semana antes',  keywords:['1 semana','última sem','una sem'],tag:'tag-pre',prog:'progress-pre'},
+    {key:'pre24', label:'Pre-producción — 24-48h antes',    keywords:['24','48h','48 h','víspera'],     tag:'tag-pre',  prog:'progress-pre'},
+    {key:'prod',  label:'Producción — Día del evento',      keywords:['día del','producción','día eve','jornada'],tag:'tag-prod',prog:'progress-prod'},
+    {key:'post24',label:'Post-producción — 24-48h después', keywords:['post','después','after','cierre'],tag:'tag-post',prog:'progress-post'},
+    {key:'post7', label:'Post-producción — 1 semana después',keywords:['1 sem','semana des','follow'],  tag:'tag-post',prog:'progress-post'},
+    {key:'emergency',label:'Checklist de Emergencias',      keywords:['emergencia','conting','fallo','crisis'],tag:'tag-prod',prog:'progress-prod'},
+  ];
+
+  // Parse sections from text
+  const cleanedText = (text||'').replace(/^[^#\n]*?\n(?=##\s)/s,'').trim() || text;
+  const sections = cleanedText.split(/^## /m).filter(s=>s.trim());
+  const tasksByPhase = {};
+
+  // Try to match sections to phases by title keywords
+  sections.forEach(sec => {
+    const nl = sec.indexOf('\n');
+    const title = (nl>-1 ? sec.slice(0,nl) : sec).trim().toLowerCase();
+    const body  = (nl>-1 ? sec.slice(nl+1) : '').trim();
+
+    // Find matching phase
+    let matchedKey = null;
+    for(const ph of phases){
+      if(ph.keywords.some(kw => title.includes(kw.toLowerCase()))){
+        matchedKey = ph.key; break;
+      }
+    }
+    // Fallback: match by position if no keyword match
+    if(!matchedKey){
+      const idx = sections.indexOf(sec);
+      matchedKey = phases[idx]?.key || ('other'+sections.indexOf(sec));
+    }
+
+    const tasks = body.split('\n').filter(l => {
+      const t = l.trim();
+      return t && t !== '--' && t.length > 3 &&
+        (t.startsWith('-') || t.startsWith('•') || t.startsWith('*') ||
+         /^\d+[.)\s]/.test(t) || /^[A-ZÁÉÍÓÚÑ]/.test(t));
+    }).map((t,j) => ({
+      id: matchedKey+'-'+j,
+      text: t.replace(/^[-•*]\s*/,'').replace(/^\d+[.)\s]+/,'').replace(/^\*\*(.+?)\*\*.*$/,'$1').trim(),
+      done: false
+    })).filter(t => t.text.length > 2);
+
+    if(tasks.length){
+      if(!tasksByPhase[matchedKey]) tasksByPhase[matchedKey] = [];
+      tasksByPhase[matchedKey].push(...tasks);
+    }
+  });
+
+  checkState = tasksByPhase;
+  if(!window._checkDone) window._checkDone = {};
+  const totalTasks = Object.values(tasksByPhase).flat().length;
+
+  // If no tasks parsed, show raw text as fallback
+  if(totalTasks === 0){
+    panel.innerHTML = `<div class="card"><div class="ch"><span class="ct">◈ Checklist Operativo</span></div><div class="cb"><p>${md(text)}</p></div></div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch">
+      <span class="ct">◈ Checklist Operativo — ${document.getElementById('nombreEvento')?.value||'El Evento'}</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span id="checkProgress" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">0/${totalTasks} completadas</span>
+        <button class="btn-sm" onclick="exportChecklist()">EXPORTAR</button>
+      </div>
+    </div>
+    ${phases.map(ph => {
+      const tasks = tasksByPhase[ph.key] || [];
+      if(!tasks.length) return '';
+      return \`<div class="rider-section">
+        <div class="phase-header">
+          <span class="phase-tag \${ph.tag}">\${ph.label}</span>
+          <div class="progress-bar" style="width:120px;margin:0">
+            <div class="progress-fill \${ph.prog}" id="prog-\${ph.key}" style="width:0%"></div>
+          </div>
+        </div>
+        \${tasks.map(task => \`
+          <div class="check-item" id="ci-\${task.id}" onclick="toggleCheck('\${task.id}','\${ph.key}',\${tasks.length})">
+            <input type="checkbox" id="cb-\${task.id}" onclick="event.stopPropagation()" onchange="toggleCheck('\${task.id}','\${ph.key}',\${tasks.length})">
+            <div class="check-text">\${task.text}</div>
+          </div>\`).join('')}
+      </div>\`;
+    }).join('')}
+  </div>`;
+}
+
+
+function toggleCheck(taskId,phaseKey,phaseTotal){
+  const cb=document.getElementById('cb-'+taskId);
+  const item=document.getElementById('ci-'+taskId);
+  if(!cb||!item)return;
+  // Only toggle if the event came from the div (not from the checkbox itself)
+  // The checkbox handles its own state; we just read it
+  if(event && event.target!==cb) cb.checked=!cb.checked;
+  const done=cb.checked;
+  item.classList.toggle('done',done);
+
+  // Update phase progress bar
+  const allPhaseItems=document.querySelectorAll(`[id^="ci-${phaseKey}"]`);
+  const donePhase=document.querySelectorAll(`[id^="ci-${phaseKey}"].done`);
+  const prog=document.getElementById('prog-'+phaseKey);
+  if(prog&&allPhaseItems.length) prog.style.width=Math.round((donePhase.length/allPhaseItems.length)*100)+'%';
+
+  // Update total counter
+  const allItems=document.querySelectorAll('.check-item');
+  const allDone=document.querySelectorAll('.check-item.done');
+  const counter=document.getElementById('checkProgress');
+  if(counter) counter.textContent=`${allDone.length}/${allItems.length} completadas`;
+}
+
+function exportChecklist(){
+  const items=document.querySelectorAll('.check-item');
+  let text='AURA EVENTS — CHECKLIST OPERATIVO\n'+'='.repeat(40)+'\n\n';
+  document.querySelectorAll('.phase-header').forEach(ph=>{
+    text+='\n'+ph.querySelector('.phase-tag')?.textContent+'\n'+'-'.repeat(30)+'\n';
+    const section=ph.closest('.rider-section');
+    section?.querySelectorAll('.check-item').forEach(item=>{
+      const done=item.classList.contains('done');
+      text+=(done?'✓ ':'☐ ')+item.querySelector('.check-text')?.textContent+'\n';
+    });
+  });
+  const blob=new Blob([text],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='AURA-Checklist.txt';a.click();
+}
+
+function renderRider(panel,text){
+  const secs=text.split(/^## /m).filter(s=>s.trim()).map(s=>{
+    const nl=s.indexOf('\n');return{title:s.slice(0,nl).trim(),body:s.slice(nl+1).trim()};
+  });
+
+  panel.innerHTML=`
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Rider Técnico & Logístico</span><button class="btn-sm" onclick="copyText('rider-full')">COPIAR TODO</button></div>
+    <div id="rider-full">
+      ${secs.map((sec,i)=>`
+        <div class="rider-section">
+          <div class="rider-head" onclick="toggleRider(this)">
+            <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:500">${sec.title}</span>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)">▾</span>
+          </div>
+          <div class="rider-body ${i===0?'open':''}">
+            <div style="font-size:15px;color:var(--text);line-height:1.8;padding-top:4px"><p>${md(sec.body)}</p></div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleRider(head){
+  const body=head.nextElementSibling;
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  head.querySelector('span:last-child').textContent=isOpen?'▾':'▴';
+}
+
+function renderRunbook(panel,text){
+  const secs=text.split(/^## /m).filter(s=>s.trim()).map(s=>{
+    const nl=s.indexOf('\n');return{title:s.slice(0,nl).trim(),body:s.slice(nl+1).trim()};
+  });
+
+  const tabs=secs.map((s,i)=>`<button class="itab ${i===0?'on':''}" onclick="iTab(this,'rb-${i}')">${s.title.slice(0,20)}</button>`).join('');
+  const panels=secs.map((s,i)=>`
+    <div id="rb-${i}" class="ip ${i===0?'show':''}" style="padding:16px 18px">
+      <div style="font-size:15px;color:var(--text);line-height:1.85"><p>${md(s.body)}</p></div>
+    </div>`).join('');
+
+  panel.innerHTML=`
+  <div class="card" id="runbook-full">
+    <div class="ch"><span class="ct">◈ Runbook — Guion del Día D</span><button class="btn-sm" onclick="copyText('runbook-full')">COPIAR</button></div>
+    <div class="itabs" style="overflow-x:auto">${tabs}</div>
+    ${panels}
+  </div>`;
+}
+
+function renderGeneric(panel,mod,text){
+  const cleanedText = text.replace(/^[^#\n]*?\n(?=##\s)/s,'').trim()||text;
+  const secs=cleanedText.split(/^## /m).filter(s=>s.trim()).map(s=>{
+    const nl=s.indexOf('\n');
+    if(nl===-1)return{title:s.trim(),body:''};
+    return{title:s.slice(0,nl).trim(),body:s.slice(nl+1).trim()};
+  });
+  let inner;
+  if(secs.length>1){
+    const tabs=secs.map((s,i)=>`<button class="itab ${i===0?'on':''}" onclick="iTab(this,'gp-${mod}-${i}')">${s.title.slice(0,28)}</button>`).join('');
+    const panels=secs.map((s,i)=>`<div id="gp-${mod}-${i}" class="ip ${i===0?'show':''} cb"><p>${md(s.body)}</p></div>`).join('');
+    inner=`<div class="itabs" style="overflow-x:auto">${tabs}</div>${panels}`;
+  } else if(secs.length===1){
+    inner=`<div class="cb"><p>${md(secs[0].body||cleanedText)}</p></div>`;
+  } else {
+    inner=`<div class="cb"><p>${md(cleanedText)}</p></div>`;
+  }
+  panel.innerHTML=`<div class="card" id="gc-${mod}"><div class="ch"><span class="ct">${MTIT[mod]||mod}</span><button class="btn-sm" onclick="copyText('gc-${mod}')">COPIAR</button></div>${inner}</div>`;
+}
+
+function copyText(id){
+  const el=document.getElementById(id);if(!el)return;
+  navigator.clipboard.writeText(el.innerText).then(()=>{
+    const btn=el.closest?.('.card')?.querySelector('.btn-sm');
+    if(btn){const o=btn.textContent;btn.textContent='✓';setTimeout(()=>btn.textContent=o,2000);}
+  });
+}
+
+// ══════════════════════════════════
+// PDF GENERATION
+// ══════════════════════════════════
+function generatePDF(tipo){
+  const b=getBrief();
+  if(Object.keys(outs).length===0){alert('Genera los módulos primero.');showTab('brief');return;}
+
+  const GOLD='#7a5c0f',DARK='#0d0b07',GRAY='#8a7040',CREAM='#faf5e8',LIGHT='#ede6d5';
+  const isCliente=tipo==='cliente';
+
+  function cleanText(t){return(t||'').replace(/<[^>]+>/g,'').replace(/\*\*(.+?)\*\*/g,'$1').trim();}
+  function textToContent(text){
+    const sections=[];
+    const clean=cleanText(text);
+    const secs=clean.split(/^## /m).filter(s=>s.trim());
+    secs.forEach(sec=>{
+      const nl=sec.indexOf('\n');
+      const title=(nl>-1?sec.slice(0,nl):sec).trim();
+      const body=(nl>-1?sec.slice(nl+1):'').trim();
+      const items=[];
+      if(title)items.push({text:title,style:'subheading',margin:[0,0,0,5]});
+      body.split('\n').forEach(line=>{
+        line=line.trim();if(!line)return;
+        if(line.startsWith('###'))items.push({text:line.replace(/^###\s*/,''),style:'subsubheading',margin:[0,5,0,2]});
+        else if(line.startsWith('-')||line.startsWith('•'))items.push({text:'• '+line.replace(/^[-•]\s*/,''),style:'bodyText',margin:[12,2,0,2]});
+        else if(line.startsWith('P:'))items.push({text:line,style:'questionText',margin:[0,5,0,1]});
+        else if(line.startsWith('R:'))items.push({text:line,style:'answerText',margin:[0,1,0,6]});
+        else items.push({text:line,style:'bodyText',margin:[0,2,0,2]});
+      });
+      if(items.length)sections.push({stack:items,unbreakable:true,margin:[0,0,0,12]});
+    });
+    return sections;
+  }
+
+  const content=[];
+
+  // COVER
+  content.push({stack:[
+    {text:'\n\n\n\n\n\n\n\n'},
+    {text:'AURA EVENTS',style:'coverTitle'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+    {text:isCliente?'PROPUESTA DE EVENTO':'DOSSIER DE PRODUCCIÓN INTERNO',style:'coverSubtitle'},
+    {text:'\n\n\n'},
+    {text:b.nombreEvento.toUpperCase(),style:'coverCompany'},
+    {text:b.cliente,style:'coverProduct'},
+    {text:'\n\n'},
+    {table:{widths:[140,590],body:[
+      [{text:'Tipo',style:'tLabel'},{text:b.tipoEvento+' · '+b.formato,style:'tVal'}],
+      [{text:'Fecha',style:'tLabel'},{text:b.fechaEvento+' · '+b.horaInicio+'–'+b.horaFin,style:'tVal'}],
+      [{text:'Lugar',style:'tLabel'},{text:b.lugar+', '+b.ciudad,style:'tVal'}],
+      [{text:'Asistentes',style:'tLabel'},{text:b.asistentes+' personas',style:'tVal'}],
+      [{text:'Objetivo',style:'tLabel'},{text:b.objetivo,style:'tVal'}],
+    ]},layout:{fillColor:(r)=>r%2===0?CREAM:LIGHT,hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7}},
+    {text:'\n\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:'#d4c090'}]},{text:'\n'},
+    {text:isCliente?'Propuesta elaborada por AURA EVENTS · AURA GROWTH':'Documento interno de producción — AURA EVENTS',style:'coverFooter'},
+    {text:'growth.aura-cabinet.com · growth@aura-cabinet.com',style:'coverFooter'},
+  ],pageBreak:'after'});
+
+  // COMPETENCIA (solo cliente PDF)
+  if(isCliente){
+    content.push({stack:[
+      {text:'POR QUÉ AURA EVENTS',style:'sectionTitle'},
+      {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:GOLD}]},{text:'\n'},
+      {text:'Una comparativa honesta entre las opciones del mercado.',style:'bodyText',margin:[0,0,0,12]},
+      {table:{
+        widths:[200,100,100,100,100,102],headerRows:1,dontBreakRows:true,
+        body:[
+          [{text:'',style:'thdr'},{text:'GRAN AGENCIA',style:'thdr'},{text:'AGENCIA MED.',style:'thdr'},{text:'AURA EVENTS',style:'thdr'},{text:'FREELANCE',style:'thdr'},{text:'INTERNO',style:'thdr'}],
+          ['Concepto creativo exclusivo',{text:'✓',color:'#2d6a4f'},{text:'Parcial',color:GRAY},{text:'✓',bold:true,color:GOLD},{text:'Variable',color:GRAY},{text:'✗',color:'#8b3a2a'}],
+          ['Director de producción dedicado',{text:'Compartido',color:GRAY},{text:'✗',color:'#8b3a2a'},{text:'✓ Exclusivo',bold:true,color:GOLD},{text:'✓',color:'#2d6a4f'},{text:'✗',color:'#8b3a2a'}],
+          ['Rider técnico personalizado',{text:'Estándar',color:GRAY},{text:'Básico',color:GRAY},{text:'✓ Completo',bold:true,color:GOLD},{text:'Básico',color:GRAY},{text:'✗',color:'#8b3a2a'}],
+          ['Checklist operativo + runbook',{text:'✓',color:'#2d6a4f'},{text:'Parcial',color:GRAY},{text:'✓ Detallado',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'},{text:'✗',color:'#8b3a2a'}],
+          ['Gestión integral de proveedores',{text:'✓',color:'#2d6a4f'},{text:'Parcial',color:'#8b6914'},{text:'✓',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'},{text:'Variable',color:GRAY}],
+          ['Métricas e informe de impacto',{text:'✓',color:'#2d6a4f'},{text:'Básico',color:GRAY},{text:'✓ Completo',bold:true,color:GOLD},{text:'✗',color:'#8b3a2a'},{text:'✗',color:'#8b3a2a'}],
+          ['Máx. 3 clientes simultáneos',{text:'✗',color:'#8b3a2a'},{text:'✗',color:'#8b3a2a'},{text:'✓ Exclusividad',bold:true,color:GOLD},{text:'Variable',color:GRAY},{text:'—',color:GRAY}],
+          ['Coste orientativo',{text:'€€€€',color:'#1a3a5c'},{text:'€€€',color:'#1a3a5c'},{text:'€€€',bold:true,color:GOLD},{text:'€€',color:GRAY},{text:'Oculto',color:GRAY}],
+        ]
+      },layout:{hLineColor:()=>'#d4c090',vLineColor:()=>'#d4c090',hLineWidth:()=>0.3,vLineWidth:()=>0.3,paddingLeft:()=>10,paddingTop:()=>7,paddingBottom:()=>7,fillColor:(r)=>r===0?GOLD:r%2===0?CREAM:'white'}},
+      {text:'\n'},
+      {text:'AURA EVENTS: la única opción que combina dirección creativa exclusiva, producción impecable y medición real de resultados — al precio de una agencia mediana.',style:'bodyText',italics:true,margin:[0,8,0,0]},
+    ],pageBreak:'after'});
+  }
+
+  // MODULES
+  const modsForPDF=isCliente
+    ?['concepto','comunicacion','presupuesto','kpis']
+    :['concepto','rider','presupuesto','comunicacion','proveedores','kpis'];
+
+  modsForPDF.forEach(mod=>{
+    if(!outs[mod])return;
+    content.push({
+      stack:[
+        {text:(MTIT[mod]||mod).toUpperCase(),style:'sectionTitle'},
+        {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+        ...textToContent(outs[mod]),
+      ],pageBreak:'after'
+    });
+  });
+
+  // CHECKLIST summary (only internal)
+  if(!isCliente && outs.checklist){
+    content.push({stack:[
+      {text:'CHECKLIST OPERATIVO',style:'sectionTitle'},
+      {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+      ...textToContent(outs.checklist),
+    ],pageBreak:'after'});
+  }
+
+  // CLOSING
+  content.push({stack:[
+    {text:'\n\n\n\n\n\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:1,lineColor:GOLD}]},{text:'\n'},
+    {text:'Transformamos empresas en referencias de mercado.',style:'closingTitle'},
+    {text:'\n'},
+    {text:isCliente?'Estamos listos para hacer de este evento algo extraordinario.':'Documento interno — AURA EVENTS.',style:'closingBody'},
+    {text:'\n\n\n\n\n'},
+    {canvas:[{type:'line',x1:0,y1:0,x2:762,y2:0,lineWidth:0.5,lineColor:'#d4c090'}]},{text:'\n'},
+    {text:'AURA GROWTH · growth@aura-cabinet.com · growth.aura-cabinet.com',style:'closingFooter',alignment:'center'},
+  ]});
+
+  const docDef={
+    content,
+    styles:{
+      coverTitle:    {fontSize:42,bold:true,color:GOLD,margin:[0,0,0,8]},
+      coverSubtitle: {fontSize:10,color:GRAY,margin:[0,0,0,22]},
+      coverCompany:  {fontSize:22,bold:true,color:DARK,margin:[0,0,0,5]},
+      coverProduct:  {fontSize:13,color:GRAY,italics:true,margin:[0,0,0,18]},
+      coverFooter:   {fontSize:8,color:GRAY,italics:true,margin:[0,3,0,0]},
+      sectionTitle:  {fontSize:17,bold:true,color:GOLD,margin:[0,12,0,6]},
+      subheading:    {fontSize:13,bold:true,color:DARK,margin:[0,8,0,4]},
+      subsubheading: {fontSize:11,bold:true,color:GOLD,margin:[0,6,0,3]},
+      bodyText:      {fontSize:11,color:DARK,lineHeight:1.65,margin:[0,1,0,2]},
+      bodyItalic:    {fontSize:11,color:GRAY,italics:true,lineHeight:1.6},
+      bullet:        {fontSize:11,color:DARK,lineHeight:1.6,margin:[8,1,0,1]},
+      tLabel:        {fontSize:9,bold:true,color:GOLD},
+      tVal:          {fontSize:9,color:DARK},
+      thdr:          {fontSize:9,bold:true,color:'#ffffff'},
+      tCell:         {fontSize:9,color:DARK,lineHeight:1.4},
+      questionText:  {fontSize:10,bold:true,color:GOLD,margin:[0,5,0,1]},
+      answerText:    {fontSize:10,color:DARK,italics:true,margin:[0,0,0,6]},
+      closingTitle:  {fontSize:14,italics:true,color:DARK,alignment:'center',margin:[0,20,0,6]},
+      closingBody:   {fontSize:10,color:GRAY,alignment:'center',margin:[0,0,0,4]},
+      closingFooter: {fontSize:8,color:GRAY,alignment:'center'},
+      kpiNum:        {fontSize:26,bold:true,color:GOLD,alignment:'center'},
+      kpiLabel:      {fontSize:9,color:GRAY,alignment:'center',margin:[0,3,0,0]},
+    },
+    defaultStyle:{font:'Helvetica',fontSize:12},
+    pageSize:'A4', pageOrientation:'landscape',
+    pageMargins:[40,50,40,35],
+    footer:(page,pages)=>({
+      columns:[
+        {text:`AURA EVENTS · ${isCliente?'Propuesta Cliente':'Dossier Interno'}`,fontSize:9,color:GRAY,margin:[40,0,0,0]},
+        {text:`Pág. ${page} / ${pages}`,fontSize:9,color:GRAY,alignment:'right',margin:[0,0,40,0]}
+      ],margin:[0,4,0,0]
+    }),
+    info:{title:`AURA EVENTS — ${b.nombreEvento}`,author:'AURA EVENTS · AURA GROWTH'}
+  };
+
+  const filename=`AURA-EVENTS-${tipo.toUpperCase()}-${(b.nombreEvento||'Evento').replace(/\s+/g,'-')}-${new Date().toISOString().slice(0,10)}.pdf`;
+  pdfMake.fonts=Object.assign(pdfMake.fonts||{},{Helvetica:{normal:"Helvetica",bold:"Helvetica-Bold",italics:"Helvetica-Oblique",bolditalics:"Helvetica-BoldOblique"}});
+  try {
+    pdfMake.createPdf(docDef).download(filename);
+  } catch(pdfErr) {
+    console.error('EVENTS PDF error:', pdfErr);
+    alert('Error PDF: ' + pdfErr.message);
+  }
+}
+
+
+// ══════════════════════════════════════════════════════════
+// GRÁFICOS — Dashboard pre/post evento
+// ══════════════════════════════════════════════════════════
+let _eventCharts = {};
+
+function renderGraficos() {
+  const panel = document.getElementById('panel-graficos');
+  if(!panel) return;
+  Object.values(_eventCharts).forEach(c=>{try{c.destroy()}catch(e){}});
+  _eventCharts = {};
+  const b = getBrief();
+  const GOLD = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#b8913a';
+  const DARK = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#0f0f12';
+  const GRAY = getComputedStyle(document.documentElement).getPropertyValue('--text3').trim() || '#60606e';
+
+  panel.innerHTML = `
+  <div class="card">
+    <div class="ch"><span class="ct">◈ Dashboard de Métricas — ${b.nombreEvento||'El Evento'}</span>
+      <button class="btn-sm" onclick="exportEventoMetrics()">EXPORTAR CSV</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px">
+
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:16px;grid-column:span 2">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Radar de Impacto — Antes vs Después del Evento</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
+          <div style="position:relative;height:280px"><canvas id="evRadar"></canvas></div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">Introduce resultados reales</div>
+            ${[['Notoriedad de marca',20,55],['Engagement asistentes',15,70],['Cobertura mediática',10,45],['NPS del evento',30,80],['Leads generados',5,35],['Satisfacción equipo',60,85]].map((d,i)=>`
+            <div style="display:grid;grid-template-columns:1fr 60px 60px;gap:6px;align-items:center">
+              <div>${d[0]}</div>
+              <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--text3);margin-bottom:2px">ANTES</div>
+                <input type="number" id="ev-pre-${i}" value="${d[1]}" min="0" max="100" style="padding:3px 5px;font-size:11px;text-align:center;width:100%"></div>
+              <div><div style="font-family:'DM Mono',monospace;font-size:8px;color:#2d6a4f;margin-bottom:2px">DESPUÉS</div>
+                <input type="number" id="ev-post-${i}" value="${d[2]}" min="0" max="100" style="padding:3px 5px;font-size:11px;text-align:center;width:100%;border-color:#2d6a4f"></div>
+            </div>`).join('')}
+            <button class="btn-gold" onclick="updateEventoRadar()" style="margin-top:8px;font-size:11px">ACTUALIZAR</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Distribución de Presupuesto</div>
+        <div style="position:relative;height:220px"><canvas id="evDonut"></canvas></div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Timeline de Asistentes por Fase</div>
+        <div style="position:relative;height:220px"><canvas id="evTimeline"></canvas></div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">KPIs Objetivo vs Resultado Real</div>
+        <div style="position:relative;height:220px"><canvas id="evKpis"></canvas></div>
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:16px">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Satisfacción por Área</div>
+        <div style="position:relative;height:220px"><canvas id="evSat"></canvas></div>
+      </div>
+
+    </div>
+    <div style="padding:16px;border-top:1px solid var(--border2)">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:12px">KPI Scoreboard del Evento</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" id="evScoreboard"></div>
+    </div>
+  </div>`;
+
+  const COLORS = ['#b8913a','#1a3a5c','#2d6a4f','#5c1a1a','#4a2d7a','#0e5a4a','#8b4513'];
+
+  setTimeout(()=>{
+    // Radar
+    const dims = ['Notoriedad','Engagement','Cobertura mediática','NPS','Leads','Satisfacción'];
+    const pre  = dims.map((_,i)=>parseFloat(document.getElementById('ev-pre-'+i)?.value||0));
+    const post = dims.map((_,i)=>parseFloat(document.getElementById('ev-post-'+i)?.value||0));
+    const rCtx = document.getElementById('evRadar')?.getContext('2d');
+    if(rCtx) _eventCharts.radar = new Chart(rCtx, {
+      type:'radar', data:{labels:dims,datasets:[
+        {label:'Antes',data:pre,borderColor:'rgba(184,145,58,0.6)',backgroundColor:'rgba(184,145,58,0.1)',pointBackgroundColor:'rgba(184,145,58,0.8)'},
+        {label:'Después',data:post,borderColor:'rgba(45,106,79,0.8)',backgroundColor:'rgba(45,106,79,0.12)',pointBackgroundColor:'rgba(45,106,79,1)'}
+      ]},options:{responsive:true,maintainAspectRatio:false,scales:{r:{suggestedMin:0,suggestedMax:100,grid:{color:'rgba(184,145,58,0.12)'},ticks:{backdropColor:'transparent',color:GRAY,font:{size:9}},pointLabels:{color:DARK,font:{size:10}}}},plugins:{legend:{labels:{color:DARK,font:{size:11}}}}}
+    });
+
+    // Donut presupuesto
+    const dCtx = document.getElementById('evDonut')?.getContext('2d');
+    if(dCtx) _eventCharts.donut = new Chart(dCtx, {
+      type:'doughnut', data:{labels:['Producción técnica','Catering','Comunicación','Logística','Honorarios AURA','Imprevisto'],datasets:[{data:[30,20,15,15,15,5],backgroundColor:COLORS,borderWidth:2,borderColor:'var(--card)'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:DARK,font:{size:10},boxWidth:12,padding:8}}}}
+    });
+
+    // Timeline asistentes
+    const tCtx = document.getElementById('evTimeline')?.getContext('2d');
+    const totalAsis = parseInt(b.asistentes)||100;
+    if(tCtx) _eventCharts.timeline = new Chart(tCtx, {
+      type:'bar', data:{labels:['Registrados','Confirmados','Acreditados','Asistencia real','Engagement','Encuesta'],datasets:[{label:'Asistentes',data:[totalAsis,Math.round(totalAsis*.85),Math.round(totalAsis*.78),Math.round(totalAsis*.72),Math.round(totalAsis*.65),Math.round(totalAsis*.45)],backgroundColor:COLORS[0],borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(184,145,58,0.08)'},ticks:{color:GRAY,font:{size:10}}},x:{grid:{display:false},ticks:{color:GRAY,font:{size:10}}}},plugins:{legend:{display:false}}}
+    });
+
+    // KPIs objetivo vs resultado
+    const kCtx = document.getElementById('evKpis')?.getContext('2d');
+    if(kCtx) _eventCharts.kpis = new Chart(kCtx, {
+      type:'bar', data:{labels:['Asistencia','Satisfacción','NPS','Cobertura','Leads','ROI'],datasets:[
+        {label:'Objetivo',data:[90,80,70,60,50,120],backgroundColor:'rgba(184,145,58,0.3)',borderColor:'rgba(184,145,58,0.8)',borderWidth:1,borderRadius:3},
+        {label:'Resultado',data:[0,0,0,0,0,0],backgroundColor:'rgba(45,106,79,0.6)',borderColor:'rgba(45,106,79,1)',borderWidth:1,borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,scales:{y:{beginAtZero:true,grid:{color:'rgba(184,145,58,0.08)'},ticks:{color:GRAY,font:{size:10}}},x:{grid:{display:false},ticks:{color:GRAY,font:{size:10}}}},plugins:{legend:{labels:{color:DARK,font:{size:10}}}}}
+    });
+
+    // Satisfacción polar
+    const sCtx = document.getElementById('evSat')?.getContext('2d');
+    if(sCtx) _eventCharts.sat = new Chart(sCtx, {
+      type:'polarArea', data:{labels:['Organización','Contenido','Venue','Catering','Networking','AV/Técnico'],datasets:[{data:[82,78,85,74,70,80],backgroundColor:COLORS.map(c=>c+'99'),borderColor:COLORS,borderWidth:1}]},
+      options:{responsive:true,maintainAspectRatio:false,scales:{r:{ticks:{backdropColor:'transparent',color:GRAY,font:{size:9}},grid:{color:'rgba(184,145,58,0.1)'}}},plugins:{legend:{position:'right',labels:{color:DARK,font:{size:10},boxWidth:10,padding:6}}}}
+    });
+
+    // Scoreboard
+    const sb = document.getElementById('evScoreboard');
+    if(sb) sb.innerHTML = [
+      ['Asistentes','',totalAsis+' objetivo'],
+      ['Satisfacción','','Meta: > 80%'],
+      ['NPS','','Meta: > +30'],
+      ['Cobertura','','Media conseguida'],
+    ].map(([kpi,val,meta])=>`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:12px;text-align:center">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">${kpi}</div>
+      <div style="font-size:22px;font-weight:600;color:var(--gold);font-family:'Bebas Neue',sans-serif">${val||'—'}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">${meta}</div>
+    </div>`).join('');
+  }, 100);
+}
+
+function updateEventoRadar(){
+  const dims = ['Notoriedad','Engagement','Cobertura mediática','NPS','Leads','Satisfacción'];
+  const pre  = dims.map((_,i)=>parseFloat(document.getElementById('ev-pre-'+i)?.value||0));
+  const post = dims.map((_,i)=>parseFloat(document.getElementById('ev-post-'+i)?.value||0));
+  if(_eventCharts.radar){
+    _eventCharts.radar.data.datasets[0].data=pre;
+    _eventCharts.radar.data.datasets[1].data=post;
+    _eventCharts.radar.update();
+  }
+}
+
+function exportEventoMetrics(){
+  const b=getBrief();
+  const q=v=>`"${String(v||'').replace(/"/g,'""')}"`;
+  let csv='\uFEFF';
+  csv+=`${q('AURA EVENTS — MÉTRICAS DEL EVENTO')}\n\n`;
+  csv+=`${q('Evento')},${q(b.nombreEvento||'—')}\n`;
+  csv+=`${q('Cliente')},${q(b.cliente||'—')}\n`;
+  csv+=`${q('Fecha')},${q(b.fechaEvento||'—')}\n`;
+  csv+=`${q('Asistentes objetivo')},${q(b.asistentes||'—')}\n\n`;
+  csv+=`${q('KPI')},${q('Antes')},${q('Después')}\n`;
+  ['Notoriedad de marca','Engagement asistentes','Cobertura mediática','NPS del evento','Leads generados','Satisfacción equipo'].forEach((d,i)=>{
+    const pre=document.getElementById('ev-pre-'+i)?.value||'—';
+    const post=document.getElementById('ev-post-'+i)?.value||'—';
+    csv+=`${q(d)},${q(pre)},${q(post)}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`AURA-Metricas-${(b.nombreEvento||'evento').replace(/\s+/g,'-')}.csv`;a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════
+// GENERATE
+// ══════════════════════════════════
+async function genAll(){
+  const cliente=document.getElementById('cliente').value.trim();
+  if(!cliente){alert('Añade el nombre del cliente.');return;}
+  const toGen=selMod.filter(m=>Object.keys(MTIT).includes(m));
+  if(!toGen.length){alert('Selecciona al menos un módulo.');return;}
+
+  // ── Verificar Motor Central ──
+  if (!AURA_BRIDGE.isEngineAvailable()) {
+    const existing = document.getElementById('aura-engine-error');
+    if (!existing) {
+      const b = document.createElement('div');
+      b.id = 'aura-engine-error';
+      b.style.cssText = ['position:fixed','top:0','left:0','right:0','z-index:99999','background:#5c1a1a','color:#f0ece2','padding:11px 20px','font-family:DM Mono,monospace','font-size:11px','letter-spacing:.12em','display:flex','align-items:center','justify-content:space-between','border-bottom:2px solid #8b3a2a','box-shadow:0 2px 12px rgba(0,0,0,.4)'].join(';');
+      b.innerHTML = `<span>◈ ERROR: Motor AURA no detectado. Abre el panel de configuración — <a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="color:#c9a84c;text-decoration:underline">Abrir Motor Multi-API</a></span><button onclick="this.parentElement.remove()" style="background:transparent;border:1px solid rgba(240,236,226,.3);color:#f0ece2;padding:3px 10px;font-family:DM Mono,monospace;font-size:10px;cursor:pointer;border-radius:2px">✕ CERRAR</button>`;
+      document.body.prepend(b);
+    }
+    return;
+  }
+
+  const b=getBrief();
+  document.getElementById('btnGen').disabled=true;
+  document.getElementById('welcomeScreen').style.display='none';
+  outs={};
+  showTab(toGen[0]);
+
+  for(const mod of toGen){
+    document.getElementById('stBar').textContent='GENERANDO '+mod.toUpperCase()+'…';
+    const panel=document.getElementById('panel-'+mod);
+    if(panel) panel.innerHTML=`<div class="loading"><div class="ring"></div><p class="ltxt">Generando ${MTIT[mod]||mod}…</p></div>`;
+    try{
+      const tok=mod==='rider'||mod==='checklist'||mod==='runbook'?5000:mod==='concepto'||mod==='comunicacion'||mod==='presupuesto'||mod==='kpis'?4500:3500;
+      const text=await callAPI(getPrompt(mod,b),tok);
+      outs[mod]=text;
+      renderModule(mod,text);
+    }catch(e){
+      outs[mod]='## Error\n'+e.message;
+      if(panel) panel.innerHTML=`<div class="card"><div class="cb" style="color:#8a4030">
+        <strong>Error:</strong><br>
+        <code style="font-family:'DM Mono',monospace;font-size:11px;background:rgba(139,58,42,0.1);padding:6px 10px;border-radius:3px;display:block;margin-top:6px;word-break:break-all">${e.message}</code>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="genAll()" style="background:var(--gold);color:white;border:none;padding:6px 14px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;border-radius:3px;letter-spacing:.1em">↺ REINTENTAR</button>
+          <a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="border:1px solid var(--border);color:var(--text3);padding:6px 12px;font-family:'DM Mono',monospace;font-size:9px;border-radius:3px;text-decoration:none">⚙ ENGINE</a>
+        </div></div></div>`;
+    }
+  }
+
+  document.getElementById('btnGen').disabled=false;
+  document.getElementById('stBar').textContent='LISTO ✓ — '+Object.keys(outs).length+' módulos';
+}
+
+// ══════════════════════════════════
+// ENGINE STATUS BAR
+// ══════════════════════════════════
+(function injectEngineBar() {
+  const bar = document.createElement('div');
+  bar.id = 'aura-engine-bar';
+  bar.style.cssText = ['position:fixed','bottom:0','left:0','right:0','z-index:1000','background:var(--bg2)','border-top:1px solid var(--border)','display:flex','align-items:center','padding:5px 16px','gap:10px','height:34px'].join(';');
+  const cfg = (()=>{ try{ const s=localStorage.getItem('aura_engine_cfg'); return s?JSON.parse(s):null; }catch(e){return null;} })();
+  const hasEngine = cfg && (cfg.claude?.key || cfg.gemini?.key || cfg.serp?.key);
+  const dotColor  = hasEngine ? 'var(--gold)' : '#8b3a2a';
+  const statusTxt = hasEngine
+    ? `Motor: ${cfg.globalOverride||'AUTO'} · Claude:${cfg.claude?.key?'✓':'✗'} · Gemini:${cfg.gemini?.key?'✓':'✗'} · SerpAPI:${cfg.serp?.key?'✓':'✗'}`
+    : '◈ Motor no configurado — Abre AURA-MULTIAPI-ENGINE.html';
+  bar.innerHTML = `<div style="width:7px;height:7px;border-radius:50%;background:${dotColor};flex-shrink:0;${hasEngine?'animation:pulse 2s infinite':''}"></div><span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)">AURA ENGINE</span><span id="suite-status-bar" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:.08em;flex:1">${statusTxt}</span><button onclick="exportConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;text-transform:uppercase" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" title="Exportar configuración a JSON">↓ Keys</button><button onclick="importConfig()" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;text-transform:uppercase" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'" title="Importar configuración desde JSON">↑ Keys</button><a href="AURA-MULTIAPI-ENGINE.html" target="_blank" style="background:transparent;border:1px solid var(--border);color:var(--text3);padding:2px 8px;font-family:'DM Mono',monospace;font-size:8px;cursor:pointer;border-radius:2px;letter-spacing:.1em;text-decoration:none;text-transform:uppercase" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text3)'">⚙ CONFIG</a>`;
+  document.addEventListener('DOMContentLoaded', () => document.body.appendChild(bar));
+})();
+
+init();
+// ══════════════════════════════════════════════════
+// AUTO-IMPORT desde Briefing de cliente (?brief=...)
+// ══════════════════════════════════════════════════
+
+(function autoImportBrief() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+
+    let d = null;
+
+    // New method: key in localStorage (avoids URI Too Long)
+    const briefKey = params.get('briefkey');
+    if (briefKey) {
+      const stored = localStorage.getItem(briefKey);
+      if (stored) {
+        d = JSON.parse(stored);
+        localStorage.removeItem(briefKey); // clean up after reading
+      }
+    }
+
+    // Legacy method: data encoded in URL
+    if (!d) {
+      const encoded = params.get('brief');
+      if (encoded) {
+        d = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+      }
+    }
+
+    if (!d || typeof d !== 'object') return;
+
+    if(d['nombre']!==undefined&&document.getElementById('cliente'))document.getElementById('cliente').value=d['nombre'];
+    if(d['nombreEvento']!==undefined&&document.getElementById('nombreEvento'))document.getElementById('nombreEvento').value=d['nombreEvento'];
+    if(d['tipoEvento']!==undefined&&document.getElementById('tipoEvento'))document.getElementById('tipoEvento').value=d['tipoEvento'];
+    if(d['fechaEvento']!==undefined&&document.getElementById('fechaEvento'))document.getElementById('fechaEvento').value=d['fechaEvento'];
+    if(d['horario']!==undefined&&document.getElementById('horaInicio'))document.getElementById('horaInicio').value=d['horario'];
+    if(d['lugar']!==undefined&&document.getElementById('lugar'))document.getElementById('lugar').value=d['lugar'];
+    if(d['ciudad']!==undefined&&document.getElementById('ciudad'))document.getElementById('ciudad').value=d['ciudad'];
+    if(d['asistentes']!==undefined&&document.getElementById('asistentes'))document.getElementById('asistentes').value=d['asistentes'];
+    if(d['objetivo']!==undefined&&document.getElementById('objetivo'))document.getElementById('objetivo').value=d['objetivo'];
+    if(d['publico']!==undefined&&document.getElementById('descripcion'))document.getElementById('descripcion').value=d['publico'];
+    if(d['presupuesto']!==undefined&&document.getElementById('presupuesto'))document.getElementById('presupuesto').value=d['presupuesto'];
+    if(d['idea']!==undefined&&document.getElementById('concepto'))document.getElementById('concepto').value=d['idea'];
+
+    // Trigger input events so any listeners fire
+    document.querySelectorAll('input,textarea,select').forEach(el =>
+      el.dispatchEvent(new Event('input', {bubbles:true}))
+    );
+
+    // Show banner
+    const nombre = d.nombre || d.cliente || d.empresa || 'cliente';
+    setTimeout(() => {
+      const bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--gold,#b8913a);color:#fff;font-family:DM Mono,monospace;font-size:10px;letter-spacing:.14em;padding:10px 22px;border-radius:20px;z-index:9999;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.2)';
+      bar.textContent = '◈ Briefing de ' + nombre + ' cargado correctamente';
+      document.body.appendChild(bar);
+      setTimeout(() => bar.remove(), 3500);
+    }, 800);
+
+    // Clean URL
+    window.history.replaceState({}, '', window.location.pathname);
+  } catch(e) { console.warn('Brief import:', e.message); }
+})();
+
+
+// ══════════════════════════════════════════════════
+// EXPORTAR HTML PARA IMPRESIÓN (máxima calidad PDF)
+// Abre en nueva ventana → Chrome → ⌘P → Guardar como PDF
+// ══════════════════════════════════════════════════
+function exportHTMLPrint(tipo) {
+  const isCliente = tipo === 'cliente';
+  if (!Object.keys(outs).length) { alert('Genera los módulos primero.'); return; }
+  const b = getBrief();
+  const fecha = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  const clienteNombre = b.cliente || b.empresa || b.nombre || 'Cliente';
+
+  const MTIT_LOCAL = typeof MTIT !== 'undefined' ? MTIT : {
+    diagnostico:'Diagnóstico',estrategia:'Estrategia',activacion:'Activación',
+    contenidos:'Contenidos',proveedores:'Proveedores',competencia:'Competencia',
+    propuesta:'Propuesta',kpis:'KPIs',concepto:'Concepto del Evento',
+    rider:'Rider Técnico',checklist:'Checklist',runbook:'Runbook',
+    comunicacion:'Comunicación',presupuesto:'Presupuesto',bio:'Biografía',
+    linkedin:'LinkedIn',visibilidad:'Visibilidad',identidad:'Identidad',
+    discurso:'Discurso',mensajes:'Mensajes Clave',prensa:'Nota de Prensa',
+    qya:'Q&A',plan:'Plan de Comunicación',empleados:'Comunicación Interna',
+    reputacion:'Reputación',competencia:'Competencia',protocolo:'Protocolo',
+    impacto:'Impacto',politico:'Perfil Político',radar:'Radar'
+  };
+
+  const INCLUDE = isCliente
+    ? Object.keys(outs).filter(m => !['proveedores','diagnostico'].includes(m))
+    : Object.keys(outs);
+
+  function cleanMd(t) {
+    return (t||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^#### (.+)$/gm,'<h4>$1</h4>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/^[-•] (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>[\s\S]*?<\/li>)\n?/g, s => '<ul>' + s + '</ul>')
+      .replace(/\n\n/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+  }
+
+  const tocHtml = INCLUDE.map((mod,i) =>
+    `<div class="toc-item"><span class="toc-num">${String(i+1).padStart(2,'0')}</span><span class="toc-title">${MTIT_LOCAL[mod]||mod}</span></div>`
+  ).join('');
+
+  const sectionsHtml = INCLUDE.map((mod,i) =>
+    `<section class="page-break">
+      <div class="section-header">
+        <div class="section-num">${String(i+1).padStart(2,'0')}</div>
+        <h2>${MTIT_LOCAL[mod]||mod}</h2>
+      </div>
+      <div class="section-body"><p>${cleanMd(outs[mod]||'')}</p></div>
+    </section>`
+  ).join('');
+
+  const metaRows = [
+    b.objetivo ? ['Objetivo', b.objetivo] : null,
+    b.mercado  ? ['Mercado', b.mercado]   : null,
+    b.presupuesto ? ['Presupuesto', b.presupuesto] : null,
+    b.duracion ? ['Duración', b.duracion] : null,
+    ['Fecha', fecha],
+  ].filter(Boolean);
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>${isCliente?'Propuesta':'Dossier'} · ${clienteNombre} · ${fecha}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#8b6914;--gold-lt:#c9a84c;--dark:#0d0b07;--gray:#6b6050;--cream:#faf7f2;--light:#f0ebe0;--border:#d4c090;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Cormorant Garamond",Georgia,serif;font-size:12pt;color:var(--dark);background:white;line-height:1.7;}
+/* COVER */
+.cover{width:100%;min-height:100vh;padding:56px 72px;display:flex;flex-direction:column;justify-content:space-between;page-break-after:always;}
+.cover-bar{height:3px;background:var(--gold);margin-bottom:40px;}
+.cover-label{font-family:"DM Mono",monospace;font-size:8pt;letter-spacing:.35em;color:var(--gray);text-transform:uppercase;margin-bottom:18px;}
+.cover-title{font-family:"Cormorant Garamond",serif;font-size:54pt;font-weight:300;color:var(--gold);line-height:1;margin-bottom:4px;}
+.cover-rule{width:80px;height:2px;background:var(--gold);margin:18px 0 26px;}
+.cover-client{font-family:"Montserrat",sans-serif;font-size:15pt;font-weight:500;color:var(--dark);letter-spacing:.04em;margin-bottom:4px;}
+.cover-product{font-size:12pt;color:var(--gray);font-style:italic;margin-bottom:32px;}
+.cover-meta{border-top:1px solid var(--border);padding-top:12px;}
+.cover-meta-row{display:flex;gap:20px;padding:6px 0;border-bottom:1px solid var(--light);font-size:9pt;}
+.cover-meta-label{font-family:"DM Mono",monospace;color:var(--gold);letter-spacing:.1em;width:110px;flex-shrink:0;}
+.cover-meta-val{color:var(--dark);}
+.cover-bottom{border-top:1px solid var(--border);padding-top:14px;display:flex;justify-content:space-between;}
+.cover-footer{font-family:"DM Mono",monospace;font-size:7.5pt;color:var(--gray);letter-spacing:.08em;line-height:1.8;}
+/* TOC */
+.toc{padding:56px 72px;page-break-after:always;}
+.toc h1{font-family:"Cormorant Garamond",serif;font-size:28pt;font-weight:300;color:var(--gold);margin-bottom:6px;}
+.toc-rule{width:56px;height:1px;background:var(--gold);margin:12px 0 26px;}
+.toc-item{display:flex;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--light);gap:14px;font-size:11pt;}
+.toc-num{font-family:"DM Mono",monospace;font-size:8pt;color:var(--gold);letter-spacing:.1em;width:26px;flex-shrink:0;}
+/* SECTIONS */
+section{padding:50px 72px;}
+.page-break{page-break-before:always;}
+.section-header{display:flex;align-items:flex-start;gap:18px;margin-bottom:26px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.section-num{font-family:"DM Mono",monospace;font-size:9pt;color:var(--gold);letter-spacing:.15em;padding-top:10px;flex-shrink:0;}
+.section-header h2{font-family:"Cormorant Garamond",serif;font-size:30pt;font-weight:300;color:var(--dark);line-height:1.1;}
+.section-body h2{font-family:"Montserrat",sans-serif;font-size:10pt;font-weight:500;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin:22px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.section-body h3{font-family:"Cormorant Garamond",serif;font-size:16pt;font-weight:600;color:var(--dark);margin:16px 0 6px;}
+.section-body h4{font-family:"Montserrat",sans-serif;font-size:8.5pt;font-weight:500;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 4px;}
+.section-body p{margin-bottom:10px;font-size:11pt;line-height:1.75;}
+.section-body ul{list-style:none;margin:7px 0 11px;padding:0;}
+.section-body li{padding:3px 0 3px 18px;position:relative;font-size:11pt;line-height:1.65;}
+.section-body li::before{content:"◈";position:absolute;left:0;color:var(--gold);font-size:7pt;top:7px;}
+strong{font-weight:600;color:var(--dark);}
+em{font-style:italic;color:var(--gray);}
+/* PRINT */
+.no-print{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;gap:8px;}
+.btn-print{background:var(--gold);color:white;border:none;padding:12px 22px;font-family:"DM Mono",monospace;font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:3px;}
+.btn-close{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:12px 16px;font-family:"DM Mono",monospace;font-size:8.5pt;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:3px;}
+@media print{
+  .no-print{display:none!important;}
+  @page{size:A4 landscape;margin:0;}
+  body{background:white;}
+  .page-break{page-break-before:always;}
+  .cover{height:100vh;page-break-after:always;}
+}
+</style></head><body>
+<div class="cover">
+  <div>
+    <div class="cover-bar"></div>
+    <div class="cover-label">${isCliente?'Propuesta de Campaña':'Dossier Estratégico Interno'}</div>
+    <div class="cover-title">AURA<br>CABINET</div>
+    <div class="cover-rule"></div>
+    <div class="cover-client">${clienteNombre.toUpperCase()}</div>
+    <div class="cover-product">${(b.producto||b.nombreEvento||b.cargo||b.evento||'').replace(/&/g,'&amp;')}</div>
+    <div class="cover-meta">${metaRows.map(([l,v])=>`<div class="cover-meta-row"><span class="cover-meta-label">${l}</span><span class="cover-meta-val">${(v||'').replace(/&/g,'&amp;')}</span></div>`).join('')}</div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-footer">${isCliente?'Propuesta elaborada por AURA CABINET':'Documento interno — Uso exclusivo AURA CABINET'}<br>aura-cabinet.com · private@aura-cabinet.com</div>
+    <div class="cover-footer" style="text-align:right">Confidencial<br>${isCliente?'Versión Cliente':'Versión Interna'}</div>
+  </div>
+</div>
+<div class="toc">
+  <h1>Índice</h1>
+  <div class="toc-rule"></div>
+  ${tocHtml}
+</div>
+${sectionsHtml}
+
+</body></html>`;
+
+  // Descarga como archivo HTML — ábrelo en Chrome y pulsa ⌘P para PDF de calidad
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = (isCliente ? 'Propuesta' : 'Dossier') + '-' +
+               (clienteNombre||'AURA').replace(/\s+/g,'-').replace(/[^a-zA-Z0-9\-]/g,'') +
+               '-' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>
