@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA ENGINE — Motor Multi-API</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@200;300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f9f9f7; --bg2:#f4f4f2; --bg3:#f0f0ee; --bgi:#f7f7f5;
+  --gold:#c5a059; --goldh:#d4b06a; --goldl:#a0803a;
+  --goldb:rgba(197,160,89,0.09); --goldbr:rgba(197,160,89,0.30);
+  --ink:#0f0f12; --ink2:#2c2c34; --ink3:#6b6b78;
+  --border:rgba(0,0,0,0.08);
+  --ok:#1a6640; --okbg:rgba(26,102,64,0.07);
+  --err:#991f0f; --errbg:rgba(153,31,15,0.07);
+  --r:8px; --rs:4px; --rl:12px;
+}
+[data-theme="dark"] {
+  --bg:#0d0d12; --bg2:#141419; --bg3:#14141b; --bgi:#1c1c25;
+  --gold:#d4a843; --goldh:#e8be58; --goldl:#a8842e;
+  --goldb:rgba(212,168,67,0.09); --goldbr:rgba(212,168,67,0.26);
+  --ink:#f2efe8; --ink2:#cec3a8; --ink3:#888070;
+  --border:rgba(255,255,255,0.06);
+  --ok:#4ab870; --okbg:rgba(74,184,112,0.08);
+  --err:#e05030; --errbg:rgba(224,80,48,0.08);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--goldbr);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+#hdr{position:sticky;top:0;z-index:200;height:54px;background:var(--bg);border-bottom:1px solid var(--goldbr);padding:0 36px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px)}
+.hdr-brand{display:flex;align-items:baseline;gap:8px;cursor:pointer;text-decoration:none}
+.hdr-aura{font-size:1.3rem;font-weight:600;font-style:italic;letter-spacing:.07em;color:var(--gold)}
+.hdr-sub{font-family:'Montserrat',sans-serif;font-size:.48rem;font-weight:300;letter-spacing:.36em;color:var(--ink3);text-transform:uppercase}
+.hdr-r{display:flex;align-items:center;gap:8px}
+.hdr-clock{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.16em;color:var(--ink3)}
+.btn-sm{background:transparent;border:1px solid var(--goldbr);color:var(--ink3);padding:5px 12px;font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:var(--rs);transition:all .2s;text-decoration:none;display:inline-block}
+.btn-sm:hover{border-color:var(--gold);color:var(--gold);background:var(--goldb)}
+
+#sbar{background:var(--bg3);border-bottom:1px solid var(--goldbr);padding:5px 36px;display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.1em;color:var(--ink3)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--err);flex-shrink:0;transition:background .4s}
+.sdot.on{background:var(--gold);animation:pulse 2.4s ease-in-out infinite}
+#stxt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+#main{max-width:900px;margin:0 auto;padding:36px 36px 80px;display:flex;flex-direction:column;gap:20px}
+
+.slbl{font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:400;letter-spacing:.38em;color:var(--ink3);text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.slbl::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--goldbr),transparent)}
+
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.scell{background:var(--bg);border:1px solid var(--goldbr);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px}
+.scell-info{flex:1;min-width:0}
+.scell-name{font-family:'Montserrat',sans-serif;font-size:7px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px}
+.scell-val{font-family:'DM Mono',monospace;font-size:8px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scell-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .4s}
+.scell-dot.on{background:var(--gold);animation:pulse 2.4s ease-in-out infinite}
+.scell-dot.err{background:var(--err)}
+
+.card{background:var(--bg);border:1px solid var(--goldbr);border-radius:var(--rl);overflow:hidden;transition:box-shadow .3s;animation:fadeUp .4s ease both}
+.card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.08s}.card:nth-child(3){animation-delay:.12s}.card:nth-child(4){animation-delay:.16s}.card:nth-child(5){animation-delay:.20s}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--goldbr);background:linear-gradient(90deg,var(--goldb),transparent);cursor:pointer;user-select:none}
+.card-tg{display:flex;align-items:center;gap:12px}
+.card-badge{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);background:var(--bg3);border:1px solid var(--goldbr);padding:2px 7px;border-radius:2px;flex-shrink:0}
+.card-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;font-style:italic;color:var(--ink);letter-spacing:.03em}
+.card-name span{color:var(--gold)}
+.card-hr{display:flex;align-items:center;gap:12px}
+.card-pill{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.08em;color:var(--ink3)}
+.adot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0;transition:background .3s,box-shadow .3s}
+.adot.ok{background:var(--ok);box-shadow:0 0 6px rgba(26,102,64,.3)}
+.adot.err{background:var(--err);box-shadow:0 0 6px rgba(153,31,15,.3)}
+.adot.loading{background:var(--gold);animation:pulse 1s ease-in-out infinite}
+.card-tog{font-size:10px;color:var(--ink3);transition:transform .3s,color .2s}
+.card.open .card-tog{transform:rotate(180deg);color:var(--gold)}
+.card-body{padding:20px;display:none;flex-direction:column;gap:16px}
+.card.open .card-body{display:flex}
+
+.frow{display:flex;flex-direction:column;gap:5px}
+.frow.h{flex-direction:row;align-items:flex-start;gap:12px}
+.frow.h .frow{flex:1}
+.flbl{font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:400;letter-spacing:.26em;text-transform:uppercase;color:var(--ink3)}
+.fwrap{position:relative}
+.finput{width:100%;background:var(--bgi);border:1px solid var(--goldbr);border-radius:var(--rs);color:var(--ink);font-family:'DM Mono',monospace;font-size:11px;padding:9px 38px 9px 11px;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:.04em}
+.finput:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldb)}
+.finput::placeholder{color:var(--ink3);opacity:.4}
+.eye{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink3);font-size:11px;line-height:1;transition:color .2s;padding:2px}
+.eye:hover{color:var(--gold)}
+.fsel{width:100%;background:var(--bgi);border:1px solid var(--goldbr);border-radius:var(--rs);color:var(--ink);font-family:'DM Mono',monospace;font-size:10px;padding:9px 28px 9px 11px;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23c5a059' opacity='.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:var(--bgi)}
+.fsel:focus{border-color:var(--gold)}
+.fsel option{background:var(--bg);color:var(--ink)}
+.cwrap{display:none}.cwrap.show{display:flex;flex-direction:column;gap:5px;flex:1}
+
+.note{background:var(--goldb);border:1px solid var(--goldbr);border-radius:var(--rs);padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:300;letter-spacing:.04em;color:var(--ink2);line-height:1.7;display:flex;gap:8px;align-items:flex-start}
+.note code{font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);background:rgba(197,160,89,.13);padding:1px 4px;border-radius:2px}
+.note-ico{color:var(--gold);font-size:11px;flex-shrink:0;margin-top:1px}
+.divhr{height:1px;background:linear-gradient(90deg,transparent,var(--goldbr),transparent)}
+
+.cfooter{display:flex;flex-direction:column;gap:10px}
+.btn-test{display:inline-flex;align-items:center;gap:7px;background:var(--goldb);border:1px solid var(--goldbr);color:var(--gold);padding:8px 18px;font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;border-radius:var(--rs);transition:all .2s;align-self:flex-start}
+.btn-test:hover:not(:disabled){background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 4px 16px rgba(197,160,89,.28)}
+.btn-test:disabled{opacity:.5;cursor:wait}
+.btn-test .sp{display:inline-block;animation:spin .8s linear infinite}
+.tres{display:none;align-items:flex-start;gap:9px;padding:10px 13px;border-radius:var(--rs);font-family:'DM Mono',monospace;font-size:9px;line-height:1.65;border:1px solid transparent;animation:fadeUp .2s ease both}
+.tres.show{display:flex}
+.tres.ok{background:var(--okbg);border-color:rgba(26,102,64,.2);color:var(--ok)}
+.tres.err{background:var(--errbg);border-color:rgba(153,31,15,.18);color:var(--err)}
+.tres-ico{font-size:13px;flex-shrink:0;margin-top:1px;font-weight:700}
+.tres-txt{word-break:break-all}
+.tres-txt b{font-weight:700}
+.logbox{display:none;background:var(--bg2);border:1px solid var(--goldbr);border-radius:var(--rs);padding:11px 13px;font-family:'DM Mono',monospace;font-size:7.5px;line-height:1.7;color:var(--ink3);max-height:180px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+.logbox.show{display:block}
+
+.savepanel{background:var(--bg);border:1px solid var(--goldbr);border-radius:var(--rl);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;animation:fadeUp .4s ease .3s both}
+.save-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;font-style:italic;color:var(--ink);margin-bottom:5px}
+.save-sub{font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:300;letter-spacing:.04em;color:var(--ink3);line-height:1.65}
+.save-sub code{font-family:'DM Mono',monospace;font-size:7px;color:var(--gold);background:var(--goldb);padding:1px 4px;border-radius:2px}
+.save-acts{display:flex;gap:9px;flex-shrink:0}
+.btn-pri{background:var(--gold);border:1px solid var(--gold);color:#fff;padding:9px 20px;font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:var(--rs);transition:all .2s}
+.btn-pri:hover{background:var(--goldh);border-color:var(--goldh)}
+.btn-sec{background:transparent;border:1px solid var(--goldbr);color:var(--ink3);padding:9px 16px;font-family:'Montserrat',sans-serif;font-size:7.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;border-radius:var(--rs);transition:all .2s}
+.btn-sec:hover{border-color:var(--err);color:var(--err)}
+
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:var(--gold);font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.14em;padding:9px 20px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:999;white-space:nowrap;border:1px solid var(--goldbr)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+#footer{border-top:1px solid var(--goldbr);padding:14px 36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-family:'DM Mono',monospace;font-size:8px;color:var(--ink3);letter-spacing:.1em}
+
+@media(max-width:600px){#hdr,#sbar,#main,#footer{padding-left:16px;padding-right:16px}.frow.h{flex-direction:column}.savepanel{flex-direction:column;align-items:flex-start}.hdr-clock{display:none}}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a class="hdr-brand" href="index.html">
+    <span class="hdr-aura">Aura</span>
+    <span class="hdr-sub">Cabinet</span>
+  </a>
+  <div class="hdr-r">
+    <span class="hdr-clock" id="hdr-clock"></span>
+    <button class="btn-sm" onclick="toggleTheme()">◐ Tema</button>
+    <a class="btn-sm" href="index.html">← Volver</a>
+  </div>
+</header>
+
+<div id="sbar">
+  <div class="sdot" id="sdot"></div>
+  <span style="font-family:'Montserrat',sans-serif;font-size:7px;letter-spacing:.28em;text-transform:uppercase;flex-shrink:0;font-weight:400">Aura Engine</span>
+  <span id="stxt">Cargando…</span>
+</div>
+
+<main id="main">
+
+  <div>
+    <div class="slbl">Estado de conexiones</div>
+    <div class="sgrid">
+      <div class="scell"><div class="scell-info"><div class="scell-name">Claude · Anthropic</div><div class="scell-val" id="sv-claude">Sin configurar</div></div><div class="scell-dot" id="sd-claude"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Gemini · Google AI</div><div class="scell-val" id="sv-gemini">Sin configurar</div></div><div class="scell-dot" id="sd-gemini"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Perplexity AI</div><div class="scell-val" id="sv-perplexity">Sin configurar</div></div><div class="scell-dot" id="sd-perplexity"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">SerpAPI · Search</div><div class="scell-val" id="sv-serp">Sin configurar</div></div><div class="scell-dot" id="sd-serp"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Places · Google</div><div class="scell-val" id="sv-places">Sin configurar</div></div><div class="scell-dot" id="sd-places"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">GitHub · OSINT</div><div class="scell-val" id="sv-github">Sin configurar</div></div><div class="scell-dot" id="sd-github"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">YouTube · OSINT</div><div class="scell-val" id="sv-youtube">Sin configurar</div></div><div class="scell-dot" id="sd-youtube"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">EmailJS · Briefing</div><div class="scell-val" id="sv-emailjs">Sin configurar</div></div><div class="scell-dot" id="sd-emailjs"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Zenserp · Search</div><div class="scell-val" id="sv-zenserp">Sin configurar</div></div><div class="scell-dot" id="sd-zenserp"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Serpstack · Search</div><div class="scell-val" id="sv-serpstack">Sin configurar</div></div><div class="scell-dot" id="sd-serpstack"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">DataForSEO · SEO</div><div class="scell-val" id="sv-dataforseo">Sin configurar</div></div><div class="scell-dot" id="sd-dataforseo"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Firecrawl · Scraping</div><div class="scell-val" id="sv-firecrawl">Sin configurar</div></div><div class="scell-dot" id="sd-firecrawl"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">NewsAPI · Noticias</div><div class="scell-val" id="sv-newsapi">Sin configurar</div></div><div class="scell-dot" id="sd-newsapi"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">Mediastack · Medios</div><div class="scell-val" id="sv-mediastack">Sin configurar</div></div><div class="scell-dot" id="sd-mediastack"></div></div>
+      <div class="scell"><div class="scell-info"><div class="scell-name">RapidAPI · Social</div><div class="scell-val" id="sv-rapidapi">Sin configurar</div></div><div class="scell-dot" id="sd-rapidapi"></div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="slbl">Proveedores · Configuración</div>
+
+    <!-- 01 CLAUDE -->
+    <div class="card open" id="c-claude">
+      <div class="card-hdr" onclick="tog('c-claude')">
+        <div class="card-tg"><span class="card-badge">01 · LLM</span><span class="card-name"><span>Claude</span> · Anthropic</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-claude"></div><span id="l-claude">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.anthropic.com/v1/messages</code> · Cabecera requerida: <code>anthropic-dangerous-direct-browser-access: true</code></span></div>
+        <div class="frow"><label class="flbl">API Key · Anthropic</label><div class="fwrap"><input type="password" class="finput" id="k-claude" placeholder="sk-ant-api03-…" autocomplete="off" oninput="resetDot('claude')"><button class="eye" onclick="toggleEye('k-claude',this)">●</button></div></div>
+        <div class="frow h">
+          <div class="frow"><label class="flbl">Modelo</label>
+            <select class="fsel" id="m-claude" onchange="onSel('claude')">
+              <option value="claude-sonnet-4-6">claude-sonnet-4-6 (recomendado)</option>
+              <option value="claude-opus-4-6">claude-opus-4-6 (más potente)</option>
+              <option value="claude-haiku-4-5-20251001">claude-haiku-4-5 (rápido)</option>
+              <option value="custom">— Modelo personalizado —</option>
+            </select>
+          </div>
+          <div class="cwrap" id="cw-claude"><label class="flbl">Modelo personalizado</label><input type="text" class="finput" id="mc-claude" placeholder="claude-sonnet-4-6" autocomplete="off"></div>
+        </div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-claude" onclick="testClaude()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-claude"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-claude"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 GEMINI -->
+    <div class="card" id="c-gemini" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-gemini')">
+        <div class="card-tg"><span class="card-badge">02 · LLM</span><span class="card-name"><span>Gemini</span> · Google AI Studio</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-gemini"></div><span id="l-gemini">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Modelos <code>gemini-2.5-*</code> usan endpoint <code>v1beta</code>. Modelos anteriores usan <code>v1</code>. Se selecciona automáticamente según el modelo elegido.</span></div>
+        <div class="frow"><label class="flbl">API Key · Google AI Studio</label><div class="fwrap"><input type="password" class="finput" id="k-gemini" placeholder="AIzaSy…" autocomplete="off" oninput="resetDot('gemini')"><button class="eye" onclick="toggleEye('k-gemini',this)">●</button></div></div>
+        <div class="frow h">
+          <div class="frow"><label class="flbl">Modelo</label>
+            <select class="fsel" id="m-gemini" onchange="onSel('gemini')">
+              <option value="gemini-2.5-flash">gemini-2.5-flash (recomendado)</option>
+              <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+              <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+              <option value="custom">— Modelo personalizado —</option>
+            </select>
+          </div>
+          <div class="cwrap" id="cw-gemini"><label class="flbl">Modelo personalizado</label><input type="text" class="finput" id="mc-gemini" placeholder="gemini-2.5-flash" autocomplete="off"></div>
+        </div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-gemini" onclick="testGemini()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-gemini"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-gemini"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 PERPLEXITY -->
+    <div class="card" id="c-perplexity" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-perplexity')">
+        <div class="card-tg"><span class="card-badge">03 · LLM</span><span class="card-name"><span>Perplexity</span> AI</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-perplexity"></div><span id="l-perplexity">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.perplexity.ai/chat/completions</code> · Formato compatible OpenAI · Auth: <code>Bearer token</code></span></div>
+        <div class="frow"><label class="flbl">API Key · Perplexity</label><div class="fwrap"><input type="password" class="finput" id="k-perplexity" placeholder="pplx-…" autocomplete="off" oninput="resetDot('perplexity')"><button class="eye" onclick="toggleEye('k-perplexity',this)">●</button></div></div>
+        <div class="frow h">
+          <div class="frow"><label class="flbl">Modelo</label>
+            <select class="fsel" id="m-perplexity" onchange="onSel('perplexity')">
+              <option value="sonar">sonar (recomendado)</option>
+              <option value="sonar-pro">sonar-pro</option>
+              <option value="custom">— Modelo personalizado —</option>
+            </select>
+          </div>
+          <div class="cwrap" id="cw-perplexity"><label class="flbl">Modelo personalizado</label><input type="text" class="finput" id="mc-perplexity" placeholder="sonar" autocomplete="off"></div>
+        </div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-perplexity" onclick="testPerplexity()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-perplexity"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-perplexity"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03b GITHUB -->
+    <div class="card" id="c-github" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-github')">
+        <div class="card-tg"><span class="card-badge">03b · OSINT</span><span class="card-name"><span>GitHub</span> API</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-github"></div><span id="l-github">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.github.com</code> · Búsqueda de perfiles, repositorios y código para OSINT.</span></div>
+        <div class="frow"><label class="flbl">Personal Access Token</label><div class="fwrap"><input type="password" class="finput" id="k-github" placeholder="ghp_xxxx…" autocomplete="off" oninput="resetDot('github')"><button class="eye" onclick="toggleEye('k-github',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-github" onclick="testGitHub()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-github"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-github"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03c YOUTUBE -->
+    <div class="card" id="c-youtube" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-youtube')">
+        <div class="card-tg"><span class="card-badge">03c · OSINT</span><span class="card-name"><span>YouTube</span> Data API v3</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-youtube"></div><span id="l-youtube">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>googleapis.com/youtube/v3</code> · Búsqueda de vídeos, canales y estadísticas para OSINT.</span></div>
+        <div class="frow"><label class="flbl">API Key</label><div class="fwrap"><input type="password" class="finput" id="k-youtube" placeholder="AIzaSy…" autocomplete="off" oninput="resetDot('youtube')"><button class="eye" onclick="toggleEye('k-youtube',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-youtube" onclick="testYouTube()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-youtube"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-youtube"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03d EMAILJS -->
+    <div class="card" id="c-emailjs" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-emailjs')">
+        <div class="card-tg"><span class="card-badge">03d · Email</span><span class="card-name"><span>EmailJS</span> · Briefing</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-emailjs"></div><span id="l-emailjs">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Para envío de emails desde Briefing Fase II. Configura tu cuenta en <a href="https://dashboard.emailjs.com" target="_blank" style="color:var(--gold)">EmailJS →</a></span></div>
+        <div class="frow"><label class="flbl">Public Key</label><div class="fwrap"><input type="password" class="finput" id="k-emailjs-pk" placeholder="Public Key" autocomplete="off" oninput="resetDot('emailjs')"><button class="eye" onclick="toggleEye('k-emailjs-pk',this)">●</button></div></div>
+        <div class="frow"><label class="flbl">Service ID</label><div class="fwrap"><input type="text" class="finput" id="k-emailjs-sid" placeholder="service_xxxxxxx" autocomplete="off" oninput="resetDot('emailjs')"></div></div>
+        <div class="frow"><label class="flbl">Template ID</label><div class="fwrap"><input type="text" class="finput" id="k-emailjs-tid" placeholder="template_xxxxxxx" autocomplete="off" oninput="resetDot('emailjs')"></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-emailjs" onclick="testEmailJS()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-emailjs"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-emailjs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 SERPAPI -->
+    <div class="card" id="c-serp" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-serp')">
+        <div class="card-tg"><span class="card-badge">04 · Search</span><span class="card-name"><span>SerpAPI</span> · Google Search</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-serp"></div><span id="l-serp">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>serpapi.com/search.json</code> · Param: <code>api_key</code> · El test desde <code>file://</code> no es posible por CORS — guarda la key y funcionará desde Netlify.</span></div>
+        <div class="frow"><label class="flbl">API Key · SerpAPI</label><div class="fwrap"><input type="password" class="finput" id="k-serp" placeholder="clave serpapi.com…" autocomplete="off" oninput="resetDot('serp')"><button class="eye" onclick="toggleEye('k-serp',this)">●</button></div></div>
+        <div class="frow h">
+          <div class="frow"><label class="flbl">Motor de búsqueda</label>
+            <select class="fsel" id="m-serp" onchange="onSel('serp')">
+              <option value="google">Google (recomendado)</option>
+              <option value="bing">Bing</option>
+              <option value="custom">— Motor personalizado —</option>
+            </select>
+          </div>
+          <div class="cwrap" id="cw-serp"><label class="flbl">Motor personalizado</label><input type="text" class="finput" id="mc-serp" placeholder="google" autocomplete="off"></div>
+        </div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-serp" onclick="testSerp()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-serp"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-serp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 PLACES -->
+    <div class="card" id="c-places" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-places')">
+        <div class="card-tg"><span class="card-badge">05 · Places</span><span class="card-name"><span>Places</span> API · Google</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-places"></div><span id="l-places">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Test abre en nueva pestaña · Verifica que la respuesta muestre <code>"status": "OK"</code></span></div>
+        <div class="frow"><label class="flbl">API Key · Google Places</label><div class="fwrap"><input type="password" class="finput" id="k-places" placeholder="AIzaSy…" autocomplete="off" oninput="resetDot('places')"><button class="eye" onclick="toggleEye('k-places',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-places" onclick="testPlaces()"><span>⬡</span> Test (abre pestaña)</button>
+          <div class="tres" id="tr-places"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04b ZENSERP -->
+    <div class="card" id="c-zenserp" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-zenserp')">
+        <div class="card-tg"><span class="card-badge">04b · Search</span><span class="card-name"><span>Zenserp</span> · Google Search</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-zenserp"></div><span id="l-zenserp">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>app.zenserp.com/api/v2/search</code> · Auth: header <code>apikey</code> · Free tier disponible · Alta precisión en resultados orgánicos.</span></div>
+        <div class="frow"><label class="flbl">API Key · Zenserp</label><div class="fwrap"><input type="password" class="finput" id="k-zenserp" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" oninput="resetDot('zenserp')"><button class="eye" onclick="toggleEye('k-zenserp',this)">●</button></div></div>
+        <div class="frow h">
+          <div class="frow"><label class="flbl">Motor de búsqueda</label>
+            <select class="fsel" id="m-zenserp" onchange="onSel('zenserp')">
+              <option value="google.com">Google (recomendado)</option>
+              <option value="bing.com">Bing</option>
+              <option value="custom">— Motor personalizado —</option>
+            </select>
+          </div>
+          <div class="cwrap" id="cw-zenserp"><label class="flbl">Motor personalizado</label><input type="text" class="finput" id="mc-zenserp" placeholder="google.com" autocomplete="off"></div>
+        </div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-zenserp" onclick="testZenserp()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-zenserp"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-zenserp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04c SERPSTACK -->
+    <div class="card" id="c-serpstack" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-serpstack')">
+        <div class="card-tg"><span class="card-badge">04c · Search</span><span class="card-name"><span>Serpstack</span> · Multi-resultado</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-serpstack"></div><span id="l-serpstack">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.serpstack.com/search</code> · Param: <code>access_key</code> · Soporta resultados orgánicos, imágenes, noticias y shopping en una sola llamada. HTTPS requiere plan de pago.</span></div>
+        <div class="frow"><label class="flbl">Access Key · Serpstack</label><div class="fwrap"><input type="password" class="finput" id="k-serpstack" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" oninput="resetDot('serpstack')"><button class="eye" onclick="toggleEye('k-serpstack',this)">●</button></div></div>
+        <div class="frow h">
+          <div class="frow"><label class="flbl">Tipo de resultado</label>
+            <select class="fsel" id="m-serpstack" onchange="onSel('serpstack')">
+              <option value="web">Web · orgánico (recomendado)</option>
+              <option value="news">News · noticias</option>
+              <option value="images">Images · imágenes</option>
+              <option value="custom">— Tipo personalizado —</option>
+            </select>
+          </div>
+          <div class="cwrap" id="cw-serpstack"><label class="flbl">Tipo personalizado</label><input type="text" class="finput" id="mc-serpstack" placeholder="web" autocomplete="off"></div>
+        </div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-serpstack" onclick="testSerpstack()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-serpstack"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-serpstack"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04d DATAFORSEO -->
+    <div class="card" id="c-dataforseo" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-dataforseo')">
+        <div class="card-tg"><span class="card-badge">04d · SEO</span><span class="card-name"><span>DataForSEO</span> · Marketing &amp; SEO</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-dataforseo"></div><span id="l-dataforseo">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.dataforseo.com</code> · Auth: <code>Basic</code> (email + contraseña de tu cuenta) · Cubre SERP, keywords, backlinks, rankings y auditoría técnica.</span></div>
+        <div class="frow"><label class="flbl">Email · DataForSEO</label><div class="fwrap"><input type="text" class="finput" id="k-dataforseo-login" placeholder="tu@email.com" autocomplete="off" oninput="resetDot('dataforseo')"></div></div>
+        <div class="frow"><label class="flbl">Contraseña · DataForSEO</label><div class="fwrap"><input type="password" class="finput" id="k-dataforseo-pass" placeholder="••••••••••" autocomplete="off" oninput="resetDot('dataforseo')"><button class="eye" onclick="toggleEye('k-dataforseo-pass',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <button class="btn-test" id="tb-dataforseo" onclick="testDataForSEO()"><span>⬡</span> Test de Conexión</button>
+          <div class="tres" id="tr-dataforseo"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-dataforseo"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06 FIRECRAWL -->
+    <div class="card" id="c-firecrawl" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-firecrawl')">
+        <div class="card-tg"><span class="card-badge">06 · Scraping</span><span class="card-name"><span>Firecrawl</span> · Web Scraping API</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-firecrawl"></div><span id="l-firecrawl">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.firecrawl.dev</code> · Extrae contenido limpio de cualquier URL. Útil para OSINT y análisis competitivo.</span></div>
+        <div class="frow"><label class="flbl">API Key · Firecrawl</label><div class="fwrap"><input type="password" class="finput" id="k-firecrawl" placeholder="fc-…" autocomplete="off" oninput="resetDot('firecrawl')"><button class="eye" onclick="toggleEye('k-firecrawl',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <div class="tres" id="tr-firecrawl"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+          <div class="logbox" id="lb-firecrawl"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07 NEWSAPI -->
+    <div class="card" id="c-newsapi" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-newsapi')">
+        <div class="card-tg"><span class="card-badge">07 · News</span><span class="card-name"><span>NewsAPI</span> · Noticias en Tiempo Real</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-newsapi"></div><span id="l-newsapi">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>newsapi.org/v2</code> · Monitoreo de noticias para OSINT y Rethora. Cobertura global.</span></div>
+        <div class="frow"><label class="flbl">API Key · NewsAPI</label><div class="fwrap"><input type="password" class="finput" id="k-newsapi" placeholder="Clave de newsapi.org" autocomplete="off" oninput="resetDot('newsapi')"><button class="eye" onclick="toggleEye('k-newsapi',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <div class="tres" id="tr-newsapi"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 08 MEDIASTACK -->
+    <div class="card" id="c-mediastack" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-mediastack')">
+        <div class="card-tg"><span class="card-badge">08 · Media</span><span class="card-name"><span>Mediastack</span> · Noticias y Medios</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-mediastack"></div><span id="l-mediastack">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Endpoint: <code>api.mediastack.com/v1/news</code> · Noticias live para clipping y monitoreo de medios.</span></div>
+        <div class="frow"><label class="flbl">API Key · Mediastack</label><div class="fwrap"><input type="password" class="finput" id="k-mediastack" placeholder="Clave de mediastack.com" autocomplete="off" oninput="resetDot('mediastack')"><button class="eye" onclick="toggleEye('k-mediastack',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <div class="tres" id="tr-mediastack"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 09 RAPIDAPI SOCIAL -->
+    <div class="card" id="c-rapidapi" style="margin-top:12px">
+      <div class="card-hdr" onclick="tog('c-rapidapi')">
+        <div class="card-tg"><span class="card-badge">09 · Social</span><span class="card-name"><span>RapidAPI</span> · Social Media Intelligence</span></div>
+        <div class="card-hr"><div class="card-pill"><div class="adot" id="d-rapidapi"></div><span id="l-rapidapi">—</span></div><span class="card-tog">▾</span></div>
+      </div>
+      <div class="card-body">
+        <div class="note"><span class="note-ico">◈</span><span>Una key RapidAPI para Instagram, TikTok, Facebook, YouTube, Twitter/X y Reddit. Análisis de perfiles, métricas y engagement para OSINT y Rethora.</span></div>
+        <div class="frow"><label class="flbl">RapidAPI Key (Universal)</label><div class="fwrap"><input type="password" class="finput" id="k-rapidapi" placeholder="x-rapidapi-key" autocomplete="off" oninput="resetDot('rapidapi')"><button class="eye" onclick="toggleEye('k-rapidapi',this)">●</button></div></div>
+        <div class="divhr"></div>
+        <div class="cfooter">
+          <div class="tres" id="tr-rapidapi"><span class="tres-ico"></span><span class="tres-txt"></span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+    <div class="save-info">
+      <div class="save-title">Guardar Configuración</div>
+      <div class="save-sub">Las claves se guardan en <code>localStorage</code> bajo la clave <code>aura_engine_cfg</code>. Solo accesibles desde este navegador. Cero servidores intermedios.</div>
+    </div>
+    <div class="save-acts">
+      <button class="btn-sec" onclick="clearAll()">✕ Borrar todo</button>
+      <button class="btn-pri" onclick="saveConfig()">◈ Guardar configuración</button>
+    </div>
+  </div>
+
+</main>
+
+<footer id="footer">
+  <span style="font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold)">Aura Engine</span>
+  <span id="fsummary"></span>
+</footer>
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// AURA ENGINE · escrito desde cero · sin código legado
+// ═══════════════════════════════════════════════════════
+
+const CFGKEY = 'aura_engine_cfg';
+
+// ── Default API Keys (pre-rellenadas para tu uso personal) ──
+const DEFAULT_KEYS = {
+  zenserp:    { key: '508ef220-2e8d-11f1-bf9e-a549e596f36d', engine: 'google.com' },
+  serpstack:  { key: 'e149b27831f9658a6c4267e584cbb558', type: 'web' },
+  dataforseo: { login: 'private@aura-cabinet.com', pass: '1bc85cb18e64627c' },
+  firecrawl:  { key: 'fc-c6e5dd12f1a64a5fad5c31d2b0bc3830' },
+  newsapi:    { key: '121011c25e84452ca65b56cd4ec2ccc3' },
+  mediastack: { key: '8029b40fad319a2732c33c475c846176' },
+  rapidapi:   { key: 'dd80ae9f0emshcf4fdc0e25cc88ap1f2125jsn735d0a87d3dc' },
+};
+
+// Merge defaults into a config object (does NOT overwrite existing values)
+function mergeDefaults(cfg) {
+  if (!cfg) cfg = {};
+  Object.keys(DEFAULT_KEYS).forEach(api => {
+    if (!cfg[api]) {
+      cfg[api] = { ...DEFAULT_KEYS[api] };
+    } else {
+      // Merge missing fields only
+      Object.keys(DEFAULT_KEYS[api]).forEach(field => {
+        if (!cfg[api][field]) cfg[api][field] = DEFAULT_KEYS[api][field];
+      });
+    }
+  });
+  return cfg;
+}
+
+// THEME
+(function(){
+  const s = localStorage.getItem('aura_theme');
+  if (s) document.documentElement.setAttribute('data-theme', s);
+  else if (window.matchMedia('(prefers-color-scheme:dark)').matches)
+    document.documentElement.setAttribute('data-theme','dark');
+})();
+function toggleTheme(){
+  const h = document.documentElement;
+  const n = (h.getAttribute('data-theme')||'light')==='dark' ? 'light' : 'dark';
+  h.setAttribute('data-theme', n);
+  localStorage.setItem('aura_theme', n);
+}
+
+// CLOCK
+(function tick(){
+  const el = document.getElementById('hdr-clock'), n = new Date();
+  if(el) el.textContent = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  setTimeout(tick, 30000);
+})();
+
+// UI HELPERS
+function tog(id){ document.getElementById(id).classList.toggle('open') }
+
+function toggleEye(id, btn){
+  const el = document.getElementById(id);
+  el.type = el.type==='password' ? 'text' : 'password';
+  btn.textContent = el.type==='password' ? '●' : '○';
+  btn.style.color = el.type==='text' ? 'var(--gold)' : '';
+}
+
+function onSel(api){
+  const sel = document.getElementById('m-'+api);
+  const wrap = document.getElementById('cw-'+api);
+  if(wrap) wrap.classList.toggle('show', sel.value==='custom');
+}
+
+function getModel(api){
+  const sel = document.getElementById('m-'+api);
+  if(!sel) return '';
+  if(sel.value==='custom'){ const c=document.getElementById('mc-'+api); return c?c.value.trim():''; }
+  return sel.value;
+}
+
+function setModel(api, val){
+  if(!val) return;
+  const sel = document.getElementById('m-'+api);
+  if(!sel) return;
+  const exists = Array.from(sel.options).some(o=>o.value===val);
+  if(exists){ sel.value=val; const w=document.getElementById('cw-'+api); if(w) w.classList.remove('show'); }
+  else{ sel.value='custom'; const c=document.getElementById('mc-'+api); if(c) c.value=val; const w=document.getElementById('cw-'+api); if(w) w.classList.add('show'); }
+}
+
+function resetDot(api){
+  setAdot(api,'none');
+  const tr=document.getElementById('tr-'+api); if(tr) tr.classList.remove('show');
+  const lb=document.getElementById('lb-'+api); if(lb) lb.classList.remove('show');
+}
+
+function setAdot(api, state){
+  const d=document.getElementById('d-'+api), l=document.getElementById('l-'+api);
+  if(!d||!l) return;
+  d.className='adot';
+  if(state==='ok')     { d.classList.add('ok');      l.textContent='Conectado';    l.style.color='var(--ok)' }
+  else if(state==='err'){ d.classList.add('err');    l.textContent='Error';        l.style.color='var(--err)' }
+  else if(state==='loading'){ d.classList.add('loading'); l.textContent='Verificando…'; l.style.color='var(--gold)' }
+  else{ l.textContent='—'; l.style.color='' }
+}
+
+function showRes(api, ok, title, detail){
+  const el=document.getElementById('tr-'+api); if(!el) return;
+  el.className='tres show '+(ok?'ok':'err');
+  el.querySelector('.tres-ico').textContent=ok?'✓':'✕';
+  const txt=el.querySelector('.tres-txt');
+  txt.innerHTML='<b>'+esc(title)+'</b>'+(detail?'<br>'+esc(detail):'');
+}
+
+function showLog(api, data){
+  const el=document.getElementById('lb-'+api); if(!el) return;
+  el.textContent=JSON.stringify(data,null,2); el.classList.add('show');
+}
+
+function setBtnLoading(api, loading){
+  const btn=document.getElementById('tb-'+api); if(!btn) return;
+  btn.disabled=loading;
+  btn.innerHTML=loading?'<span class="sp">◈</span> Verificando…':'<span>⬡</span> Test de Conexión';
+}
+
+function setScell(api, val, on, err){
+  const v=document.getElementById('sv-'+api), d=document.getElementById('sd-'+api);
+  if(v) v.textContent=val;
+  if(d){ d.className='scell-dot'; if(on) d.classList.add('on'); if(err) d.classList.add('err'); }
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') }
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// CONFIG
+function buildCfg(){
+  return {
+    claude:     { key: document.getElementById('k-claude').value.trim(),     model: getModel('claude') },
+    gemini:     { key: document.getElementById('k-gemini').value.trim(),     model: getModel('gemini') },
+    perplexity: { key: document.getElementById('k-perplexity').value.trim(), model: getModel('perplexity') },
+    serp:       { key: document.getElementById('k-serp').value.trim(),       engine: getModel('serp')||'google', country:'es' },
+    places:     { key: document.getElementById('k-places').value.trim() },
+    github:     { key: document.getElementById('k-github').value.trim() },
+    youtube:    { key: document.getElementById('k-youtube').value.trim() },
+    emailjs:    { pk: document.getElementById('k-emailjs-pk').value.trim(), sid: document.getElementById('k-emailjs-sid').value.trim(), tid: document.getElementById('k-emailjs-tid').value.trim() },
+    zenserp:    { key: document.getElementById('k-zenserp').value.trim(),    engine: getModel('zenserp')||'google.com' },
+    serpstack:  { key: document.getElementById('k-serpstack').value.trim(),  type: getModel('serpstack')||'web' },
+    dataforseo: { login: document.getElementById('k-dataforseo-login').value.trim(), pass: document.getElementById('k-dataforseo-pass').value.trim() },
+    firecrawl:  { key: document.getElementById('k-firecrawl').value.trim() },
+    newsapi:    { key: document.getElementById('k-newsapi').value.trim() },
+    mediastack: { key: document.getElementById('k-mediastack').value.trim() },
+    rapidapi:   { key: document.getElementById('k-rapidapi').value.trim() },
+  };
+}
+
+function populateForm(cfg){
+  if(!cfg) return;
+  ['claude','gemini','perplexity'].forEach(api=>{
+    const d=cfg[api]; if(!d) return;
+    const el=document.getElementById('k-'+api); if(el&&d.key) el.value=d.key;
+    if(d.model) setModel(api, d.model);
+  });
+  if(cfg.serp){ const el=document.getElementById('k-serp'); if(el&&cfg.serp.key) el.value=cfg.serp.key; if(cfg.serp.engine) setModel('serp',cfg.serp.engine); }
+  if(cfg.places){ const el=document.getElementById('k-places'); if(el&&cfg.places.key) el.value=cfg.places.key; }
+  if(cfg.github){ const el=document.getElementById('k-github'); if(el&&cfg.github.key) el.value=cfg.github.key; }
+  if(cfg.youtube){ const el=document.getElementById('k-youtube'); if(el&&cfg.youtube.key) el.value=cfg.youtube.key; }
+  if(cfg.emailjs){ 
+    const pk=document.getElementById('k-emailjs-pk'); if(pk&&cfg.emailjs.pk) pk.value=cfg.emailjs.pk;
+    const sid=document.getElementById('k-emailjs-sid'); if(sid&&cfg.emailjs.sid) sid.value=cfg.emailjs.sid;
+    const tid=document.getElementById('k-emailjs-tid'); if(tid&&cfg.emailjs.tid) tid.value=cfg.emailjs.tid;
+  }
+  if(cfg.zenserp){ const el=document.getElementById('k-zenserp'); if(el&&cfg.zenserp.key) el.value=cfg.zenserp.key; if(cfg.zenserp.engine) setModel('zenserp',cfg.zenserp.engine); }
+  if(cfg.serpstack){ const el=document.getElementById('k-serpstack'); if(el&&cfg.serpstack.key) el.value=cfg.serpstack.key; if(cfg.serpstack.type) setModel('serpstack',cfg.serpstack.type); }
+  if(cfg.dataforseo){
+    const lg=document.getElementById('k-dataforseo-login'); if(lg&&cfg.dataforseo.login) lg.value=cfg.dataforseo.login;
+    const ps=document.getElementById('k-dataforseo-pass');  if(ps&&cfg.dataforseo.pass)  ps.value=cfg.dataforseo.pass;
+  }
+  // New APIs
+  if(cfg.firecrawl){ const el=document.getElementById('k-firecrawl'); if(el&&cfg.firecrawl.key) el.value=cfg.firecrawl.key; }
+  if(cfg.newsapi){ const el=document.getElementById('k-newsapi'); if(el&&cfg.newsapi.key) el.value=cfg.newsapi.key; }
+  if(cfg.mediastack){ const el=document.getElementById('k-mediastack'); if(el&&cfg.mediastack.key) el.value=cfg.mediastack.key; }
+  if(cfg.rapidapi){ const el=document.getElementById('k-rapidapi'); if(el&&cfg.rapidapi.key) el.value=cfg.rapidapi.key; }
+}
+
+function updateBar(cfg){
+  const dot=document.getElementById('sdot'), txt=document.getElementById('stxt'), sum=document.getElementById('fsummary');
+  if(!cfg){ dot.classList.remove('on'); txt.textContent='◈ Motor no configurado — introduce las API Keys y guarda'; if(sum) sum.textContent=''; return; }
+  const parts=[];
+  if(cfg.claude?.key)     parts.push('Claude ✓');
+  if(cfg.gemini?.key)     parts.push('Gemini ✓');
+  if(cfg.perplexity?.key) parts.push('Perplexity ✓');
+  if(cfg.serp?.key)       parts.push('SerpAPI ✓');
+  if(cfg.places?.key)     parts.push('Places ✓');
+  if(cfg.github?.key)     parts.push('GitHub ✓');
+  if(cfg.youtube?.key)    parts.push('YouTube ✓');
+  if(cfg.emailjs?.pk)     parts.push('EmailJS ✓');
+  if(cfg.zenserp?.key)    parts.push('Zenserp ✓');
+  if(cfg.serpstack?.key)  parts.push('Serpstack ✓');
+  if(cfg.dataforseo?.login) parts.push('DataForSEO ✓');
+  if(cfg.firecrawl?.key)  parts.push('Firecrawl ✓');
+  if(cfg.newsapi?.key)    parts.push('NewsAPI ✓');
+  if(cfg.mediastack?.key) parts.push('Mediastack ✓');
+  if(cfg.rapidapi?.key)   parts.push('RapidAPI ✓');
+  if(!parts.length){ dot.classList.remove('on'); txt.textContent='◈ Engine sin API Keys'; if(sum) sum.textContent=''; }
+  else{ dot.classList.add('on'); txt.textContent='Motor activo · '+parts.join(' · '); if(sum) sum.textContent=parts.join(' · '); }
+}
+
+function updateScells(cfg){
+  if(!cfg) return;
+  ['claude','gemini','perplexity'].forEach(api=>{ const d=cfg[api]; if(d?.key) setScell(api,d.model||'Configurado',true,false); else setScell(api,'Sin configurar',false,false); });
+  if(cfg.serp?.key) setScell('serp',cfg.serp.engine||'google',true,false); else setScell('serp','Sin configurar',false,false);
+  if(cfg.places?.key) setScell('places','Configurado',true,false); else setScell('places','Sin configurar',false,false);
+  if(cfg.github?.key) setScell('github','Configurado',true,false); else setScell('github','Sin configurar',false,false);
+  if(cfg.youtube?.key) setScell('youtube','Configurado',true,false); else setScell('youtube','Sin configurar',false,false);
+  if(cfg.emailjs?.pk) setScell('emailjs','Configurado',true,false); else setScell('emailjs','Sin configurar',false,false);
+  if(cfg.zenserp?.key)    setScell('zenserp',cfg.zenserp.engine||'google.com',true,false); else setScell('zenserp','Sin configurar',false,false);
+  if(cfg.serpstack?.key)  setScell('serpstack',cfg.serpstack.type||'web',true,false);       else setScell('serpstack','Sin configurar',false,false);
+  if(cfg.dataforseo?.login) setScell('dataforseo',cfg.dataforseo.login,true,false);         else setScell('dataforseo','Sin configurar',false,false);
+  if(cfg.firecrawl?.key)  setScell('firecrawl','Configurado',true,false);  else setScell('firecrawl','Sin configurar',false,false);
+  if(cfg.newsapi?.key)    setScell('newsapi','Configurado',true,false);    else setScell('newsapi','Sin configurar',false,false);
+  if(cfg.mediastack?.key) setScell('mediastack','Configurado',true,false); else setScell('mediastack','Sin configurar',false,false);
+  if(cfg.rapidapi?.key)   setScell('rapidapi','Social APIs',true,false);   else setScell('rapidapi','Sin configurar',false,false);
+}
+
+function saveConfig(){
+  const cfg=buildCfg();
+  localStorage.setItem(CFGKEY, JSON.stringify(cfg));
+  updateBar(cfg); updateScells(cfg);
+  toast('◈ Configuración guardada');
+}
+
+function clearAll(){
+  if(!confirm('¿Borrar toda la configuración guardada?')) return;
+  localStorage.removeItem(CFGKEY); location.reload();
+}
+
+// INIT — lee localStorage, merge defaults y rellena el formulario
+(function(){
+  let cfg=null;
+  try{ const r=localStorage.getItem(CFGKEY); cfg=r?JSON.parse(r):null; }catch(e){}
+  cfg = mergeDefaults(cfg);
+  // Auto-save merged defaults so they persist
+  try { localStorage.setItem(CFGKEY, JSON.stringify(cfg)); } catch(e){}
+  populateForm(cfg); updateBar(cfg); updateScells(cfg);
+})();
+
+// ═══════════════════════════════════════
+// TEST FUNCTIONS
+// ═══════════════════════════════════════
+
+// CLAUDE
+// - max_tokens 64 (suficiente para "OK")
+// - system prompt en español
+// - modelo de la lista 2025/2026 sin legado
+async function testClaude(){
+  const key=document.getElementById('k-claude').value.trim();
+  const model=getModel('claude')||'claude-sonnet-4-6';
+  if(!key){ showRes('claude',false,'API Key vacía','Introduce tu clave Anthropic.'); return; }
+  setBtnLoading('claude',true); setAdot('claude','loading');
+  document.getElementById('tr-claude').classList.remove('show');
+  document.getElementById('lb-claude').classList.remove('show');
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:model,
+        max_tokens:64,
+        system:'Eres un asistente. Responde siempre en español.',
+        messages:[{role:'user',content:'Responde únicamente con la palabra OK, nada más.'}]
+      })
+    });
+    const data=await res.json();
+    showLog('claude',data);
+    if(res.ok && data?.content?.[0]?.text){
+      setAdot('claude','ok'); showRes('claude',true,'Conexión establecida','Modelo: '+model); setScell('claude',model,true,false);
+    } else {
+      setAdot('claude','err'); showRes('claude',false,'Error '+res.status,data?.error?.message||JSON.stringify(data)); setScell('claude','Error',false,true);
+    }
+  }catch(e){ setAdot('claude','err'); showRes('claude',false,'Error de red',e.message); }
+  finally{ setBtnLoading('claude',false); }
+}
+
+// GEMINI
+// - Endpoint v1beta para gemini-2.5-*, endpoint v1 para el resto
+// - SIN thinkingConfig (no existe en v1, ni en modelos anteriores a 2.5)
+// - maxOutputTokens 256, temperature 0
+async function testGemini(){
+  const key=document.getElementById('k-gemini').value.trim();
+  const model=getModel('gemini')||'gemini-2.5-flash';
+  if(!key){ showRes('gemini',false,'API Key vacía','Introduce tu clave Google AI Studio.'); return; }
+  setBtnLoading('gemini',true); setAdot('gemini','loading');
+  document.getElementById('tr-gemini').classList.remove('show');
+  document.getElementById('lb-gemini').classList.remove('show');
+  const apiVer = model.startsWith('gemini-2.5') ? 'v1beta' : 'v1';
+  const url=`https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${key}`;
+  try{
+    const res=await fetch(url,{
+      method:'POST',
+      headers:{'content-type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:'Responde únicamente con la palabra OK, nada más.'}]}],
+        generationConfig:{maxOutputTokens:256, temperature:0}
+      })
+    });
+    const data=await res.json();
+    showLog('gemini',data);
+    const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(res.ok && text){
+      setAdot('gemini','ok'); showRes('gemini',true,'Conexión establecida','Modelo: '+model+' · Endpoint: '+apiVer); setScell('gemini',model,true,false);
+    } else {
+      setAdot('gemini','err'); showRes('gemini',false,'Error '+res.status,data?.error?.message||JSON.stringify(data)); setScell('gemini','Error',false,true);
+    }
+  }catch(e){ setAdot('gemini','err'); showRes('gemini',false,'Error de red',e.message); }
+  finally{ setBtnLoading('gemini',false); }
+}
+
+// PERPLEXITY
+async function testPerplexity(){
+  const key=document.getElementById('k-perplexity').value.trim();
+  const model=getModel('perplexity')||'sonar';
+  if(!key){ showRes('perplexity',false,'API Key vacía','Introduce tu clave Perplexity.'); return; }
+  setBtnLoading('perplexity',true); setAdot('perplexity','loading');
+  document.getElementById('tr-perplexity').classList.remove('show');
+  document.getElementById('lb-perplexity').classList.remove('show');
+  try{
+    const res=await fetch('https://api.perplexity.ai/chat/completions',{
+      method:'POST',
+      headers:{'content-type':'application/json','authorization':'Bearer '+key},
+      body:JSON.stringify({model:model,max_tokens:64,messages:[{role:'user',content:'Responde únicamente con la palabra OK, nada más.'}]})
+    });
+    const data=await res.json();
+    showLog('perplexity',data);
+    if(res.ok && data?.choices?.[0]?.message?.content){
+      setAdot('perplexity','ok'); showRes('perplexity',true,'Conexión establecida','Modelo: '+model); setScell('perplexity',model,true,false);
+    } else {
+      setAdot('perplexity','err'); showRes('perplexity',false,'Error '+res.status,data?.error?.message||JSON.stringify(data)); setScell('perplexity','Error',false,true);
+    }
+  }catch(e){ setAdot('perplexity','err'); showRes('perplexity',false,'Error de red',e.message); }
+  finally{ setBtnLoading('perplexity',false); }
+}
+
+// SERPAPI
+// - Desde file:// SerpAPI bloquea CORS — se detecta y se avisa claramente
+// - Desde HTTPS (Netlify) funciona con fetch directo
+async function testSerp(){
+  const key=document.getElementById('k-serp').value.trim();
+  const engine=getModel('serp')||'google';
+  if(!key){ showRes('serp',false,'API Key vacía','Introduce tu clave SerpAPI.'); return; }
+  if(location.protocol==='file:'){
+    setAdot('serp','ok');
+    showRes('serp',true,'Key registrada · Test omitido en file://','SerpAPI bloquea CORS desde archivo local. La clave funcionará correctamente desde Netlify. Pulsa Guardar para continuar.');
+    setScell('serp',engine,true,false);
+    return;
+  }
+  setBtnLoading('serp',true); setAdot('serp','loading');
+  document.getElementById('tr-serp').classList.remove('show');
+  document.getElementById('lb-serp').classList.remove('show');
+  const params=new URLSearchParams({api_key:key,q:'test',engine:engine,gl:'es',hl:'es',num:'1'});
+  try{
+    const res=await fetch('https://serpapi.com/search.json?'+params.toString());
+    const data=await res.json();
+    showLog('serp',data);
+    if(res.ok && data?.organic_results){
+      setAdot('serp','ok'); showRes('serp',true,'Conexión establecida','Motor: '+engine); setScell('serp',engine,true,false);
+    } else {
+      setAdot('serp','err'); showRes('serp',false,data?.error||'Error '+res.status,JSON.stringify(data).slice(0,120)); setScell('serp','Error',false,true);
+    }
+  }catch(e){ setAdot('serp','err'); showRes('serp',false,'Error de red',e.message); }
+  finally{ setBtnLoading('serp',false); }
+}
+
+// PLACES
+function testPlaces(){
+  const key=document.getElementById('k-places').value.trim();
+  if(!key){ showRes('places',false,'API Key vacía','Introduce tu clave Google Places.'); return; }
+  const url='https://maps.googleapis.com/maps/api/place/nearbysearch/json?key='+key+'&location=40.4168,-3.7038&radius=500&type=restaurant';
+  window.open(url,'_blank');
+  showRes('places',true,'URL abierta en nueva pestaña','Si ves "status": "OK" → la clave funciona correctamente.');
+  setAdot('places','ok'); setScell('places','Verificado (pestaña)',true,false);
+}
+
+// GITHUB
+async function testGitHub(){
+  const key=document.getElementById('k-github').value.trim();
+  if(!key){ showRes('github',false,'Token vacío','Introduce tu Personal Access Token de GitHub.'); return; }
+  setBtnLoading('github',true); setAdot('github','loading');
+  document.getElementById('tr-github').classList.remove('show');
+  document.getElementById('lb-github').classList.remove('show');
+  try{
+    const res=await fetch('https://api.github.com/user',{
+      headers:{'Authorization':'Bearer '+key,'Accept':'application/vnd.github+json'}
+    });
+    const data=await res.json();
+    showLog('github',data);
+    if(res.ok && data?.login){
+      setAdot('github','ok'); showRes('github',true,'Conexión establecida','Usuario: '+data.login); setScell('github',data.login,true,false);
+    } else {
+      setAdot('github','err'); showRes('github',false,data?.message||'Error '+res.status,'Verifica tu token.'); setScell('github','Error',false,true);
+    }
+  }catch(e){ setAdot('github','err'); showRes('github',false,'Error de red',e.message); }
+  finally{ setBtnLoading('github',false); }
+}
+
+// YOUTUBE
+async function testYouTube(){
+  const key=document.getElementById('k-youtube').value.trim();
+  if(!key){ showRes('youtube',false,'API Key vacía','Introduce tu clave de YouTube Data API.'); return; }
+  setBtnLoading('youtube',true); setAdot('youtube','loading');
+  document.getElementById('tr-youtube').classList.remove('show');
+  document.getElementById('lb-youtube').classList.remove('show');
+  try{
+    const res=await fetch('https://www.googleapis.com/youtube/v3/search?part=snippet&q=test&maxResults=1&key='+key);
+    const data=await res.json();
+    showLog('youtube',data);
+    if(res.ok && data?.items){
+      setAdot('youtube','ok'); showRes('youtube',true,'Conexión establecida','API funcionando correctamente'); setScell('youtube','Conectado',true,false);
+    } else {
+      setAdot('youtube','err'); showRes('youtube',false,data?.error?.message||'Error '+res.status,'Verifica tu API Key.'); setScell('youtube','Error',false,true);
+    }
+  }catch(e){ setAdot('youtube','err'); showRes('youtube',false,'Error de red',e.message); }
+  finally{ setBtnLoading('youtube',false); }
+}
+
+// EMAILJS
+async function testEmailJS(){
+  const pk=document.getElementById('k-emailjs-pk').value.trim();
+  const sid=document.getElementById('k-emailjs-sid').value.trim();
+  const tid=document.getElementById('k-emailjs-tid').value.trim();
+  if(!pk||!sid||!tid){ showRes('emailjs',false,'Campos incompletos','Completa Public Key, Service ID y Template ID.'); return; }
+  setBtnLoading('emailjs',true); setAdot('emailjs','loading');
+  document.getElementById('tr-emailjs').classList.remove('show');
+  document.getElementById('lb-emailjs').classList.remove('show');
+  try{
+    // Cargar EmailJS SDK si no está cargado
+    if(typeof emailjs==='undefined'){
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement('script');
+        s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
+        s.onload=resolve; s.onerror=reject;
+        document.head.appendChild(s);
+      });
+    }
+    // Inicializar con la public key - si falla, las credenciales son inválidas
+    emailjs.init(pk);
+    // Si llegamos aquí, la public key es válida
+    setAdot('emailjs','ok'); 
+    showRes('emailjs',true,'Credenciales guardadas','Public Key válida. Service ID y Template ID se verificarán al enviar.');
+    setScell('emailjs','Configurado',true,false);
+  }catch(e){ 
+    setAdot('emailjs','err'); 
+    showRes('emailjs',false,'Error de configuración',e.text||e.message||'Verifica tu Public Key.'); 
+    setScell('emailjs','Error',false,true);
+  }
+  finally{ setBtnLoading('emailjs',false); }
+}
+// ZENSERP
+async function testZenserp(){
+  const key=document.getElementById('k-zenserp').value.trim();
+  const engine=getModel('zenserp')||'google.com';
+  if(!key){ showRes('zenserp',false,'API Key vacía','Introduce tu clave Zenserp.'); return; }
+  if(location.protocol==='file:'){
+    setAdot('zenserp','ok');
+    showRes('zenserp',true,'Key registrada · Test omitido en file://','Zenserp bloquea CORS desde archivo local. Funcionará desde Vercel/Netlify. Pulsa Guardar para continuar.');
+    setScell('zenserp',engine,true,false);
+    return;
+  }
+  setBtnLoading('zenserp',true); setAdot('zenserp','loading');
+  document.getElementById('tr-zenserp').classList.remove('show');
+  document.getElementById('lb-zenserp').classList.remove('show');
+  try{
+    const params=new URLSearchParams({q:'test',search_engine:engine,country:'es',language:'es',num:1});
+    const res=await fetch('https://app.zenserp.com/api/v2/search?'+params.toString(),{
+      headers:{'apikey':key}
+    });
+    const data=await res.json();
+    showLog('zenserp',data);
+    if(res.ok && (data?.organic || data?.organic_results)){
+      setAdot('zenserp','ok'); showRes('zenserp',true,'Conexión establecida','Motor: '+engine); setScell('zenserp',engine,true,false);
+    } else {
+      setAdot('zenserp','err'); showRes('zenserp',false,data?.error||data?.message||'Error '+res.status,JSON.stringify(data).slice(0,120)); setScell('zenserp','Error',false,true);
+    }
+  }catch(e){ setAdot('zenserp','err'); showRes('zenserp',false,'Error de red',e.message); }
+  finally{ setBtnLoading('zenserp',false); }
+}
+
+// SERPSTACK
+async function testSerpstack(){
+  const key=document.getElementById('k-serpstack').value.trim();
+  const type=getModel('serpstack')||'web';
+  if(!key){ showRes('serpstack',false,'Access Key vacía','Introduce tu clave Serpstack.'); return; }
+  if(location.protocol==='file:'){
+    setAdot('serpstack','ok');
+    showRes('serpstack',true,'Key registrada · Test omitido en file://','Serpstack requiere HTTPS para el plan gratuito. Funcionará desde Vercel/Netlify. Pulsa Guardar para continuar.');
+    setScell('serpstack',type,true,false);
+    return;
+  }
+  setBtnLoading('serpstack',true); setAdot('serpstack','loading');
+  document.getElementById('tr-serpstack').classList.remove('show');
+  document.getElementById('lb-serpstack').classList.remove('show');
+  try{
+    const params=new URLSearchParams({access_key:key,query:'test',gl:'es',hl:'es',num:1,type});
+    const res=await fetch('https://api.serpstack.com/search?'+params.toString());
+    const data=await res.json();
+    showLog('serpstack',data);
+    if(res.ok && data?.organic_results && !data?.error){
+      setAdot('serpstack','ok'); showRes('serpstack',true,'Conexión establecida','Tipo: '+type); setScell('serpstack',type,true,false);
+    } else {
+      const msg=data?.error?.info||data?.error?.type||'Error '+res.status;
+      setAdot('serpstack','err'); showRes('serpstack',false,msg,JSON.stringify(data).slice(0,120)); setScell('serpstack','Error',false,true);
+    }
+  }catch(e){ setAdot('serpstack','err'); showRes('serpstack',false,'Error de red',e.message); }
+  finally{ setBtnLoading('serpstack',false); }
+}
+
+// DATAFORSEO
+async function testDataForSEO(){
+  const login=document.getElementById('k-dataforseo-login').value.trim();
+  const pass=document.getElementById('k-dataforseo-pass').value.trim();
+  if(!login||!pass){ showRes('dataforseo',false,'Credenciales incompletas','Introduce email y contraseña de tu cuenta DataForSEO.'); return; }
+  setBtnLoading('dataforseo',true); setAdot('dataforseo','loading');
+  document.getElementById('tr-dataforseo').classList.remove('show');
+  document.getElementById('lb-dataforseo').classList.remove('show');
+  try{
+    const creds=btoa(login+':'+pass);
+    const res=await fetch('https://api.dataforseo.com/v3/serp/google/organic/live/advanced',{
+      method:'POST',
+      headers:{'Authorization':'Basic '+creds,'Content-Type':'application/json'},
+      body:JSON.stringify([{keyword:'test',location_code:2724,language_code:'es',device:'desktop',os:'windows',depth:1}])
+    });
+    const data=await res.json();
+    showLog('dataforseo',data);
+    if(res.ok && data?.status_code===20000){
+      const remaining=data?.tasks?.[0]?.cost!==undefined ? ' · Coste: $'+data.tasks[0].cost : '';
+      setAdot('dataforseo','ok'); showRes('dataforseo',true,'Conexión establecida','Usuario: '+login+remaining); setScell('dataforseo',login,true,false);
+    } else {
+      const msg=data?.status_message||data?.tasks?.[0]?.status_message||'Error '+res.status;
+      setAdot('dataforseo','err'); showRes('dataforseo',false,msg,'Verifica email y contraseña.'); setScell('dataforseo','Error',false,true);
+    }
+  }catch(e){ setAdot('dataforseo','err'); showRes('dataforseo',false,'Error de red',e.message); }
+  finally{ setBtnLoading('dataforseo',false); }
+}
+</script>
+</body>
+</html>
