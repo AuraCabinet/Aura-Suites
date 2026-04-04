@@ -1,13 +1,16 @@
 export default async function handler(req, res) {
-  // Solo POST
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // Responder preflight CORS
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-
-  // CORS — permite solo tu dominio
-  res.setHeader('Access-Control-Allow-Origin', 'https://suites.aura-cabinet.com');
-  res.setHeader('Access-Control-Allow-Methods', 'POST');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
