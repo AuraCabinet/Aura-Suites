@@ -1,7 +1,5 @@
 {
   "functions": {
-    "api/send-email.js": {
-      "runtime": "node@18"
-    }
+    "api/send-email.js": {}
   }
 }
