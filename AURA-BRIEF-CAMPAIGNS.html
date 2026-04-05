@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico de Campaña — Aura Cabinet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@200;300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f0ede8;--bg2:#f7f5f1;--bg3:#faf8f4;--bg4:#f2efe9;--gold:#b8913a;--gold2:rgba(184,145,58,0.12);--gold3:rgba(184,145,58,0.40);--ink:#0f0f12;--ink2:#2c2c34;--ink3:#60606e;--border:rgba(0,0,0,0.09);--border2:rgba(184,145,58,0.35);--r:6px;--r2:3px;}
+@media(prefers-color-scheme:dark){:root{--bg:#0e0e14;--bg2:#13131b;--bg3:#1a1a24;--bg4:#1e1e2a;--gold:#d4a843;--gold2:rgba(212,168,67,0.11);--gold3:rgba(212,168,67,0.30);--ink:#f5f2ec;--ink2:#d4c9b0;--ink3:#8a8272;--border:rgba(255,255,255,0.07);--border2:rgba(212,168,67,0.28);}}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--gold3);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#hero{background:var(--bg2);border-bottom:1px solid var(--border2);padding:44px 36px 36px;text-align:center}
+.eyebrow{font-family:'Montserrat',sans-serif;font-size:.52rem;font-weight:300;letter-spacing:.44em;color:var(--gold);text-transform:uppercase;margin-bottom:12px}
+.hero-title{font-size:2.2rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:8px}
+.hero-title strong{color:var(--gold);font-weight:400}
+.hero-desc{font-family:'Montserrat',sans-serif;font-size:.68rem;font-weight:300;color:var(--ink3);max-width:480px;margin:0 auto;line-height:1.9}
+.hero-rule{width:50px;height:1px;background:var(--border2);margin:16px auto}
+#form-wrap{max-width:680px;margin:0 auto;padding:36px 20px 80px}
+.sec{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:18px;animation:fadeUp .35s ease}
+.sec-hdr{padding:14px 20px;background:var(--gold2);border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px}
+.sec-num{font-family:'Montserrat',sans-serif;font-size:.5rem;font-weight:500;letter-spacing:.3em;color:var(--gold);background:rgba(184,145,58,0.15);border:1px solid var(--border2);padding:2px 8px;border-radius:2px}
+.sec-title{font-size:1.1rem;font-weight:600;font-style:italic;color:var(--ink)}
+.sec-body{padding:20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column;gap:5px}
+.lbl{font-family:'Montserrat',sans-serif;font-size:.57rem;font-weight:400;letter-spacing:.28em;text-transform:uppercase;color:var(--ink3)}
+.lbl em{color:var(--gold);font-style:normal;margin-left:2px}
+input,textarea,select{background:var(--bg4);border:1px solid var(--border2);color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:15px;padding:9px 13px;border-radius:var(--r2);outline:none;width:100%;transition:border-color .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold2)}
+textarea{resize:vertical;line-height:1.6;min-height:76px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23b8913a' opacity='.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+select option{background:var(--bg4)}
+input::placeholder,textarea::placeholder{color:var(--ink3);opacity:.45;font-style:italic}
+.hint{font-family:'Montserrat',sans-serif;font-size:.57rem;color:var(--ink3);line-height:1.6;margin-top:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{font-family:'Montserrat',sans-serif;font-size:.57rem;padding:4px 12px;border-radius:14px;border:1px solid var(--border2);cursor:pointer;color:var(--ink2);background:transparent;letter-spacing:.06em;transition:all .18s;white-space:nowrap;user-select:none}
+.chip:hover{border-color:var(--gold);color:var(--gold)}
+.chip.on{background:var(--gold2);border-color:var(--gold);color:var(--gold)}
+#submit-block{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:28px 24px;text-align:center}
+.sub-title{font-size:1.1rem;font-weight:400;font-style:italic;color:var(--ink);margin-bottom:8px}
+.sub-desc{font-family:'Montserrat',sans-serif;font-size:.62rem;font-weight:300;color:var(--ink3);line-height:1.8;margin-bottom:20px}
+.btn-send{background:var(--gold);border:none;color:#fff;padding:14px 36px;font-family:'Montserrat',sans-serif;font-size:.68rem;font-weight:400;letter-spacing:.22em;text-transform:uppercase;cursor:pointer;border-radius:var(--r2);transition:opacity .2s}
+.btn-send:hover{opacity:.87}
+.btn-send:disabled{opacity:.5;cursor:not-allowed}
+#success{display:none;text-align:center;padding:60px 20px;animation:fadeUp .4s ease;max-width:500px;margin:0 auto}
+.suc-icon{font-size:2.4rem;color:var(--gold);margin-bottom:16px}
+.suc-title{font-size:1.8rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:12px}
+.suc-desc{font-family:'Montserrat',sans-serif;font-size:.67rem;font-weight:300;color:var(--ink3);line-height:1.9}
+.suc-box{background:var(--gold2);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 18px;margin-top:18px;font-family:'Montserrat',sans-serif;font-size:.62rem;color:var(--ink2);line-height:1.8;text-align:left}
+footer{border-top:1px solid var(--border2);padding:16px 36px;display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Montserrat',sans-serif;font-size:.55rem;color:var(--ink3);letter-spacing:.2em;text-transform:uppercase;margin-top:20px}
+footer .brand{color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;letter-spacing:.06em;text-transform:none}
+
+/* ── REVIEW SCREEN ── */
+#review{display:none;max-width:680px;margin:0 auto;padding:24px 20px 60px;animation:fadeUp .35s ease}
+.rev-hdr{text-align:center;margin-bottom:28px}
+.rev-title{font-size:1.8rem;font-weight:300;font-style:italic;color:var(--ink);margin-bottom:8px}
+.rev-sub{font-family:'Montserrat',sans-serif;font-size:.65rem;font-weight:300;color:var(--ink3);line-height:1.8}
+.rev-doc{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.rev-doc-hdr{padding:18px 24px;background:var(--gold2);border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between}
+.rev-doc-title{font-size:1.05rem;font-weight:600;font-style:italic;color:var(--ink)}
+.rev-date{font-family:'DM Mono',monospace;font-size:8px;color:var(--ink3);letter-spacing:.12em}
+.rev-sec{padding:0 24px 14px}
+.rev-sec-title{font-family:'Montserrat',sans-serif;font-size:.52rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);padding:14px 0 8px;border-bottom:1px solid var(--border2);margin-bottom:8px}
+.rev-row{display:grid;grid-template-columns:160px 1fr;gap:4px 16px;padding:7px 0;border-bottom:1px solid rgba(184,145,58,0.08)}
+.rev-row:last-child{border-bottom:none}
+.rev-lbl{font-family:'Montserrat',sans-serif;font-size:.57rem;font-weight:400;letter-spacing:.1em;color:var(--ink3);padding-top:3px;line-height:1.4}
+.rev-val{font-size:15px;color:var(--ink);line-height:1.5}
+.rev-val.empty{color:var(--ink3);font-style:italic;font-size:13px}
+.rev-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-back{background:transparent;border:1px solid var(--border2);color:var(--ink3);padding:12px 22px;font-family:'Montserrat',sans-serif;font-size:.64rem;font-weight:400;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;border-radius:var(--r2);transition:all .2s}
+.btn-back:hover{border-color:var(--gold);color:var(--gold)}
+@media(max-width:500px){.rev-row{grid-template-columns:1fr}.rev-lbl{padding-bottom:2px}}
+
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init("b0zh_dXjgUI8CsMAE");</script>
+</head>
+<body>
+
+<section id="hero">
+  <div class="eyebrow">Aura Cabinet · Estrategia de Campaña</div>
+  <h1 class="hero-title">Cuéntanos sobre tu <strong>proyecto</strong></h1>
+  <div class="hero-rule"></div>
+  <p class="hero-desc">Completa este formulario con la mayor precisión posible. Cuanto más conozcamos tu situación, más precisa y útil será la estrategia que desarrollemos para ti.</p>
+</section>
+
+<div id="form-wrap">
+<form id="brief-form" name="brief-campaigns" onsubmit="return false;">
+<input type="hidden" name="form-name" value="brief-campaigns">
+<div style="display:none"></div>
+<div id="form-content">
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">01</span><span class="sec-title">Tu empresa o proyecto</span></div>
+    <div class="sec-body">
+      <div class="grid">
+        <div class="f full"><label class="lbl">Nombre de la empresa o marca <em>*</em></label><input type="text" id="nombre" placeholder="Ej. Grupo Meridian, Del Frutal, María García…"></div>
+        <div class="f"><label class="lbl">Sector <em>*</em></label>
+          <select id="sector">
+            <option value="">— Seleccionar —</option>
+            <option>Alimentación y Bebidas</option><option>Gran consumo / Retail</option>
+            <option>Hostelería y Restauración</option><option>Moda y Lujo</option>
+            <option>Cosmética y Belleza</option><option>Tecnología / Software</option>
+            <option>Servicios Profesionales</option><option>Consultoría</option>
+            <option>Educación y Formación</option><option>Salud y Farmacéutica</option>
+            <option>Inmobiliario</option><option>Turismo y Viajes</option>
+            <option>Eventos y Entretenimiento</option><option>Industria / Manufactura</option>
+            <option>Energía y Sostenibilidad</option><option>ONG / Tercer Sector</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="f"><label class="lbl">Mercado principal <em>*</em></label><input type="text" id="mercado" placeholder="Ej. España, LATAM, Florida EE.UU.…"></div>
+        <div class="f full"><label class="lbl">¿A qué se dedica exactamente?</label><textarea id="descripcion" placeholder="Describe brevemente tu empresa, producto o servicio…"></textarea></div>
+        <div class="f full"><label class="lbl">¿Qué hace único a tu producto o servicio?</label><textarea id="propuesta" placeholder="Tu diferenciador real frente a la competencia…"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">02</span><span class="sec-title">La campaña que necesitas</span></div>
+    <div class="sec-body">
+      <div class="grid">
+        <div class="f full"><label class="lbl">Producto o servicio a campañar <em>*</em></label><input type="text" id="producto" placeholder="Ej. Lanzamiento de nueva línea, campaña de verano, activación en punto de venta…"></div>
+        <div class="f full"><label class="lbl">¿Cuál es tu objetivo principal? <em>*</em></label>
+          <div class="chips" id="chips-objetivo">
+            <button type="button" class="chip" data-g="objetivo" data-v="Lanzar un nuevo producto o servicio">Lanzar producto / servicio</button>
+            <button type="button" class="chip" data-g="objetivo" data-v="Posicionar o reposicionar la marca">Posicionar la marca</button>
+            <button type="button" class="chip" data-g="objetivo" data-v="Generar ventas y conversiones">Generar ventas</button>
+            <button type="button" class="chip" data-g="objetivo" data-v="Ganar notoriedad y visibilidad">Ganar notoriedad</button>
+            <button type="button" class="chip" data-g="objetivo" data-v="Fidelizar a los clientes actuales">Fidelizar clientes</button>
+            <button type="button" class="chip" data-g="objetivo" data-v="Expandirse a un nuevo mercado">Expansión a nuevo mercado</button>
+          </div>
+        </div>
+        <div class="f full"><label class="lbl">Cuéntanoslo con tus palabras</label><textarea id="objetivo" placeholder="¿Qué quieres conseguir exactamente con esta campaña?"></textarea></div>
+        <div class="f full"><label class="lbl">¿A quién va dirigida la campaña? <em>*</em></label><textarea id="publico" placeholder="Describe a tu cliente ideal: quién es, qué le importa, dónde está, qué le motiva a comprar…" style="min-height:68px"></textarea></div>
+        <div class="f"><label class="lbl">Presupuesto disponible para la campaña</label>
+          <select id="presupuesto">
+            <option value="">— Rango orientativo —</option>
+            <option>Hasta 10.000 €</option><option>10.000 – 30.000 €</option>
+            <option>30.000 – 80.000 €</option><option>80.000 – 200.000 €</option>
+            <option>Más de 200.000 €</option><option>Prefiero no indicarlo</option>
+          </select>
+        </div>
+        <div class="f"><label class="lbl">Duración prevista</label>
+          <select id="duracion">
+            <option value="">— Seleccionar —</option>
+            <option>Menos de 1 mes (acción puntual)</option><option>1 – 3 meses</option>
+            <option>3 – 6 meses</option><option>6 – 12 meses</option><option>Más de 1 año</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">03</span><span class="sec-title">Tu mercado y competencia</span></div>
+    <div class="sec-body">
+      <div class="grid">
+        <div class="f full"><label class="lbl">¿Quiénes son tus principales competidores?</label><input type="text" id="competidores" placeholder="Menciona 2 o 3 marcas o empresas que compiten contigo…"></div>
+        <div class="f full"><label class="lbl">¿Qué canales usáis actualmente o queréis activar?</label>
+          <div class="chips" id="chips-canales">
+            <button type="button" class="chip" data-g="canales_multi" data-v="Instagram">Instagram</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="TikTok">TikTok</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="LinkedIn">LinkedIn</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Facebook">Facebook</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="YouTube">YouTube</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Email marketing">Email</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Publicidad online (Google, Meta Ads)">Publicidad online</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Punto de venta físico">Punto de venta</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Prensa y medios">Prensa / PR</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Influencers y embajadores">Influencers</button>
+            <button type="button" class="chip" data-g="canales_multi" data-v="Eventos y activaciones">Eventos</button>
+          </div>
+        </div>
+        <div class="f full"><label class="lbl">¿Qué has probado antes y qué resultado tuvo?</label><textarea id="acciones" placeholder="Acciones de marketing anteriores, qué funcionó, qué no…"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-hdr"><span class="sec-num">04</span><span class="sec-title">Tu visión y urgencia</span></div>
+    <div class="sec-body">
+      <div class="grid">
+        <div class="f full"><label class="lbl">¿Tienes alguna idea o intuición para la campaña?</label><textarea id="idea" placeholder="Cualquier concepto, referencia, sensación o dirección creativa que tengas en mente…"></textarea>
+          <div class="hint">No hace falta que sea elaborado — una frase, una imagen de referencia, una sensación es suficiente.</div>
+        </div>
+        <div class="f full"><label class="lbl">¿Cuándo necesitas resultados?</label>
+          <div class="chips" id="chips-urgencia">
+            <button type="button" class="chip" data-g="urgencia" data-v="Muy urgente, en menos de 1 mes">Menos de 1 mes</button>
+            <button type="button" class="chip" data-g="urgencia" data-v="En 1 a 3 meses">1 – 3 meses</button>
+            <button type="button" class="chip" data-g="urgencia" data-v="En 3 a 6 meses">3 – 6 meses</button>
+            <button type="button" class="chip" data-g="urgencia" data-v="Sin urgencia especial">Sin urgencia</button>
+          </div>
+        </div>
+        <div class="f"><label class="lbl">Nombre de contacto <em>*</em></label><input type="text" id="contacto" placeholder="Tu nombre completo"></div>
+        <div class="f"><label class="lbl">Email de contacto <em>*</em></label><input type="email" id="email" placeholder="tu@empresa.com"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="submit-block">
+    <p class="sub-title">¿Todo listo?</p>
+    <p class="sub-desc">Al enviar, se descargará un archivo con tu diagnóstico. Envíanoslo por email o WhatsApp y lo tendremos todo listo para la reunión.</p>
+    <button class="btn-send" onclick="submitFormValidate()">Enviar diagnóstico →</button>
+    <p style="font-family:'Montserrat',sans-serif;font-size:.57rem;color:var(--ink3);margin-top:12px">Los campos marcados con <em style="color:var(--gold);font-style:normal">*</em> son obligatorios</p>
+  </div>
+
+</div>
+
+
+</form>
+
+<div id="review">
+  <div class="rev-hdr">
+    <h2 class="rev-title">Revisa tu diagnóstico</h2>
+    <p class="rev-sub">Confirma que toda la información es correcta antes de enviar.<br>Puedes volver atrás para modificar cualquier dato.</p>
+  </div>
+  <div class="rev-doc" id="rev-doc-content"></div>
+  <div class="rev-actions">
+    <button class="btn-back" onclick="backToForm()">&#8592; Volver a editar</button>
+    <button class="btn-send" onclick="submitForm()">Confirmar y enviar &#8594;</button>
+  </div>
+</div>
+
+<div id="success">
+  <div class="suc-icon">◈</div>
+  <h2 class="suc-title">¡Diagnóstico completado!</h2>
+  <p class="suc-desc">Muchas gracias por tu tiempo. Hemos recibido toda la información necesaria para preparar tu estrategia de campaña.</p>
+  <div class="suc-box">
+    Hemos recibido tu briefing y nos pondremos en contacto contigo en menos de 48 horas.<br><br>
+    Si tienes material adicional (logotipo, imágenes, referencias…) puedes enviárnoslo directamente a <strong>private@aura-cabinet.com</strong>
+  
+  <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border2);text-align:center">
+    <p style="font-family:'Montserrat',sans-serif;font-size:.57rem;font-weight:300;color:var(--ink3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px">Conoce todo lo que podemos hacer por ti</p>
+    <a href="https://aura-cabinet.com" target="_blank" rel="noopener" style="display:inline-block;font-family:'Montserrat',sans-serif;font-size:.64rem;font-weight:400;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border2);padding:11px 28px;border-radius:var(--r2);text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)';this.style.background='var(--gold2)'" onmouseout="this.style.borderColor='var(--border2)';this.style.background='transparent'">Visitar Aura Cabinet →</a>
+  </div>
+</div>
+</div>
+
+</div>
+
+<footer><span class="brand">Aura Cabinet</span> <span style="opacity:.25">·</span> <span>Estrategia & Comunicación</span></footer>
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--gold);font-family:'Montserrat',sans-serif;font-size:.6rem;letter-spacing:.14em;padding:9px 20px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:999;white-space:nowrap;border:1px solid var(--border2)"></div>
+
+<script>
+const _cg={};
+document.querySelectorAll('.chip').forEach(b=>{
+  const g=b.dataset.g;if(!_cg[g])_cg[g]=[];_cg[g].push(b);
+  b.addEventListener('click',()=>{
+    if(g.endsWith('_multi')){b.classList.toggle('on');}
+    else{_cg[g].forEach(x=>x.classList.remove('on'));b.classList.add('on');}
+  });
+});
+function _cv(g){
+  if(g.endsWith('_multi'))return[...(_cg[g]||[])].filter(b=>b.classList.contains('on')).map(b=>b.dataset.v).join(', ');
+  return(_cg[g]||[]).find(b=>b.classList.contains('on'))?.dataset.v||'';
+}
+function _v(id){return document.getElementById(id)?.value?.trim()||'';}
+function _toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(10px)';},2600);}
+
+
+function submitFormValidate() {
+  if(!_v('nombre')){_toast('Indica el nombre del cliente');document.getElementById('nombre')?.focus();return;}
+  if(!_v('producto')){_toast('Indica el producto o servicio');document.getElementById('producto')?.focus();return;}
+  if(!_v('email')){_toast('Indica tu email');document.getElementById('email')?.focus();return;}
+  const date = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'});
+  let rv = '<div class="rev-doc-hdr"><span class="rev-doc-title">Resumen de tu diagnostico</span><span class="rev-date">' + date + '</span></div>';
+  rv += '<div class="rev-sec"><div class="rev-sec-title">El cliente</div>';
+  {const v=_v("cliente");rv+='<div class="rev-row"><div class="rev-lbl">Cliente/Empresa</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("sector");rv+='<div class="rev-row"><div class="rev-lbl">Sector</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("mercado");rv+='<div class="rev-row"><div class="rev-lbl">Mercado</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("descripcion");rv+='<div class="rev-row"><div class="rev-lbl">Descripcion</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  rv += "</div>";
+  rv += '<div class="rev-sec"><div class="rev-sec-title">La campana</div>';
+  {const v=_v("producto");rv+='<div class="rev-row"><div class="rev-lbl">Producto/Servicio</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("objetivo");rv+='<div class="rev-row"><div class="rev-lbl">Objetivo</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("publico");rv+='<div class="rev-row"><div class="rev-lbl">Publico objetivo</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("presupuesto");rv+='<div class="rev-row"><div class="rev-lbl">Presupuesto</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("duracion");rv+='<div class="rev-row"><div class="rev-lbl">Duracion</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  rv += "</div>";
+  rv += '<div class="rev-sec"><div class="rev-sec-title">Estrategia</div>';
+  {const v=_v("competidores");rv+='<div class="rev-row"><div class="rev-lbl">Competidores</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("canales");rv+='<div class="rev-row"><div class="rev-lbl">Canales</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("idea");rv+='<div class="rev-row"><div class="rev-lbl">Idea creativa</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("propuesta");rv+='<div class="rev-row"><div class="rev-lbl">Propuesta de valor</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  rv += "</div>";
+  rv += '<div class="rev-sec"><div class="rev-sec-title">Contacto</div>';
+  {const v=_v("nombre");rv+='<div class="rev-row"><div class="rev-lbl">Nombre</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("email");rv+='<div class="rev-row"><div class="rev-lbl">Email</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  {const v=_v("tel");rv+='<div class="rev-row"><div class="rev-lbl">Telefono</div><div class="rev-val '+(!v?"empty":"")+'">'+(v||"—")+'</div></div>';}
+  rv += "</div>";
+  document.getElementById('rev-doc-content').innerHTML = rv;
+  document.getElementById('form-content').style.display = 'none';
+  document.getElementById('brief-form').style.display = 'none';
+  document.getElementById('review').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function backToForm() {
+  document.getElementById('review').style.display = 'none';
+  document.getElementById('form-content').style.display = 'block';
+  document.getElementById('brief-form').style.display = 'block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function confirmSend() {
+  const btn = document.getElementById('btn-confirm');
+  btn.textContent = 'Enviando…';
+  btn.disabled = true;
+  submitForm();
+}
+
+function buildData() {
+  return {
+    _tipo: 'campaigns', _version: '1.0',
+    _fecha: new Date().toISOString(),
+    _fechaLegible: new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'}),
+    nombre: _v('nombre'), sector: _v('sector'), mercado: _v('mercado'),
+    descripcion: _v('descripcion'), propuesta: _v('propuesta'),
+    producto: _v('producto'),
+    objetivo: _cv('objetivo') || _v('objetivo'),
+    objetivoTexto: _v('objetivo'),
+    publico: _v('publico'), presupuesto: _v('presupuesto'), duracion: _v('duracion'),
+    competidores: _v('competidores'), canales: _cv('canales_multi'),
+    accionesPrevias: _v('acciones'), idea: _v('idea'), urgencia: _cv('urgencia'),
+    contacto: _v('contacto'), email: _v('email'),
+  };
+}
+
+function submitForm() {
+  if(!_v('nombre')){_toast('Por favor, indica el nombre');return;}
+  if(!_v('email')){_toast('Indica tu email de contacto');document.getElementById('email')?.focus();return;}
+
+  const data = buildData();
+  const nombre = data.nombre || data.cliente || data.empresa || 'cliente';
+  const emailCliente = data.email || '';
+
+  // Botón de confirmación en estado enviando
+  const btn = document.getElementById('btn-confirm');
+  if(btn){ btn.textContent = 'Enviando…'; btn.disabled = true; }
+
+  // Construir cuerpo del email en texto plano
+  const sep = '━'.repeat(48);
+  let body = `AURA CABINET — BRIEF Campaigns
+${sep}
+`;
+  body += `FECHA: ${new Date().toLocaleString('es-ES')}
+`;
+  body += `${sep}
+
+`;
+  Object.entries(data).forEach(([k, v]) => {
+    if(k.startsWith('_')) return;
+    if(!v || v === '') return;
+    const label = k.charAt(0).toUpperCase() + k.slice(1).replace(/([A-Z])/g,' $1');
+    body += `${label}:
+${Array.isArray(v) ? v.join(', ') : v}
+
+`;
+  });
+  body += `${sep}
+FIN DEL BRIEF — AURA CABINET`;
+
+  // Enviar con EmailJS
+  emailjs.send('service_662y2ak', 'template_usuario', {
+    from_name: nombre,
+    reply_to: emailCliente || '',
+    subject: `[Brief Campaigns] ${nombre} — ${new Date().toLocaleDateString('es-ES')}`,
+    message: body
+  })
+  .then(() => {
+    showSuccess(nombre);
+  })
+  .catch(err => {
+    console.error('EmailJS error:', err);
+    alert('Error al enviar: ' + (err?.text || err?.message || err));
+    if(btn){ btn.textContent = '\u25C8 Confirmar y enviar'; btn.disabled = false; }
+  });
+}
+
+function showSuccess(nombre) {
+  document.getElementById('form-content').style.display = 'none';
+  document.getElementById('review').style.display = 'none';
+  document.getElementById('success').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
